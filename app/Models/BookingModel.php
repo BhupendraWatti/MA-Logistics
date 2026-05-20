@@ -1,0 +1,78 @@
+<?php
+namespace App\Models;
+
+use CodeIgniter\Model;
+
+class BookingModel extends Model
+{
+    protected $table = 'bookings';
+    protected $primaryKey = 'id';
+    protected $allowedFields = [
+        'awb_no', 'company_id', 'booking_date', 'origin', 'destination', 
+        'mode_transport', 'material_type', 'material_details', 
+        'material_category', 'status', 'driver_name', 'driver_mobile', 
+        'vehicle_no', 'total_pieces', 'flight_number', 'airlines', 
+        'status', 'created_by'
+    ];
+    protected $useTimestamps = true;
+
+    public function searchByCompany($companyId, $searchValue)
+    {
+        return $this->select('bookings.*, companies.name as company_name, 
+           COALESCE(SUM(shipment_items.chargeable_weight), 0) as total_chargeable_weight')
+        ->join('companies', 'companies.id = bookings.company_id')
+        ->join('shipment_items', 'shipment_items.booking_id = bookings.id', 'left')
+        ->where('bookings.company_id', $companyId)
+        ->groupStart()
+        ->like('bookings.awb_no', $searchValue)
+        ->orLike('shipment_items.docket_no', $searchValue)
+        ->groupEnd()
+        ->groupBy('bookings.id')
+        ->orderBy('bookings.booking_date', 'DESC')
+        ->findAll();
+    }
+
+    public function getFullBooking($id)
+    {
+        return $this->select('bookings.*, companies.name as company_name, users.username as created_by_name')
+        ->join('companies', 'companies.id = bookings.company_id')
+        ->join('users', 'users.id = bookings.created_by')
+        ->find($id);
+    }
+
+
+    public function getCompanyStats($companyId)
+    {
+        $totalBookings = $this->where('company_id', $companyId)->countAllResults();
+
+        $db = \Config\Database::connect();
+        $totalShipments = $db->table('shipment_items si')
+        ->join('bookings b', 'b.id = si.booking_id')
+        ->where('b.company_id', $companyId)
+        ->countAllResults();
+
+        $totalCharges = $db->table('sales_charges sc')
+        ->join('bookings b', 'b.id = sc.booking_id')
+        ->where('b.company_id', $companyId)
+        ->selectSum('total_amount')
+        ->get()
+        ->getRowArray()['total_amount'] ?? 0;
+
+        return [
+            'total_bookings' => $totalBookings,
+            'total_shipments' => $totalShipments,
+            'total_charges' => '₹' . number_format($totalCharges ?: 0, 0),  // ✅ Shows real ₹ amount!
+            'status' => 'Active'
+        ];
+    }
+
+   public function getCompanyBookings($companyId, $limit = 5)
+   {
+    return $this->where('company_id', $companyId)
+    ->orderBy('id', 'DESC')
+    ->limit($limit)
+    ->findAll();
+   }
+
+
+}

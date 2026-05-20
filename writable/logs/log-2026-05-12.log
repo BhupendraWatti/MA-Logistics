@@ -1,0 +1,120 @@
+CRITICAL - 2026-05-12 12:46:07 --> ErrorException: Undefined variable $booking
+[Method: GET, Route: logistics]
+in APPPATH\Views\logistics\dashboard.php on line 94.
+ 1 APPPATH\Views\logistics\dashboard.php(94): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined variable $booking', 'C:\\xampp\\htdocs\\malogistics\\malogistics1\\app\\Views\\logistics\\dashboard.php', 94)
+ 2 SYSTEMPATH\View\View.php(240): include('C:\\xampp\\htdocs\\malogistics\\malogistics1\\app\\Views\\logistics\\dashboard.php')
+ 3 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('logistics/dashboard', [], true)
+ 5 APPPATH\Controllers\Logistics.php(39): view('logistics/dashboard', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Logistics->index()
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Logistics))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+12 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\malogistics\\malogistics1\\public\\index.php')
+CRITICAL - 2026-05-12 12:46:10 --> ErrorException: Undefined variable $booking
+[Method: GET, Route: logistics]
+in APPPATH\Views\logistics\dashboard.php on line 94.
+ 1 APPPATH\Views\logistics\dashboard.php(94): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined variable $booking', 'C:\\xampp\\htdocs\\malogistics\\malogistics1\\app\\Views\\logistics\\dashboard.php', 94)
+ 2 SYSTEMPATH\View\View.php(240): include('C:\\xampp\\htdocs\\malogistics\\malogistics1\\app\\Views\\logistics\\dashboard.php')
+ 3 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('logistics/dashboard', [], true)
+ 5 APPPATH\Controllers\Logistics.php(39): view('logistics/dashboard', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Logistics->index()
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Logistics))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+12 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\malogistics\\malogistics1\\public\\index.php')
+CRITICAL - 2026-05-12 12:46:15 --> ErrorException: Undefined variable $booking
+[Method: GET, Route: logistics]
+in APPPATH\Views\logistics\dashboard.php on line 94.
+ 1 APPPATH\Views\logistics\dashboard.php(94): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined variable $booking', 'C:\\xampp\\htdocs\\malogistics\\malogistics1\\app\\Views\\logistics\\dashboard.php', 94)
+ 2 SYSTEMPATH\View\View.php(240): include('C:\\xampp\\htdocs\\malogistics\\malogistics1\\app\\Views\\logistics\\dashboard.php')
+ 3 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('logistics/dashboard', [], true)
+ 5 APPPATH\Controllers\Logistics.php(39): view('logistics/dashboard', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Logistics->index()
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Logistics))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+12 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\malogistics\\malogistics1\\public\\index.php')
+CRITICAL - 2026-05-12 12:46:18 --> ErrorException: Undefined variable $booking
+[Method: GET, Route: logistics]
+in APPPATH\Views\logistics\dashboard.php on line 94.
+ 1 APPPATH\Views\logistics\dashboard.php(94): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined variable $booking', 'C:\\xampp\\htdocs\\malogistics\\malogistics1\\app\\Views\\logistics\\dashboard.php', 94)
+ 2 SYSTEMPATH\View\View.php(240): include('C:\\xampp\\htdocs\\malogistics\\malogistics1\\app\\Views\\logistics\\dashboard.php')
+ 3 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('logistics/dashboard', [], true)
+ 5 APPPATH\Controllers\Logistics.php(39): view('logistics/dashboard', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Logistics->index()
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Logistics))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+12 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\malogistics\\malogistics1\\public\\index.php')
+CRITICAL - 2026-05-12 12:46:24 --> ErrorException: Undefined variable $booking
+[Method: GET, Route: logistics]
+in APPPATH\Views\logistics\dashboard.php on line 94.
+ 1 APPPATH\Views\logistics\dashboard.php(94): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined variable $booking', 'C:\\xampp\\htdocs\\malogistics\\malogistics1\\app\\Views\\logistics\\dashboard.php', 94)
+ 2 SYSTEMPATH\View\View.php(240): include('C:\\xampp\\htdocs\\malogistics\\malogistics1\\app\\Views\\logistics\\dashboard.php')
+ 3 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('logistics/dashboard', [], true)
+ 5 APPPATH\Controllers\Logistics.php(39): view('logistics/dashboard', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Logistics->index()
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Logistics))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+12 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\malogistics\\malogistics1\\public\\index.php')
+CRITICAL - 2026-05-12 12:46:39 --> ErrorException: Undefined variable $booking
+[Method: GET, Route: logistics]
+in APPPATH\Views\logistics\dashboard.php on line 94.
+ 1 APPPATH\Views\logistics\dashboard.php(94): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined variable $booking', 'C:\\xampp\\htdocs\\malogistics\\malogistics1\\app\\Views\\logistics\\dashboard.php', 94)
+ 2 SYSTEMPATH\View\View.php(240): include('C:\\xampp\\htdocs\\malogistics\\malogistics1\\app\\Views\\logistics\\dashboard.php')
+ 3 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('logistics/dashboard', [], true)
+ 5 APPPATH\Controllers\Logistics.php(39): view('logistics/dashboard', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Logistics->index()
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Logistics))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+12 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\malogistics\\malogistics1\\public\\index.php')
+CRITICAL - 2026-05-12 12:46:44 --> ErrorException: Undefined variable $booking
+[Method: GET, Route: logistics]
+in APPPATH\Views\logistics\dashboard.php on line 94.
+ 1 APPPATH\Views\logistics\dashboard.php(94): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined variable $booking', 'C:\\xampp\\htdocs\\malogistics\\malogistics1\\app\\Views\\logistics\\dashboard.php', 94)
+ 2 SYSTEMPATH\View\View.php(240): include('C:\\xampp\\htdocs\\malogistics\\malogistics1\\app\\Views\\logistics\\dashboard.php')
+ 3 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('logistics/dashboard', [], true)
+ 5 APPPATH\Controllers\Logistics.php(39): view('logistics/dashboard', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Logistics->index()
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Logistics))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+12 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\malogistics\\malogistics1\\public\\index.php')
+CRITICAL - 2026-05-12 12:47:54 --> ErrorException: Undefined variable $booking
+[Method: GET, Route: logistics]
+in APPPATH\Views\logistics\dashboard.php on line 94.
+ 1 APPPATH\Views\logistics\dashboard.php(94): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined variable $booking', 'C:\\xampp\\htdocs\\malogistics\\malogistics1\\app\\Views\\logistics\\dashboard.php', 94)
+ 2 SYSTEMPATH\View\View.php(240): include('C:\\xampp\\htdocs\\malogistics\\malogistics1\\app\\Views\\logistics\\dashboard.php')
+ 3 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('logistics/dashboard', [], true)
+ 5 APPPATH\Controllers\Logistics.php(39): view('logistics/dashboard', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Logistics->index()
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Logistics))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+12 SYSTEMPATH\rewrite.php(44): require_once('C:\\xampp\\htdocs\\malogistics\\malogistics1\\public\\index.php')

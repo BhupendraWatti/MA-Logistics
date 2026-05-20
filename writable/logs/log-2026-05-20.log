@@ -1,0 +1,243 @@
+CRITICAL - 2026-05-20 06:30:45 --> ErrorException: touch(): Unable to create file writable/session/ci_session15061024efadc46dca2c408b0b7a9083 because No such file or directory
+[Method: GET, Route: logistics/create]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 06:31:39 --> ErrorException: touch(): Unable to create file writable/session/ci_session1ab78493f0b24dc0a82f2f8005eb6ba9 because No such file or directory
+[Method: GET, Route: login]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 08:01:47 --> ErrorException: touch(): Unable to create file writable/session/ci_session259f9291ff066db8632b08a4b7e9f470 because No such file or directory
+[Method: GET, Route: admin]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 08:01:53 --> ErrorException: touch(): Unable to create file writable/session/ci_session259f9291ff066db8632b08a4b7e9f470 because No such file or directory
+[Method: GET, Route: admin]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 08:38:03 --> ErrorException: touch(): Unable to create file writable/session/ci_session9f90cebf9f0a20278b60a96867aab837 because No such file or directory
+[Method: GET, Route: logistics/exportExcel]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 08:38:04 --> ErrorException: touch(): Unable to create file writable/session/ci_session9f90cebf9f0a20278b60a96867aab837 because No such file or directory
+[Method: GET, Route: logistics/exportExcel]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 08:56:09 --> ErrorException: Undefined variable $companyModel
+[Method: GET, Route: logistics/exportExcel]
+in APPPATH/Controllers/Logistics.php on line 687.
+ 1 APPPATH/Controllers/Logistics.php(687): CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/CodeIgniter.php(951): App\Controllers\Logistics->exportExcel()
+ 3 SYSTEMPATH/CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController()
+ 4 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
+ 5 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 6 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
+ 7 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
+CRITICAL - 2026-05-20 08:56:13 --> ErrorException: touch(): Unable to create file writable/session/ci_session8b37d0acc4db52e4242224030bcc35b5 because No such file or directory
+[Method: GET, Route: logistics/manage]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 08:56:14 --> ErrorException: touch(): Unable to create file writable/session/ci_session8b37d0acc4db52e4242224030bcc35b5 because No such file or directory
+[Method: GET, Route: logistics/manage]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 08:56:19 --> ErrorException: Undefined variable $companyModel
+[Method: GET, Route: logistics/exportExcel]
+in APPPATH/Controllers/Logistics.php on line 687.
+ 1 APPPATH/Controllers/Logistics.php(687): CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/CodeIgniter.php(951): App\Controllers\Logistics->exportExcel()
+ 3 SYSTEMPATH/CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController()
+ 4 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
+ 5 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 6 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
+ 7 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
+CRITICAL - 2026-05-20 08:56:22 --> ErrorException: touch(): Unable to create file writable/session/ci_session8b37d0acc4db52e4242224030bcc35b5 because No such file or directory
+[Method: GET, Route: logistics/manage]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 08:57:26 --> ErrorException: touch(): Unable to create file writable/session/ci_session8b37d0acc4db52e4242224030bcc35b5 because No such file or directory
+[Method: GET, Route: logistics/manage]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 08:57:29 --> ErrorException: Undefined variable $companyModel
+[Method: GET, Route: logistics/exportExcel]
+in APPPATH/Controllers/Logistics.php on line 687.
+ 1 APPPATH/Controllers/Logistics.php(687): CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/CodeIgniter.php(951): App\Controllers\Logistics->exportExcel()
+ 3 SYSTEMPATH/CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController()
+ 4 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
+ 5 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 6 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
+ 7 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
+CRITICAL - 2026-05-20 08:57:33 --> ErrorException: touch(): Unable to create file writable/session/ci_session8b37d0acc4db52e4242224030bcc35b5 because No such file or directory
+[Method: GET, Route: logistics/manage]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 08:57:36 --> ErrorException: touch(): Unable to create file writable/session/ci_session8b37d0acc4db52e4242224030bcc35b5 because No such file or directory
+[Method: GET, Route: logistics/manage]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 08:57:40 --> ErrorException: Undefined variable $companyModel
+[Method: GET, Route: logistics/exportExcel]
+in APPPATH/Controllers/Logistics.php on line 687.
+ 1 APPPATH/Controllers/Logistics.php(687): CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/CodeIgniter.php(951): App\Controllers\Logistics->exportExcel()
+ 3 SYSTEMPATH/CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController()
+ 4 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
+ 5 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 6 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
+ 7 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
+CRITICAL - 2026-05-20 08:57:59 --> ErrorException: touch(): Unable to create file writable/session/ci_session8b37d0acc4db52e4242224030bcc35b5 because No such file or directory
+[Method: GET, Route: logistics/manage]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 08:58:01 --> ErrorException: touch(): Unable to create file writable/session/ci_session8b37d0acc4db52e4242224030bcc35b5 because No such file or directory
+[Method: GET, Route: logistics/manage]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 08:58:55 --> ErrorException: touch(): Unable to create file writable/session/ci_session8b37d0acc4db52e4242224030bcc35b5 because No such file or directory
+[Method: GET, Route: logistics/manage]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 09:14:12 --> ErrorException: touch(): Unable to create file writable/session/ci_sessiond7d6ba2a8e0ab80494ca7af5bc74860e because No such file or directory
+[Method: GET, Route: logistics/manage]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 09:14:45 --> ErrorException: touch(): Unable to create file writable/session/ci_sessiond7d6ba2a8e0ab80494ca7af5bc74860e because No such file or directory
+[Method: GET, Route: logistics/manage]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 09:38:30 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bcd8ada835791e1ae871db5425ff551 because No such file or directory
+[Method: GET, Route: logistics/manage]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 09:38:32 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bcd8ada835791e1ae871db5425ff551 because No such file or directory
+[Method: GET, Route: logistics/manage]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 09:38:37 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bcd8ada835791e1ae871db5425ff551 because No such file or directory
+[Method: GET, Route: logistics/manage]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 09:38:38 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bcd8ada835791e1ae871db5425ff551 because No such file or directory
+[Method: GET, Route: logistics/manage]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 10:26:15 --> ErrorException: touch(): Unable to create file writable/session/ci_session16c4e733d6fd4b1540f7af8b5c630154 because No such file or directory
+[Method: GET, Route: logistics/create]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 10:28:29 --> ErrorException: touch(): Unable to create file writable/session/ci_sessiona8a2b4283996908ae568e55e10a19035 because No such file or directory
+[Method: GET, Route: logistics/create]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 10:28:36 --> ErrorException: touch(): Unable to create file writable/session/ci_sessiona8a2b4283996908ae568e55e10a19035 because No such file or directory
+[Method: GET, Route: logistics/create]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 10:28:39 --> ErrorException: touch(): Unable to create file writable/session/ci_sessiona8a2b4283996908ae568e55e10a19035 because No such file or directory
+[Method: GET, Route: logistics/create]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 11:39:34 --> ErrorException: touch(): Unable to create file writable/session/ci_session6c90e964907bd9ec67a6d61ac193340a because No such file or directory
+[Method: GET, Route: logistics]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 11:40:05 --> ErrorException: touch(): Unable to create file writable/session/ci_session6c90e964907bd9ec67a6d61ac193340a because No such file or directory
+[Method: GET, Route: logistics]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 11:40:14 --> ErrorException: touch(): Unable to create file writable/session/ci_session6c90e964907bd9ec67a6d61ac193340a because No such file or directory
+[Method: GET, Route: logistics]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-20 11:40:15 --> ErrorException: touch(): Unable to create file writable/session/ci_session6c90e964907bd9ec67a6d61ac193340a because No such file or directory
+[Method: GET, Route: logistics]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()

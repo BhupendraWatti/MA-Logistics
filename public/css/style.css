@@ -1,0 +1,8 @@
+/*Header Naviagation*/
+.navbar .navbar-nav .top-nav-link {
+    margin-right: 4px !important;
+    padding: 5px 12px;
+}
+.navbar .navbar-nav .top-nav-link:last-child {
+    padding-right: 0px;
+}

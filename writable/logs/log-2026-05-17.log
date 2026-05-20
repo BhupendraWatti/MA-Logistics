@@ -1,0 +1,879 @@
+CRITICAL - 2026-05-17 04:36:58 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: .env]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:36:58 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: .env.local]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:36:58 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: .env.production]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:36:58 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: .env.staging]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:36:59 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: .env.development]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:37:03 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: .env~]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:37:30 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: phpinfo.php]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:37:30 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: info.php]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:37:30 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: php.php]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:37:31 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: i.php]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:37:31 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: pi.php]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:37:31 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: pinfo.php]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:37:31 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: test.php]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:37:32 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: phpinfo]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:37:32 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: p.php]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:37:32 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: debug.php]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:37:34 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: phpinfo.php]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:37:34 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: info]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:37:34 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: php-info.php]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:37:34 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: phpversion.php]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:37:35 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: _phpinfo.php]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:37:35 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: old_phpinfo.php]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:37:35 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: server-info.php]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:37:35 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: server-status.php]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 04:37:36 --> ErrorException: touch(): Unable to create file writable/session/ci_session3bc5d85fe24715daf1896021eb58f46c because No such file or directory
+[Method: GET, Route: _environment]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 07:38:38 --> ErrorException: touch(): Unable to create file writable/session/ci_session4df9986c47a478d8242dbc17546de017 because No such file or directory
+[Method: GET, Route: /]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:03 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: api/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:03 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: h5/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:03 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: m/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:04 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: 7/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:04 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: v2]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:04 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: im/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:04 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: vip/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:04 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: xy/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:04 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: pc/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:04 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: wap/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:04 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: chat]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:05 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: admin]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:05 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: imei/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:05 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: dwcc/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:05 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: apps/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:05 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: appx/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:05 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: login]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:05 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: homes/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:05 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: mobile]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:05 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: page/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:05 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: 1.html]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:05 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: chat/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:05 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: mobile/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:06 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: jym-wn/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:06 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: conf.js]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:06 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: 55.html]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:06 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: lang.js]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:06 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: snake/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:06 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: platform]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:06 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: api.php/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:06 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: style.css]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:06 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: join_room]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:07 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: join_room]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:07 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: categories]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:07 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: yongxing/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:07 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: xingkong/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:07 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: mindex.html]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:18 --> CodeIgniter\HTTP\Exceptions\BadRequestException: The URI you submitted has disallowed characters: "exchangerateuserconfig!get.action"
+[Method: GET, Route: wap/api/exchangerateuserconfig%21get.action]
+in SYSTEMPATH/Router/Router.php on line 768.
+ 1 SYSTEMPATH/Router/Router.php(219): CodeIgniter\Router\Router->checkDisallowedChars()
+ 2 SYSTEMPATH/CodeIgniter.php(829): CodeIgniter\Router\Router->handle()
+ 3 SYSTEMPATH/CodeIgniter.php(441): CodeIgniter\CodeIgniter->tryToRouteIt()
+ 4 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
+ 5 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 6 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
+ 7 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
+CRITICAL - 2026-05-17 13:38:18 --> CodeIgniter\HTTP\Exceptions\BadRequestException: The URI you submitted has disallowed characters: "exchangerateuserconfig!get.action"
+[Method: GET, Route: api/api/exchangerateuserconfig%21get.action]
+in SYSTEMPATH/Router/Router.php on line 768.
+ 1 SYSTEMPATH/Router/Router.php(219): CodeIgniter\Router\Router->checkDisallowedChars()
+ 2 SYSTEMPATH/CodeIgniter.php(829): CodeIgniter\Router\Router->handle()
+ 3 SYSTEMPATH/CodeIgniter.php(441): CodeIgniter\CodeIgniter->tryToRouteIt()
+ 4 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
+ 5 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 6 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
+ 7 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
+CRITICAL - 2026-05-17 13:38:19 --> CodeIgniter\HTTP\Exceptions\BadRequestException: The URI you submitted has disallowed characters: "syspara!getSyspara.action"
+[Method: GET, Route: wap/api/syspara%21getSyspara.action]
+in SYSTEMPATH/Router/Router.php on line 768.
+ 1 SYSTEMPATH/Router/Router.php(219): CodeIgniter\Router\Router->checkDisallowedChars()
+ 2 SYSTEMPATH/CodeIgniter.php(829): CodeIgniter\Router\Router->handle()
+ 3 SYSTEMPATH/CodeIgniter.php(441): CodeIgniter\CodeIgniter->tryToRouteIt()
+ 4 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
+ 5 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 6 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
+ 7 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
+CRITICAL - 2026-05-17 13:38:20 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: h5/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:20 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: /]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:20 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: m/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:20 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: h5]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:20 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: v2]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:20 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: 7/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:20 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: api/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:20 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: im/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:20 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: wap]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:20 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: vip/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:20 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: pc/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:20 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: h5/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:20 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: chat]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:20 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: api/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:20 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: admin]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:20 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: imei/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: syn/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: apps/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: dwcc/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: homes/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: html/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: login]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: config]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: 1.html]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: zz.php]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: page/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: chat/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: m/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: mobile/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: jym-wn/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: pc.html]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: conf.js]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: 55.html]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: app_cn/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: snake/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: platform]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: api.php/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: config.js]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: style.css]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: 360.html]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: categories]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: code1.html]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: yongxing/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: xingkong/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:21 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: djacgkjs/]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:22 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: mindex.html]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:22 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: AppInfo.aspx]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:22 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: sign]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:22 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: Pay_Index.html]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:23 --> ErrorException: touch(): Unable to create file writable/session/ci_sessioneba1699fb8f20f3314064d8a1873662e because No such file or directory
+[Method: GET, Route: queryVersion.php]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 13:38:26 --> CodeIgniter\HTTP\Exceptions\BadRequestException: The URI you submitted has disallowed characters: "exchangerateuserconfig!get.action"
+[Method: GET, Route: wap/api/exchangerateuserconfig%21get.action]
+in SYSTEMPATH/Router/Router.php on line 768.
+ 1 SYSTEMPATH/Router/Router.php(219): CodeIgniter\Router\Router->checkDisallowedChars()
+ 2 SYSTEMPATH/CodeIgniter.php(829): CodeIgniter\Router\Router->handle()
+ 3 SYSTEMPATH/CodeIgniter.php(441): CodeIgniter\CodeIgniter->tryToRouteIt()
+ 4 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
+ 5 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 6 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
+ 7 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
+CRITICAL - 2026-05-17 13:38:26 --> CodeIgniter\HTTP\Exceptions\BadRequestException: The URI you submitted has disallowed characters: "exchangerateuserconfig!get.action"
+[Method: GET, Route: api/api/exchangerateuserconfig%21get.action]
+in SYSTEMPATH/Router/Router.php on line 768.
+ 1 SYSTEMPATH/Router/Router.php(219): CodeIgniter\Router\Router->checkDisallowedChars()
+ 2 SYSTEMPATH/CodeIgniter.php(829): CodeIgniter\Router\Router->handle()
+ 3 SYSTEMPATH/CodeIgniter.php(441): CodeIgniter\CodeIgniter->tryToRouteIt()
+ 4 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
+ 5 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 6 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
+ 7 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
+CRITICAL - 2026-05-17 13:38:26 --> CodeIgniter\HTTP\Exceptions\BadRequestException: The URI you submitted has disallowed characters: "syspara!getSyspara.action"
+[Method: GET, Route: wap/api/syspara%21getSyspara.action]
+in SYSTEMPATH/Router/Router.php on line 768.
+ 1 SYSTEMPATH/Router/Router.php(219): CodeIgniter\Router\Router->checkDisallowedChars()
+ 2 SYSTEMPATH/CodeIgniter.php(829): CodeIgniter\Router\Router->handle()
+ 3 SYSTEMPATH/CodeIgniter.php(441): CodeIgniter\CodeIgniter->tryToRouteIt()
+ 4 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
+ 5 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
+ 6 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
+ 7 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
+CRITICAL - 2026-05-17 21:41:24 --> ErrorException: touch(): Unable to create file writable/session/ci_sessionb9f305010f5198437ccf0c7908b7dc5b because No such file or directory
+[Method: GET, Route: logistics]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 21:41:25 --> ErrorException: touch(): Unable to create file writable/session/ci_sessionb9f305010f5198437ccf0c7908b7dc5b because No such file or directory
+[Method: GET, Route: ads.txt]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 21:41:26 --> ErrorException: touch(): Unable to create file writable/session/ci_sessionb9f305010f5198437ccf0c7908b7dc5b because No such file or directory
+[Method: GET, Route: llms.txt]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
+CRITICAL - 2026-05-17 21:41:26 --> ErrorException: touch(): Unable to create file writable/session/ci_sessionb9f305010f5198437ccf0c7908b7dc5b because No such file or directory
+[Method: GET, Route: humans.txt]
+in SYSTEMPATH/Session/Handlers/FileHandler.php on line 188.
+ 1 [internal function]: CodeIgniter\Debug\Exceptions->errorHandler()
+ 2 SYSTEMPATH/Session/Handlers/FileHandler.php(188): touch()
+ 3 [internal function]: CodeIgniter\Session\Handlers\FileHandler->write()
+ 4 [internal function]: session_write_close()
