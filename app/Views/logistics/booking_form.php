@@ -192,13 +192,26 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 <div class="col-md-2"><label>TCP</label><input type="number" step="0.01" name="tcp" class="form-control calc-total" value="<?= $sales['tcp'] ?? '' ?>"></div>
             </div>
 
-            <div class="row mb-4">
+            <div class="row mb-3">
                 <div class="col-md-2"><label>Inbound TSP</label><input type="number" step="0.01" name="inbound_tsp" class="form-control calc-total" value="<?= $sales['inbound_tsp'] ?? '' ?>"></div>
                 <div class="col-md-2"><label>Outbound TSP</label><input type="number" step="0.01" name="outbound_tsp" class="form-control calc-total" value="<?= $sales['outbound_tsp'] ?? '' ?>"></div>
                 <div class="col-md-2"><label>Utility</label><input type="number" step="0.01" name="utility_charges" class="form-control calc-total" value="<?= $sales['utility_charges'] ?? '' ?>"></div>
                 <div class="col-md-2"><label>X-Ray</label><input type="number" step="0.01" name="xray_charges" class="form-control calc-total" value="<?= $sales['xray_charges'] ?? '' ?>"></div>
                 <div class="col-md-2"><label>ADO</label><input type="number" step="0.01" name="ado" class="form-control calc-total" value="<?= $sales['ado'] ?? '' ?>"></div>
                 <div class="col-md-2"><label>Misc</label><input type="number" step="0.01" name="misc_charges" class="form-control calc-total" value="<?= $sales['misc_charges'] ?? '' ?>"></div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-2"><label>AWB Fees Agent</label><input type="number" step="0.01" name="awb_fees_agent" class="form-control calc-total" value="<?= $sales['awb_fees_agent'] ?? '' ?>"></div>
+                <div class="col-md-2"><label>AWB Fees Carrier</label><input type="number" step="0.01" name="awb_fees_carrier" class="form-control calc-total" value="<?= $sales['awb_fees_carrier'] ?? '' ?>"></div>
+                <div class="col-md-2"><label>Admin Charges</label><input type="number" step="0.01" name="admin_charges" class="form-control calc-total" value="<?= $sales['admin_charges'] ?? '' ?>"></div>
+                <div class="col-md-2"><label>Delivery Order Charges</label><input type="number" step="0.01" name="delivery_order_charges" class="form-control calc-total" value="<?= $sales['delivery_order_charges'] ?? '' ?>"></div>
+                <div class="col-md-2"><label>Inbound Handling</label><input type="number" step="0.01" name="inbound_handling" class="form-control calc-total" value="<?= $sales['inbound_handling'] ?? '' ?>"></div>
+                <div class="col-md-2"><label>Inbound Storage</label><input type="number" step="0.01" name="inbound_storage" class="form-control calc-total" value="<?= $sales['inbound_storage'] ?? '' ?>"></div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-2"><label>Outbound Storage</label><input type="number" step="0.01" name="outbound_storage" class="form-control calc-total" value="<?= $sales['outbound_storage'] ?? '' ?>"></div>
             </div>
 
             <div class="row mt-4">

@@ -11,9 +11,11 @@ class Logistics extends BaseController
     private function checkPermission($permission)
     {
         $permissions = session()->get('permissions') ?? [];
-        if (!$permissions[$permission]) {
+        if (!($permissions[$permission] ?? 0)) {
             return redirect()->to('/logistics')->with('error', 'Permission denied!');
         }
+
+        return true;
     }
 
 
@@ -215,8 +217,6 @@ public function create()
 
   public function view($id)
   {
-    $this->checkPermission('can_edit');
-    
     $bookingModel = new BookingModel();
     $shipmentModel = new ShipmentItemModel();
     $salesModel = new SalesChargeModel();
@@ -518,9 +518,6 @@ public function companySelection()
  public function manageBookings()
  {
 
-    // ✅ SECURITY FIRST - Block unauthorized users
-    $this->checkPermission('can_edit');
-
     $companyId = session()->get('selected_company_id');
     if (!$companyId) {
         return redirect()->to('/company-selection');
@@ -572,7 +569,7 @@ public function exportPdf($id)
     $html = '<h2 style="color:#0d6efd;">AWB: ' . $booking['awb_no'] . '</h2>';
     $html .= '<p style="font-size:9px;">';
     $html .= '<b>Company:</b> ' . $booking['company_name'] . ' | ';
-    $html .= '<b>Origin:</b> ' . $booking['origin'] . ' → ' . $booking['destination'] . ' | ';
+    $html .= '<b>Origin:</b> ' . $booking['origin'] . ' to ' . $booking['destination'] . ' | ';
     $html .= '<b>Status:</b> ' . $booking['status'] . ' | ';
     $html .= '<b>Pieces:</b> ' . $booking['total_pieces'];
     $html .= '</p><hr>';
@@ -686,15 +683,32 @@ public function exportPdf($id)
     if ($sales) {
         $calculatedTotal = ($sales['rate'] * $sales['weight']) + $sales['ddc'] + $sales['ssc'] + $sales['btc'] + $sales['flc'] + $sales['doc'] + $sales['inbound_tsp'] + $sales['outbound_tsp'] + $sales['tcp'] + $sales['utility_charges'] + $sales['xray_charges'] + $sales['ado'] + $sales['awb_fees_agent'] + $sales['awb_fees_carrier'] + $sales['admin_charges'] + $sales['delivery_order_charges'] + $sales['inbound_handling'] + $sales['inbound_storage'] + $sales['outbound_storage'] + $sales['misc_charges'];
         
-        $html .= '<hr><table border="0" cellpadding="2" style="width:30%; font-size:8px;">';
-        $html .= '<tr><th colspan="2" style="background-color:#ffc107;">Sales Charges</th></tr>';
-        $html .= '<tr><td>Flight:</td><td>' . ($sales['flight_number'] ?? '-') . '</td></tr>';
-        $html .= '<tr><td>Airlines:</td><td>' . ($sales['airlines'] ?? '-') . '</td></tr>';
-        $html .= '<tr><td>Weight:</td><td>' . number_format($sales['weight'] ?? 0, 2) . ' KG</td></tr>';
-        $html .= '<tr><td>Rate:</td><td>Rs ' . number_format($sales['rate'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td>DDC:</td><td>Rs ' . number_format($sales['ddc'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td>SSC:</td><td>Rs ' . number_format($sales['ssc'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td><strong>Total:</strong></td><td><strong>Rs ' . number_format($calculatedTotal, 2) . '</strong></td></tr>';
+        $html .= '<hr><br><table border="1" cellpadding="3" style="border-collapse:collapse; width:45%; font-size:8px; margin-top:15px;">';
+        $html .= '<tr style="background-color:#ffc107;"><th width="50%" style="text-align:left; padding:5px;">Description</th><th width="50%" style="text-align:right; padding:5px;">Amount</th></tr>';
+        $html .= '<tr><td>Flight:</td><td style="text-align:right;">' . ($sales['flight_number'] ?? '-') . '</td></tr>';
+        $html .= '<tr><td>Airlines:</td><td style="text-align:right;">' . ($sales['airlines'] ?? '-') . '</td></tr>';
+        $html .= '<tr><td>Weight:</td><td style="text-align:right;">' . number_format($sales['weight'] ?? 0, 2) . ' KG</td></tr>';
+        $html .= '<tr><td>Rate:</td><td style="text-align:right;">Rs ' . number_format($sales['rate'] ?? 0, 2) . '</td></tr>';
+        $html .= '<tr><td>DDC:</td><td style="text-align:right;">Rs ' . number_format($sales['ddc'] ?? 0, 2) . '</td></tr>';
+        $html .= '<tr><td>SSC:</td><td style="text-align:right;">Rs ' . number_format($sales['ssc'] ?? 0, 2) . '</td></tr>';
+        $html .= '<tr><td>BTC:</td><td style="text-align:right;">Rs ' . number_format($sales['btc'] ?? 0, 2) . '</td></tr>';
+        $html .= '<tr><td>FLC:</td><td style="text-align:right;">Rs ' . number_format($sales['flc'] ?? 0, 2) . '</td></tr>';
+        $html .= '<tr><td>DOC:</td><td style="text-align:right;">Rs ' . number_format($sales['doc'] ?? 0, 2) . '</td></tr>';
+        $html .= '<tr><td>Inbound TSP:</td><td style="text-align:right;">Rs ' . number_format($sales['inbound_tsp'] ?? 0, 2) . '</td></tr>';
+        $html .= '<tr><td>Outbound TSP:</td><td style="text-align:right;">Rs ' . number_format($sales['outbound_tsp'] ?? 0, 2) . '</td></tr>';
+        $html .= '<tr><td>TCP:</td><td style="text-align:right;">Rs ' . number_format($sales['tcp'] ?? 0, 2) . '</td></tr>';
+        $html .= '<tr><td>Utility Charges:</td><td style="text-align:right;">Rs ' . number_format($sales['utility_charges'] ?? 0, 2) . '</td></tr>';
+        $html .= '<tr><td>Xray Charges:</td><td style="text-align:right;">Rs ' . number_format($sales['xray_charges'] ?? 0, 2) . '</td></tr>';
+        $html .= '<tr><td>ADO:</td><td style="text-align:right;">Rs ' . number_format($sales['ado'] ?? 0, 2) . '</td></tr>';
+        $html .= '<tr><td>AWB Fees Agent:</td><td style="text-align:right;">Rs ' . number_format($sales['awb_fees_agent'] ?? 0, 2) . '</td></tr>';
+        $html .= '<tr><td>AWB Fees Carrier:</td><td style="text-align:right;">Rs ' . number_format($sales['awb_fees_carrier'] ?? 0, 2) . '</td></tr>';
+        $html .= '<tr><td>Admin Charges:</td><td style="text-align:right;">Rs ' . number_format($sales['admin_charges'] ?? 0, 2) . '</td></tr>';
+        $html .= '<tr><td>Delivery Order Charges:</td><td style="text-align:right;">Rs ' . number_format($sales['delivery_order_charges'] ?? 0, 2) . '</td></tr>';
+        $html .= '<tr><td>Inbound Handling:</td><td style="text-align:right;">Rs ' . number_format($sales['inbound_handling'] ?? 0, 2) . '</td></tr>';
+        $html .= '<tr><td>Inbound Storage:</td><td style="text-align:right;">Rs ' . number_format($sales['inbound_storage'] ?? 0, 2) . '</td></tr>';
+        $html .= '<tr><td>Outbound Storage:</td><td style="text-align:right;">Rs ' . number_format($sales['outbound_storage'] ?? 0, 2) . '</td></tr>';
+        $html .= '<tr><td>Misc Charges:</td><td style="text-align:right;">Rs ' . number_format($sales['misc_charges'] ?? 0, 2) . '</td></tr>';
+        $html .= '<tr style="background-color:#198754; color:white; font-weight:bold;"><td>Total:</td><td style="text-align:right;">Rs ' . number_format($calculatedTotal, 2) . '</td></tr>';
         $html .= '</table>';
     }
     

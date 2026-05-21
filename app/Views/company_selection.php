@@ -35,9 +35,12 @@
                 ?>
                 <hr class="my-4">
                 
+                <?php if ($role === 'admin'): ?>
                 <h5 class="text-center mb-3">⚙️ Manage Companies</h5>
+                <?php endif; ?>
                 
-                <?php if ($role === 'admin' || !empty($permissions['can_create'])): ?>
+                <!-- Create Company option disabled -->
+                <?php if (false): ?>
                 <?= form_open('logistics/createCompany', ['class' => 'mb-3 d-flex']) ?>
                     <input type="text" name="name" class="form-control me-2" placeholder="New Company Name" required>
                     <button type="submit" class="btn btn-success text-nowrap">

@@ -31,7 +31,7 @@
                     <?php if (session()->get('role') === 'admin'): ?>
                         <a class="nav-link top-nav-link" href="<?= base_url('admin') ?>"><i class="fas fa-users-cog"></i> Admin</a>
                     <?php endif; ?>
-                    <a class="nav-link top-nav-link" href="<?= base_url('logistics') ?>"><i class="fas fa-search"></i> Search</a>
+                    <!-- <a class="nav-link top-nav-link" href="#"><i class="fas fa-search"></i> Search</a> -->
                     <?php if ((session()->get('permissions')['can_create'] ?? 0) == 1): ?>
                         <a class="nav-link top-nav-link" href="<?= base_url('logistics/create') ?>"><i class="fas fa-plus"></i> New Booking</a>
                     <?php endif; ?>

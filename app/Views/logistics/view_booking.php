@@ -106,13 +106,22 @@
                         $calculatedTotal = ($sales['rate'] * $sales['weight']) + $sales['ddc'] + $sales['ssc'] + $sales['btc'] + $sales['flc'] + $sales['doc'] + $sales['inbound_tsp'] + $sales['outbound_tsp'] + $sales['tcp'] + $sales['utility_charges'] + $sales['xray_charges'] + $sales['ado'] + $sales['awb_fees_agent'] + $sales['awb_fees_carrier'] + $sales['admin_charges'] + $sales['delivery_order_charges'] + $sales['inbound_handling'] + $sales['inbound_storage'] + $sales['outbound_storage'] + $sales['misc_charges'];
                     ?>
                         <div class="mb-2"><strong>Flight:</strong> <?= esc($sales['flight_number']) ?></div>
+                        <div class="mb-2"><strong>Airlines:</strong> <?= esc($sales['airlines']) ?></div>
+                        <div class="mb-2"><strong>Weight:</strong> <?= number_format($sales['weight'] ?? 0, 2) ?> KG</div>
+                        <div class="mb-2"><strong>Rate:</strong> ₹<?= number_format($sales['rate'] ?? 0, 2) ?></div>
+                        <hr>
                         <div class="mb-2"><strong>Total Amount:</strong> <span class="text-success fs-5">₹<?= number_format($calculatedTotal, 2) ?></span></div>
                         <hr>
                         <small class="text-muted">
-                            DDC: ₹<?= number_format($sales['ddc'], 2) ?><br>
-                            SSC: ₹<?= number_format($sales['ssc'], 2) ?><br>
-                            BTC: ₹<?= number_format($sales['btc'], 2) ?><br>
-                            FLC: ₹<?= number_format($sales['flc'], 2) ?>
+                            <div><strong>Charges Breakdown:</strong></div>
+                            DDC: ₹<?= number_format($sales['ddc'] ?? 0, 2) ?> | SSC: ₹<?= number_format($sales['ssc'] ?? 0, 2) ?> | BTC: ₹<?= number_format($sales['btc'] ?? 0, 2) ?><br>
+                            FLC: ₹<?= number_format($sales['flc'] ?? 0, 2) ?> | DOC: ₹<?= number_format($sales['doc'] ?? 0, 2) ?> | TCP: ₹<?= number_format($sales['tcp'] ?? 0, 2) ?><br>
+                            Inbound TSP: ₹<?= number_format($sales['inbound_tsp'] ?? 0, 2) ?> | Outbound TSP: ₹<?= number_format($sales['outbound_tsp'] ?? 0, 2) ?><br>
+                            Utility: ₹<?= number_format($sales['utility_charges'] ?? 0, 2) ?> | X-Ray: ₹<?= number_format($sales['xray_charges'] ?? 0, 2) ?> | ADO: ₹<?= number_format($sales['ado'] ?? 0, 2) ?><br>
+                            AWB Agent: ₹<?= number_format($sales['awb_fees_agent'] ?? 0, 2) ?> | AWB Carrier: ₹<?= number_format($sales['awb_fees_carrier'] ?? 0, 2) ?><br>
+                            Admin: ₹<?= number_format($sales['admin_charges'] ?? 0, 2) ?> | Delivery Order: ₹<?= number_format($sales['delivery_order_charges'] ?? 0, 2) ?><br>
+                            Inbound Handling: ₹<?= number_format($sales['inbound_handling'] ?? 0, 2) ?> | Inbound Storage: ₹<?= number_format($sales['inbound_storage'] ?? 0, 2) ?><br>
+                            Outbound Storage: ₹<?= number_format($sales['outbound_storage'] ?? 0, 2) ?> | Misc: ₹<?= number_format($sales['misc_charges'] ?? 0, 2) ?>
                         </small>
                     <?php else: ?>
                         <span class="text-muted">No sales charges</span>
