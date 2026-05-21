@@ -465,6 +465,55 @@ public function companySelection()
         ->setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   }
 
+  public function createCompany()
+  {
+      $permissions = session()->get('permissions') ?? [];
+      $role = session()->get('role');
+      if ($role !== 'admin' && !($permissions['can_create'] ?? 0)) {
+          return redirect()->back()->with('error', '❌ You do not have permission to create companies!');
+      }
+
+      $name = $this->request->getPost('name');
+      if (empty($name)) {
+          return redirect()->back()->with('error', '❌ Company name is required!');
+      }
+
+      $companyModel = new CompanyModel();
+      // Check if already exists
+      if ($companyModel->where('name', $name)->first()) {
+          return redirect()->back()->with('error', '❌ Company already exists!');
+      }
+
+      $companyModel->insert(['name' => $name]);
+      return redirect()->back()->with('success', '✅ Company "' . esc($name) . '" created successfully!');
+  }
+
+  public function deleteCompany($id)
+  {
+      $permissions = session()->get('permissions') ?? [];
+      $role = session()->get('role');
+      if ($role !== 'admin' && !($permissions['can_delete'] ?? 0)) {
+          return redirect()->back()->with('error', '❌ You do not have permission to delete companies!');
+      }
+
+      $companyModel = new CompanyModel();
+      $company = $companyModel->find($id);
+
+      if (!$company) {
+          return redirect()->back()->with('error', '❌ Company not found!');
+      }
+
+      // Delete company (MySQL will cascade delete related bookings)
+      $companyModel->delete($id);
+
+      // If the currently selected company is deleted, clear session
+      if (session()->get('selected_company_id') == $id) {
+          session()->remove(['selected_company_id', 'selected_company_name']);
+      }
+
+      return redirect()->back()->with('success', '✅ Company "' . esc($company['name']) . '" and all its associated records deleted successfully!');
+  }
+
 
  public function manageBookings()
  {
@@ -635,6 +684,8 @@ public function exportPdf($id)
     
     // ========== SALES CHARGES (FIXED) ==========
     if ($sales) {
+        $calculatedTotal = ($sales['rate'] * $sales['weight']) + $sales['ddc'] + $sales['ssc'] + $sales['btc'] + $sales['flc'] + $sales['doc'] + $sales['inbound_tsp'] + $sales['outbound_tsp'] + $sales['tcp'] + $sales['utility_charges'] + $sales['xray_charges'] + $sales['ado'] + $sales['awb_fees_agent'] + $sales['awb_fees_carrier'] + $sales['admin_charges'] + $sales['delivery_order_charges'] + $sales['inbound_handling'] + $sales['inbound_storage'] + $sales['outbound_storage'] + $sales['misc_charges'];
+        
         $html .= '<hr><table border="0" cellpadding="2" style="width:30%; font-size:8px;">';
         $html .= '<tr><th colspan="2" style="background-color:#ffc107;">Sales Charges</th></tr>';
         $html .= '<tr><td>Flight:</td><td>' . ($sales['flight_number'] ?? '-') . '</td></tr>';
@@ -643,7 +694,7 @@ public function exportPdf($id)
         $html .= '<tr><td>Rate:</td><td>Rs ' . number_format($sales['rate'] ?? 0, 2) . '</td></tr>';
         $html .= '<tr><td>DDC:</td><td>Rs ' . number_format($sales['ddc'] ?? 0, 2) . '</td></tr>';
         $html .= '<tr><td>SSC:</td><td>Rs ' . number_format($sales['ssc'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td><strong>Total:</strong></td><td><strong>Rs ' . number_format($sales['total_amount'] ?? 0, 2) . '</strong></td></tr>';
+        $html .= '<tr><td><strong>Total:</strong></td><td><strong>Rs ' . number_format($calculatedTotal, 2) . '</strong></td></tr>';
         $html .= '</table>';
     }
     

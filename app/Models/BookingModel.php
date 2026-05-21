@@ -54,7 +54,7 @@ class BookingModel extends Model
         $totalCharges = $db->table('sales_charges sc')
         ->join('bookings b', 'b.id = sc.booking_id')
         ->where('b.company_id', $companyId)
-        ->selectSum('total_amount')
+        ->select('SUM((rate * weight) + ddc + ssc + btc + flc + doc + inbound_tsp + outbound_tsp + tcp + utility_charges + xray_charges + ado + awb_fees_agent + awb_fees_carrier + admin_charges + delivery_order_charges + inbound_handling + inbound_storage + outbound_storage + misc_charges) AS total_amount', false)
         ->get()
         ->getRowArray()['total_amount'] ?? 0;
 

@@ -102,9 +102,11 @@
                     <h6><i class="fas fa-dollar-sign"></i> Sales Charges</h6>
                 </div>
                 <div class="card-body">
-                    <?php if ($sales): ?>
+                    <?php if ($sales): 
+                        $calculatedTotal = ($sales['rate'] * $sales['weight']) + $sales['ddc'] + $sales['ssc'] + $sales['btc'] + $sales['flc'] + $sales['doc'] + $sales['inbound_tsp'] + $sales['outbound_tsp'] + $sales['tcp'] + $sales['utility_charges'] + $sales['xray_charges'] + $sales['ado'] + $sales['awb_fees_agent'] + $sales['awb_fees_carrier'] + $sales['admin_charges'] + $sales['delivery_order_charges'] + $sales['inbound_handling'] + $sales['inbound_storage'] + $sales['outbound_storage'] + $sales['misc_charges'];
+                    ?>
                         <div class="mb-2"><strong>Flight:</strong> <?= esc($sales['flight_number']) ?></div>
-                        <div class="mb-2"><strong>Total Amount:</strong> <span class="text-success fs-5">₹<?= number_format($sales['total_amount'], 2) ?></span></div>
+                        <div class="mb-2"><strong>Total Amount:</strong> <span class="text-success fs-5">₹<?= number_format($calculatedTotal, 2) ?></span></div>
                         <hr>
                         <small class="text-muted">
                             DDC: ₹<?= number_format($sales['ddc'], 2) ?><br>

@@ -28,6 +28,40 @@
                 </button>
                 <?= form_close() ?>
                 
+                <?php 
+                $permissions = session()->get('permissions') ?? [];
+                $role = session()->get('role');
+                if ($role === 'admin' || !empty($permissions['can_create']) || !empty($permissions['can_delete'])): 
+                ?>
+                <hr class="my-4">
+                
+                <h5 class="text-center mb-3">⚙️ Manage Companies</h5>
+                
+                <?php if ($role === 'admin' || !empty($permissions['can_create'])): ?>
+                <?= form_open('logistics/createCompany', ['class' => 'mb-3 d-flex']) ?>
+                    <input type="text" name="name" class="form-control me-2" placeholder="New Company Name" required>
+                    <button type="submit" class="btn btn-success text-nowrap">
+                        <i class="fas fa-plus"></i> Add
+                    </button>
+                <?= form_close() ?>
+                <?php endif; ?>
+
+                <?php if ($role === 'admin' || !empty($permissions['can_delete'])): ?>
+                <div class="list-group">
+                    <?php foreach($companies ?? [] as $company): ?>
+                        <div class="list-group-item d-flex justify-content-between align-items-center py-2">
+                            <span><?= esc($company['name']) ?></span>
+                            <?= form_open('logistics/deleteCompany/' . $company['id'], ['class' => 'm-0', 'onsubmit' => 'return confirm("Are you sure? This will delete ALL bookings related to this company!");']) ?>
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Company">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            <?= form_close() ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+                <?php endif; ?>
+
                 <div class="text-center mt-4 p-3 bg-light rounded">
                     <small class="text-muted">
                         👤 Welcome, <strong><?= esc(session()->get('username')) ?></strong> | 

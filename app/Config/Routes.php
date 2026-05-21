@@ -29,6 +29,8 @@ $routes->get('logistics/clearCompany', 'Logistics::clearCompany');
 // COMPANY SELECTION (CRITICAL - MUST BE BEFORE FALLBACK)
 $routes->get('company-selection', 'Logistics::companySelection');
 $routes->post('logistics/setCompany', 'Logistics::setCompany');
+$routes->post('logistics/createCompany', 'Logistics::createCompany');
+$routes->post('logistics/deleteCompany/(:num)', 'Logistics::deleteCompany/$1');
 
 // DEFAULT FALLBACK (LAST!)
 $routes->get('(:segment)', 'Logistics::index');
