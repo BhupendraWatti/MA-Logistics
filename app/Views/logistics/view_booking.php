@@ -29,14 +29,13 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-3"><strong>AWB No:</strong> <?= esc($booking['awb_no']) ?></div>
-                        <div class="col-md-2"><strong>Date:</strong> <?= date('d-M-Y H:i', strtotime($booking['booking_date'])) ?></div>
-                        <div class="col-md-2"><strong>Company:</strong> <?= esc($booking['company_name']) ?></div>
-                        <div class="col-md-2"><strong>Status:</strong> 
-                            <span class="badge bg-<?= $booking['status'] == 'Delivered' ? 'success' : 
-                                ($booking['status'] == 'In-Transit' ? 'warning' : 'secondary') ?>">
-                                <?= ucfirst($booking['status']) ?>
+                        <div class="col-md-3"><strong>Date:</strong> <?= date('d-M-Y H:i', strtotime($booking['booking_date'])) ?></div>
+                        <div class="col-md-3"><strong>Company:</strong> <?= esc($booking['company_name']) ?></div>
+                        <!-- <div class="col-md-2"><strong>Status:</strong> 
+                            <span class="badge bg-<?//= $booking['status'] == 'Delivered' ? 'success' : ($booking['status'] == 'In-Transit' ? 'warning' : 'secondary') ?>">
+                                <?//= ucfirst($booking['status']) ?>
                             </span>
-                        </div>
+                        </div> -->
                         <div class="col-md-3"><strong>Created By:</strong> <?= esc($booking['created_by_name']) ?></div>
                     </div>
                     <hr>

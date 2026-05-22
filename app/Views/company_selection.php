@@ -29,9 +29,10 @@
                 <?= form_close() ?>
                 
                 <?php 
-                $permissions = session()->get('permissions') ?? [];
+                //$permissions = session()->get('permissions') ?? [];
                 $role = session()->get('role');
-                if ($role === 'admin' || !empty($permissions['can_create']) || !empty($permissions['can_delete'])): 
+                //if ($role === 'admin' || !empty($permissions['can_create']) || !empty($permissions['can_delete'])): 
+                if (session()->get('role') === 'admin'):
                 ?>
                 <hr class="my-4">
                 
@@ -49,7 +50,8 @@
                 <?= form_close() ?>
                 <?php endif; ?>
 
-                <?php if ($role === 'admin' || !empty($permissions['can_delete'])): ?>
+                <?php //if ($role === 'admin' || !empty($permissions['can_delete'])): ?>
+                <?php if (session()->get('role') === 'admin'): ?>
                 <div class="list-group">
                     <?php foreach($companies ?? [] as $company): ?>
                         <div class="list-group-item d-flex justify-content-between align-items-center py-2">

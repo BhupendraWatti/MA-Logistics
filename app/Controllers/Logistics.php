@@ -467,11 +467,16 @@ public function companySelection()
 
   public function createCompany()
   {
-      $permissions = session()->get('permissions') ?? [];
-      $role = session()->get('role');
-      if ($role !== 'admin' && !($permissions['can_create'] ?? 0)) {
-          return redirect()->back()->with('error', '❌ You do not have permission to create companies!');
-      }
+    //   $permissions = session()->get('permissions') ?? [];
+    //   $role = session()->get('role');
+    //   if ($role !== 'admin' && !($permissions['can_create'] ?? 0)) {
+    //       return redirect()->back()->with('error', '❌ You do not have permission to create companies!');
+    //   }
+
+    // ✅ FIXED: ONLY Admin can create companies (ignores can_create permission)
+    if (session()->get('role') !== 'admin') {
+        return redirect()->to('/logistics')->with('error', '❌ Admin access required!');
+    }
 
       $name = $this->request->getPost('name');
       if (empty($name)) {
@@ -490,12 +495,16 @@ public function companySelection()
 
   public function deleteCompany($id)
   {
-      $permissions = session()->get('permissions') ?? [];
-      $role = session()->get('role');
-      if ($role !== 'admin' && !($permissions['can_delete'] ?? 0)) {
-          return redirect()->back()->with('error', '❌ You do not have permission to delete companies!');
-      }
+    //   $permissions = session()->get('permissions') ?? [];
+    //   $role = session()->get('role');
+    //   if ($role !== 'admin' && !($permissions['can_delete'] ?? 0)) {
+    //       return redirect()->back()->with('error', '❌ You do not have permission to delete companies!');
+    //   }
 
+    // ✅ FIXED: ONLY Admin can delete companies (ignores can_delete permission)
+    if (session()->get('role') !== 'admin') {
+        return redirect()->to('/logistics')->with('error', '❌ Admin access required!');
+    }
       $companyModel = new CompanyModel();
       $company = $companyModel->find($id);
 
@@ -557,44 +566,66 @@ public function exportPdf($id)
     if (empty($shipments)) {
         return redirect()->back()->with('error', 'No shipment items found!');
     }
-    
-    // Generate PDF - Landscape for wider table
-    $pdf = new \TCPDF();
+
+    $invoiceNo = $shipments[0]['invoice_no'] ?? 'AWB-' . $booking['awb_no'];
+    $invoiceDates = array_filter(array_column($shipments, 'invoice_date'));
+    sort($invoiceDates);
+    $invoiceStart = !empty($invoiceDates) ? date('d.m.Y', strtotime(reset($invoiceDates))) : date('d.m.Y', strtotime($booking['booking_date']));
+    $invoiceEnd = !empty($invoiceDates) ? date('d.m.Y', strtotime(end($invoiceDates))) : date('d.m.Y', strtotime($booking['booking_date']));
+    $invoicePeriod = $invoiceStart . ' TO ' . $invoiceEnd;
+    $invoiceDate = !empty($invoiceDates) ? date('d.m.Y', strtotime(end($invoiceDates))) : date('d.m.Y');
+    $billingBranch = $booking['origin'] ?: 'Pune';
+    $modeTransport = strtoupper($booking['mode_transport'] ?: 'AIR');
+    $recipientName = $booking['company_name'] ?: 'NA';
+    $recipientAddress = $shipments[0]['bill_to'] ?? $shipments[0]['consignee'] ?? '';
+    $recipientAddress = $recipientAddress ?: 'Address not available';
+
+    $pdf = new \TCPDF('L', 'mm', 'A4');
     $pdf->SetCreator('Malogistics');
     $pdf->SetAuthor('Malogistics');
-    $pdf->AddPage('L'); // Landscape mode
-    $pdf->SetFont('helvetica', '', 7); // Smaller font
-    
-    // ========== HEADER ==========
-    $html = '<h2 style="color:#0d6efd;">AWB: ' . $booking['awb_no'] . '</h2>';
-    $html .= '<p style="font-size:9px;">';
-    $html .= '<b>Company:</b> ' . $booking['company_name'] . ' | ';
-    $html .= '<b>Origin:</b> ' . $booking['origin'] . ' to ' . $booking['destination'] . ' | ';
-    $html .= '<b>Status:</b> ' . $booking['status'] . ' | ';
-    $html .= '<b>Pieces:</b> ' . $booking['total_pieces'];
-    $html .= '</p><hr>';
-    
-    // ========== MAIN TABLE ==========
-    $html .= '<table border="1" cellpadding="2" style="border-collapse:collapse; width:100%;">';
-    $html .= '<tr style="background-color:#0d6efd; color:white; font-size:8px;">
-        <th width="3%">SR</th>
-        <th width="6%">DATE</th>
-        <th width="10%">INVOICE NO</th>
-        <th width="10%">ORIGIN</th>
-        <th width="10%">DESTINATION</th>
-        <th width="5%">BOX</th>
-        <th width="6%">WEIGHT</th>
-        <th width="6%">RATE</th>
-        <th width="6%">FUEL SUR</th>
-        <th width="7%">FREIGHT</th>
-        <th width="7%">FUEL AMT</th>
-        <th width="6%">DOCKET</th>
-        <th width="7%">PICKUP</th>
-        <th width="7%">DELIVERY</th>
-        <th width="8%">TAXABLE</th>
-    </tr>';
-    
-    // ========== TABLE ROWS ==========
+    $pdf->SetPrintHeader(false);
+    $pdf->SetPrintFooter(false);
+    $pdf->SetMargins(8, 8, 8);
+    $pdf->AddPage();
+    $pdf->SetFont('helvetica', '', 8);
+
+    $html = '<table cellpadding="4" cellspacing="0" style="width:100%; font-size:9px; border-collapse:collapse;">';
+    $html .= '<tr><td colspan="3" style="text-align:center; font-size:14px; font-weight:bold;">M.A.LOGISTICS</td></tr>';
+    $html .= '<tr><td colspan="3" style="text-align:center; font-size:10px;">Sr.No.34/2, plot No. -69, Rajkamal Bldg, Lane No.10(10A) Vidya Nagar, Tingre Nagar, Pune 411 032<br>Office Ph.7719868468, Mob.7620829619, Email ID : malogistics.pune@gmail.com</td></tr>';
+    $html .= '<tr><td colspan="3" style="text-align:center; font-size:10px;"><b>GSTIN :</b> 27AICPD8922A1ZQ &nbsp;&nbsp; <b>SAC CODE :</b> 996531 &nbsp;&nbsp; <b>PAN :</b> AICPD8922A</td></tr>';
+    $html .= '<tr><td colspan="3" style="text-align:center; font-size:12px; font-weight:bold; padding:6px 0;">INVOICE</td></tr>';
+    $html .= '<tr><td style="width:60%; vertical-align:top;">';
+    $html .= '<strong>TO :</strong><br>' . htmlspecialchars($recipientName, ENT_QUOTES, 'UTF-8') . '<br>' . htmlspecialchars($recipientAddress, ENT_QUOTES, 'UTF-8') . '</td>';
+    $html .= '<td style="width:40%; vertical-align:top;">';
+    $html .= '<table cellpadding="3" cellspacing="0" style="width:100%; font-size:9px; border-collapse:collapse;">';
+    $html .= '<tr><td style="width:40%;"><strong>Invoice No :</strong></td><td>' . htmlspecialchars($invoiceNo, ENT_QUOTES, 'UTF-8') . '</td></tr>';
+    $html .= '<tr><td><strong>Invoice Period Date :</strong></td><td>' . htmlspecialchars($invoicePeriod, ENT_QUOTES, 'UTF-8') . '</td></tr>';
+    $html .= '<tr><td><strong>Invoice Date :</strong></td><td>' . htmlspecialchars($invoiceDate, ENT_QUOTES, 'UTF-8') . '</td></tr>';
+    $html .= '<tr><td><strong>Billing Branch :</strong></td><td>' . htmlspecialchars($billingBranch, ENT_QUOTES, 'UTF-8') . '</td></tr>';
+    $html .= '<tr><td><strong>MODE :</strong></td><td>' . htmlspecialchars($modeTransport, ENT_QUOTES, 'UTF-8') . '</td></tr>';
+    $html .= '</table></td></tr>';
+    $html .= '</table><br>';
+
+    $html .= '<table border="1" cellpadding="4" cellspacing="0" style="width:100%; border-collapse:collapse; font-size:8px;">';
+    $html .= '<tr style="background-color:#000; color:#fff; text-align:center; font-weight:bold;">';
+    $html .= '<td style="width:3%;">SR NO</td>';
+    $html .= '<td style="width:6%;">DATE</td>';
+    $html .= '<td style="width:8%;">LR NO</td>';
+    $html .= '<td style="width:11%;">INVOICE NUMBER</td>';
+    $html .= '<td style="width:8%;">ORIGIN</td>';
+    $html .= '<td style="width:8%;">DEST</td>';
+    $html .= '<td style="width:5%;">NO. OF BOX</td>';
+    $html .= '<td style="width:5%;">WT</td>';
+    $html .= '<td style="width:6%;">RATE</td>';
+    $html .= '<td style="width:6%;">Fuel Surcharge</td>';
+    $html .= '<td style="width:6%;">FREIGHT</td>';
+    $html .= '<td style="width:6%;">Fuel surcharge Amount</td>';
+    $html .= '<td style="width:6%;">DOCKET</td>';
+    $html .= '<td style="width:6%;">PICK UP CHARGE</td>';
+    $html .= '<td style="width:7%;">DELIVER CHARGE</td>';
+    $html .= '<td style="width:8%;">TAXABLE AMOUNT</td>';
+    $html .= '</tr>';
+
     $serial = 1;
     $totalFreight = 0;
     $totalFuelAmt = 0;
@@ -602,121 +633,132 @@ public function exportPdf($id)
     $totalPickup = 0;
     $totalDelivery = 0;
     $totalTaxable = 0;
-    
+
     foreach ($shipments as $item) {
-        // Get values safely
+        $date = !empty($item['invoice_date']) ? date('d.m.y', strtotime($item['invoice_date'])) : '-';
+        $lrNo = $item['docket_no'] ?: '-';
+        $invoiceNumber = $item['invoice_no'] ?: '-';
+        $origin = $booking['origin'];
+        $destination = $booking['destination'];
+        $boxes = intval($item['pieces'] ?? 1);
         $wt = floatval($item['actual_weight'] ?? 0);
         $rate = floatval($item['rate'] ?? 0);
         $fuelSur = floatval($item['fuel_surcharge'] ?? 0);
-        $dock = floatval($item['docket_charges'] ?? 0);
-        $pickup = floatval($item['pickup_charges'] ?? 0);
-        $delivery = floatval($item['delivery_charges'] ?? 0);
-        
-        // Calculations
         $freight = $wt * $rate;
         $fuelAmt = $wt * $fuelSur;
-        $taxable = $freight + $fuelAmt + $dock + $pickup + $delivery;
-        
-        // Sum totals
+        $docket = floatval($item['docket_charges'] ?? 0);
+        $pickup = floatval($item['pickup_charges'] ?? 0);
+        $delivery = floatval($item['delivery_charges'] ?? 0);
+        $taxable = $freight + $fuelAmt + $docket + $pickup + $delivery;
+
         $totalFreight += $freight;
         $totalFuelAmt += $fuelAmt;
-        $totalDock += $dock;
+        $totalDock += $docket;
         $totalPickup += $pickup;
         $totalDelivery += $delivery;
         $totalTaxable += $taxable;
-        
-        // Invoice date
-        $invDate = !empty($item['invoice_date']) ? date('d-m-y', strtotime($item['invoice_date'])) : '-';
-        
-        $html .= '<tr style="font-size:7px;">
-            <td style="text-align:center;">' . $serial . '</td>
-            <td style="text-align:center;">' . $invDate . '</td>
-            <td>' . ($item['invoice_no'] ?? '-') . '</td>
-            <td>' . $booking['origin'] . '</td>
-            <td>' . $booking['destination'] . '</td>
-            <td style="text-align:center;">' . ($item['pieces'] ?? 1) . '</td>
-            <td style="text-align:right;">' . number_format($wt, 2) . '</td>
-            <td style="text-align:right;">' . number_format($rate, 2) . '</td>
-            <td style="text-align:right;">' . number_format($fuelSur, 2) . '</td>
-            <td style="text-align:right;">' . number_format($freight, 2) . '</td>
-            <td style="text-align:right;">' . number_format($fuelAmt, 2) . '</td>
-            <td style="text-align:right;">' . number_format($dock, 2) . '</td>
-            <td style="text-align:right;">' . number_format($pickup, 2) . '</td>
-            <td style="text-align:right;">' . number_format($delivery, 2) . '</td>
-            <td style="text-align:right; font-weight:bold;">' . number_format($taxable, 2) . '</td>
-        </tr>';
-        
+
+        $html .= '<tr style="font-size:8px;">';
+        $html .= '<td style="text-align:center;">' . $serial . '</td>';
+        $html .= '<td style="text-align:center;">' . $date . '</td>';
+        $html .= '<td style="text-align:center;">' . htmlspecialchars($lrNo, ENT_QUOTES, 'UTF-8') . '</td>';
+        $html .= '<td>' . htmlspecialchars($invoiceNumber, ENT_QUOTES, 'UTF-8') . '</td>';
+        $html .= '<td style="text-align:center;">' . htmlspecialchars($origin, ENT_QUOTES, 'UTF-8') . '</td>';
+        $html .= '<td style="text-align:center;">' . htmlspecialchars($destination, ENT_QUOTES, 'UTF-8') . '</td>';
+        $html .= '<td style="text-align:center;">' . $boxes . '</td>';
+        $html .= '<td style="text-align:right;">' . number_format($wt, 2) . '</td>';
+        $html .= '<td style="text-align:right;">' . number_format($rate, 2) . '</td>';
+        $html .= '<td style="text-align:right;">' . number_format($fuelSur, 2) . '</td>';
+        $html .= '<td style="text-align:right;">' . number_format($freight, 2) . '</td>';
+        $html .= '<td style="text-align:right;">' . number_format($fuelAmt, 2) . '</td>';
+        $html .= '<td style="text-align:right;">' . number_format($docket, 2) . '</td>';
+        $html .= '<td style="text-align:right;">' . number_format($pickup, 2) . '</td>';
+        $html .= '<td style="text-align:right;">' . number_format($delivery, 2) . '</td>';
+        $html .= '<td style="text-align:right; font-weight:bold;">' . number_format($taxable, 2) . '</td>';
+        $html .= '</tr>';
+
         $serial++;
     }
-    
+
+    $html .= '<tr style="font-weight:bold; background-color:#f0f0f0;">';
+    $html .= '<td colspan="10" style="text-align:right;">TOTAL</td>';
+    $html .= '<td style="text-align:right;">' . number_format($totalFreight, 2) . '</td>';
+    $html .= '<td style="text-align:right;">' . number_format($totalFuelAmt, 2) . '</td>';
+    $html .= '<td style="text-align:right;">' . number_format($totalDock, 2) . '</td>';
+    $html .= '<td style="text-align:right;">' . number_format($totalPickup, 2) . '</td>';
+    $html .= '<td style="text-align:right;">' . number_format($totalDelivery, 2) . '</td>';
+    $html .= '<td style="text-align:right;">' . number_format($totalTaxable, 2) . '</td>';
+    $html .= '</tr>';
     $html .= '</table>';
-    
-    // ========== TOTALS TABLE ==========
-    // $html .= '<br><table border="1" cellpadding="3" style="width:40%; border-collapse:collapse;">';
-    // $html .= '<tr style="background-color:#f8f9fa; font-size:9px;">
-    //     <th style="text-align:left;">FREIGHT</th>
-    //     <th style="text-align:right;">' . number_format($totalFreight, 2) . '</th>
-    // </tr>';
-    // $html .= '<tr style="font-size:9px;">
-    //     <th style="text-align:left;">FUEL AMOUNT</th>
-    //     <th style="text-align:right;">' . number_format($totalFuelAmt, 2) . '</th>
-    // </tr>';
-    // $html .= '<tr style="font-size:9px;">
-    //     <th style="text-align:left;">DOCKET CHARGE</th>
-    //     <th style="text-align:right;">' . number_format($totalDock, 2) . '</th>
-    // </tr>';
-    // $html .= '<tr style="font-size:9px;">
-    //     <th style="text-align:left;">PICK UP CHARGE</th>
-    //     <th style="text-align:right;">' . number_format($totalPickup, 2) . '</th>
-    // </tr>';
-    // $html .= '<tr style="font-size:9px;">
-    //     <th style="text-align:left;">DELIVERY CHARGE</th>
-    //     <th style="text-align:right;">' . number_format($totalDelivery, 2) . '</th>
-    // </tr>';
-    // $html .= '<tr style="background-color:#198754; color:white; font-size:10px;">
-    //     <th style="text-align:left;">TOTAL TAXABLE AMOUNT</th>
-    //     <th style="text-align:right;">₹' . number_format($totalTaxable, 2) . '</th>
-    // </tr>';
-    // $html .= '</table>';
-    
-    // ========== SALES CHARGES (FIXED) ==========
-    if ($sales) {
-        $calculatedTotal = ($sales['rate'] * $sales['weight']) + $sales['ddc'] + $sales['ssc'] + $sales['btc'] + $sales['flc'] + $sales['doc'] + $sales['inbound_tsp'] + $sales['outbound_tsp'] + $sales['tcp'] + $sales['utility_charges'] + $sales['xray_charges'] + $sales['ado'] + $sales['awb_fees_agent'] + $sales['awb_fees_carrier'] + $sales['admin_charges'] + $sales['delivery_order_charges'] + $sales['inbound_handling'] + $sales['inbound_storage'] + $sales['outbound_storage'] + $sales['misc_charges'];
-        
-        $html .= '<hr><br><table border="1" cellpadding="3" style="border-collapse:collapse; width:45%; font-size:8px; margin-top:15px;">';
-        $html .= '<tr style="background-color:#ffc107;"><th width="50%" style="text-align:left; padding:5px;">Description</th><th width="50%" style="text-align:right; padding:5px;">Amount</th></tr>';
-        $html .= '<tr><td>Flight:</td><td style="text-align:right;">' . ($sales['flight_number'] ?? '-') . '</td></tr>';
-        $html .= '<tr><td>Airlines:</td><td style="text-align:right;">' . ($sales['airlines'] ?? '-') . '</td></tr>';
-        $html .= '<tr><td>Weight:</td><td style="text-align:right;">' . number_format($sales['weight'] ?? 0, 2) . ' KG</td></tr>';
-        $html .= '<tr><td>Rate:</td><td style="text-align:right;">Rs ' . number_format($sales['rate'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td>DDC:</td><td style="text-align:right;">Rs ' . number_format($sales['ddc'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td>SSC:</td><td style="text-align:right;">Rs ' . number_format($sales['ssc'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td>BTC:</td><td style="text-align:right;">Rs ' . number_format($sales['btc'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td>FLC:</td><td style="text-align:right;">Rs ' . number_format($sales['flc'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td>DOC:</td><td style="text-align:right;">Rs ' . number_format($sales['doc'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td>Inbound TSP:</td><td style="text-align:right;">Rs ' . number_format($sales['inbound_tsp'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td>Outbound TSP:</td><td style="text-align:right;">Rs ' . number_format($sales['outbound_tsp'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td>TCP:</td><td style="text-align:right;">Rs ' . number_format($sales['tcp'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td>Utility Charges:</td><td style="text-align:right;">Rs ' . number_format($sales['utility_charges'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td>Xray Charges:</td><td style="text-align:right;">Rs ' . number_format($sales['xray_charges'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td>ADO:</td><td style="text-align:right;">Rs ' . number_format($sales['ado'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td>AWB Fees Agent:</td><td style="text-align:right;">Rs ' . number_format($sales['awb_fees_agent'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td>AWB Fees Carrier:</td><td style="text-align:right;">Rs ' . number_format($sales['awb_fees_carrier'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td>Admin Charges:</td><td style="text-align:right;">Rs ' . number_format($sales['admin_charges'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td>Delivery Order Charges:</td><td style="text-align:right;">Rs ' . number_format($sales['delivery_order_charges'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td>Inbound Handling:</td><td style="text-align:right;">Rs ' . number_format($sales['inbound_handling'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td>Inbound Storage:</td><td style="text-align:right;">Rs ' . number_format($sales['inbound_storage'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td>Outbound Storage:</td><td style="text-align:right;">Rs ' . number_format($sales['outbound_storage'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr><td>Misc Charges:</td><td style="text-align:right;">Rs ' . number_format($sales['misc_charges'] ?? 0, 2) . '</td></tr>';
-        $html .= '<tr style="background-color:#198754; color:white; font-weight:bold;"><td>Total:</td><td style="text-align:right;">Rs ' . number_format($calculatedTotal, 2) . '</td></tr>';
-        $html .= '</table>';
-    }
-    
-    // Output PDF
+
+    $cgst = round($totalTaxable * 0.09, 2);
+    $sgst = round($totalTaxable * 0.09, 2);
+    $igst = 0.00;
+    $netPayable = round($totalTaxable + $cgst + $sgst + $igst, 2);
+
+    $html .= '<br><table cellpadding="4" cellspacing="0" style="width:40%; border-collapse:collapse; font-size:8px; float:right;">';
+    $html .= '<tr><td style="width:60%;">TAXABLE AMOUNT</td><td style="text-align:right;">' . number_format($totalTaxable, 2) . '</td></tr>';
+    $html .= '<tr><td>C.GST - 9%</td><td style="text-align:right;">' . number_format($cgst, 2) . '</td></tr>';
+    $html .= '<tr><td>S.GST - 9%</td><td style="text-align:right;">' . number_format($sgst, 2) . '</td></tr>';
+    $html .= '<tr><td>I.GST - 18%</td><td style="text-align:right;">' . number_format($igst, 2) . '</td></tr>';
+    $html .= '<tr style="background-color:#e9ecef; font-weight:bold;"><td>NET PAYABLE AMOUNT</td><td style="text-align:right;">' . number_format($netPayable, 2) . '</td></tr>';
+    $html .= '</table><div style="clear:both;"></div>';
+    $html .= '<p style="font-size:8px; margin-top:10px;"><strong>Amount (In Words):</strong> ' . ucfirst($this->formatAmountInWords($netPayable)) . ' only.</p>';
+
     $pdf->writeHTML($html, true, false, true, false, '');
     $pdf->Output('AWB-' . $booking['awb_no'] . '.pdf', 'D');
 }
 
+private function formatAmountInWords($amount)
+{
+    $whole = floor($amount);
+    $fraction = round(($amount - $whole) * 100);
+    $words = $this->numberToWords($whole) . ' Rupees';
+    if ($fraction > 0) {
+        $words .= ' and ' . $this->numberToWords($fraction) . ' Paise';
+    }
+    return $words;
+}
+
+private function numberToWords($number)
+{
+    $words = [
+        0 => 'zero', 1 => 'one', 2 => 'two', 3 => 'three', 4 => 'four',
+        5 => 'five', 6 => 'six', 7 => 'seven', 8 => 'eight', 9 => 'nine',
+        10 => 'ten', 11 => 'eleven', 12 => 'twelve', 13 => 'thirteen',
+        14 => 'fourteen', 15 => 'fifteen', 16 => 'sixteen', 17 => 'seventeen',
+        18 => 'eighteen', 19 => 'nineteen', 20 => 'twenty', 30 => 'thirty',
+        40 => 'forty', 50 => 'fifty', 60 => 'sixty', 70 => 'seventy',
+        80 => 'eighty', 90 => 'ninety'
+    ];
+
+    if ($number < 21) {
+        return $words[$number];
+    }
+    if ($number < 100) {
+        $tens = intval($number / 10) * 10;
+        $units = $number % 10;
+        return $words[$tens] . ($units ? ' ' . $words[$units] : '');
+    }
+    if ($number < 1000) {
+        $hundreds = intval($number / 100);
+        $remainder = $number % 100;
+        return $words[$hundreds] . ' hundred' . ($remainder ? ' ' . $this->numberToWords($remainder) : '');
+    }
+    if ($number < 100000) {
+        $thousands = intval($number / 1000);
+        $remainder = $number % 1000;
+        return $this->numberToWords($thousands) . ' thousand' . ($remainder ? ' ' . $this->numberToWords($remainder) : '');
+    }
+    if ($number < 10000000) {
+        $lakhs = intval($number / 100000);
+        $remainder = $number % 100000;
+        return $this->numberToWords($lakhs) . ' lakh' . ($remainder ? ' ' . $this->numberToWords($remainder) : '');
+    }
+    $crores = intval($number / 10000000);
+    $remainder = $number % 10000000;
+    return $this->numberToWords($crores) . ' crore' . ($remainder ? ' ' . $this->numberToWords($remainder) : '');
+}
 
 
 

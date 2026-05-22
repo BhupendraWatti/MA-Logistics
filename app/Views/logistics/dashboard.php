@@ -159,7 +159,7 @@
                 <div class="card bg-light h-100">
                     <div class="card-body text-center">
                         <h3 class="text-info"><?= $stats['total_charges'] ?? 0 ?></h3>
-                        <p class="mb-0"><i class="fas fa-rupee-sign text-info"></i> Charges</p>
+                        <p class="mb-0"><i class="fas fa-rupee-sign text-info"></i> Sales Charges</p>
                     </div>
                 </div>
             </div>

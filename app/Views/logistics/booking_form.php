@@ -109,15 +109,15 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     <label class="form-label">Material Category</label>
                     <input type="text" name="material_category" class="form-control" value="<?= $booking['material_category'] ?? '' ?>">
                 </div>
-                <div class="col-md-3 mt-2">
+                <!-- <div class="col-md-3 mt-2">
                     <label class="form-label">Status</label>
                     <select name="status" class="form-select">
-                        <option value="Draft" <?= ($booking['status'] ?? 'Draft') == 'Draft' ? 'selected' : '' ?>>Draft</option>
-                        <option value="Booked" <?= ($booking['status'] ?? '') == 'Booked' ? 'selected' : '' ?>>Booked</option>
-                        <option value="In-Transit" <?= ($booking['status'] ?? '') == 'In-Transit' ? 'selected' : '' ?>>In-Transit</option>
-                        <option value="Delivered" <?= ($booking['status'] ?? '') == 'Delivered' ? 'selected' : '' ?>>Delivered</option>
+                        <option value="Draft" <?//= ($booking['status'] ?? 'Draft') == 'Draft' ? 'selected' : '' ?>>Draft</option>
+                        <option value="Booked" <?//= ($booking['status'] ?? '') == 'Booked' ? 'selected' : '' ?>>Booked</option>
+                        <option value="In-Transit" <?//= ($booking['status'] ?? '') == 'In-Transit' ? 'selected' : '' ?>>In-Transit</option>
+                        <option value="Delivered" <?//= ($booking['status'] ?? '') == 'Delivered' ? 'selected' : '' ?>>Delivered</option>
                     </select>
-                </div>
+                </div> -->
             </div>
 
             <!-- B. TRANSPORT DETAILS -->
@@ -175,7 +175,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 </div>
                 <div class="col-md-3">
                     <label>Rate (₹/KG)</label>
-                    <input type="number" step="0.01" name="rate" class="form-control" value="<?= $sales['rate'] ?? '' ?>">
+                    <input type="number" step="0.01" id="salesRate" name="rate" class="form-control" value="<?= $sales['rate'] ?? '' ?>">
                 </div>
                 <div class="col-md-3">
                     <label>Total Weight (KG)</label>
@@ -258,6 +258,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             addShipmentItem();
         }
 
+        syncSalesRateFromFirstItem();
         // Trigger calculations
         $('.calc-weight, .calc-dim').trigger('input');
         $('[name="rate"], [name="weight"], [name="ddc"]').trigger('input');
@@ -452,11 +453,26 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             firstInvalid.focus();
             return;
         }
+        syncSalesRateFromFirstItem();
         document.getElementById('tab2-tab').disabled = false;
         new bootstrap.Tab(document.getElementById('tab2-tab')).show();
     }
 
+    function syncSalesRateFromFirstItem() {
+        const firstItemRateInput = $('input[name*="[rate]"]').filter(function() {
+            return $(this).val().toString().trim() !== '';
+        }).first();
+        const firstItemRate = parseFloat(firstItemRateInput.val()) || 0;
+        if (firstItemRate > 0) {
+            $('#salesRate').val(firstItemRate).trigger('input');
+        }
+    }
+
     // JavaScript
+    $(document).on('input', 'input[name*="[rate]"]', function() {
+        syncSalesRateFromFirstItem();
+    });
+
     $(document).on('input', '[name="rate"], [name="weight"], [name="ddc"], [name="ssc"], [name="btc"], [name="flc"], [name="doc"], [name="inbound_tsp"], [name="outbound_tsp"], [name="tcp"], [name="utility_charges"], [name="xray_charges"], [name="ado"], [name="awb_fees_agent"], [name="awb_fees_carrier"], [name="admin_charges"], [name="delivery_order_charges"], [name="inbound_handling"], [name="inbound_storage"], [name="outbound_storage"], [name="misc_charges"]', function() {
         let total = 0;
 
