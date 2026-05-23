@@ -11,26 +11,25 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
 <div class="container mt-4">
     <?php if (isset($isEdit) && $isEdit): ?>
         <div class="alert alert-warning">
-            <h5><i class="fas fa-edit"></i> Edit Mode - AWB: <?= esc($booking['awb_no']) ?></h5>
+            <h5>Edit Mode - AWB: <?= esc($booking['awb_no']) ?></h5>
             <small>All changes will be saved to existing booking #<?= $bookingId ?></small>
         </div>
     <?= form_open('logistics/update/' . $bookingId, ['id' => 'bookingForm']) ?>
     <?php else: ?>
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="fas fa-plane-departure"></i> New AWB Booking (Two-Tab System)</h2>
+            <h2>New AWB Booking (Two-Tab System)</h2>
             <a href="<?= base_url('logistics') ?>" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back to Dashboard
+                Back to Dashboard
             </a>
         </div>
         <?= form_open_multipart('logistics/store', ['id' => 'bookingForm']) ?>
     <?php endif; ?>
 
     <!-- COMPANY DROPDOWN -->
-    <!-- ✅ AUTO COMPANY (NO DROPDOWN) -->
+    <!--  AUTO COMPANY (NO DROPDOWN) -->
     <div class="row mt-3 mb-4 p-3 border rounded bg-light">
         <div class="col-md-12">
             <div class="d-flex align-items-center">
-                <i class="fas fa-building fa-2x text-primary me-3"></i>
                 <div>
                     <label class="form-label fw-bold fs-5 mb-1 d-block">Selected Company</label>
                     <h5 class="mb-0 text-success"><?= esc($selected_company_name ?? 'No Company') ?></h5>
@@ -50,12 +49,12 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     <ul class="nav nav-tabs" id="bookingTabs" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link active" id="tab1-tab" data-bs-toggle="tab" data-bs-target="#tab1" type="button" role="tab">
-                <i class="fas fa-file-alt"></i> Tab 1: AWB & Shipment (<?= isset($shipments) ? count($shipments) : 0 ?> items)
+                Tab 1: AWB & Shipment (<?= isset($shipments) ? count($shipments) : 0 ?> items)
             </button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="tab2-tab" data-bs-toggle="tab" data-bs-target="#tab2" type="button" role="tab" disabled>
-                <i class="fas fa-dollar-sign"></i> Tab 2: Sales Charges
+                Tab 2: Sales Charges
             </button>
         </li>
     </ul>
@@ -65,7 +64,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         <div class="tab-pane fade show active" id="tab1" role="tabpanel">
             <!-- A. BASIC BOOKING DETAILS -->
             <div class="row mb-4 p-3 border rounded bg-light">
-                <h5><i class="fas fa-file-alt text-primary"></i> A. Basic Booking Details</h5>
+                <h5>A. Basic Booking Details</h5>
                 <div class="col-md-3">
                     <label class="form-label fw-bold">AWB No. <span class="text-danger">*</span></label>
                     <input type="text" name="awb_no" class="form-control" 
@@ -122,7 +121,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
 
             <!-- B. TRANSPORT DETAILS -->
             <div class="row mb-4 p-3 border rounded bg-light">
-                <h5><i class="fas fa-truck text-success"></i> B. Transport & Driver Details</h5>
+                <h5>B. Transport & Driver Details</h5>
                 <div class="col-md-3">
                     <label>Driver Name</label>
                     <input type="text" name="driver_name" class="form-control" value="<?= $booking['driver_name'] ?? '' ?>">
@@ -144,9 +143,9 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             <!-- C. SHIPMENT ITEMS (ALL FIELDS RESTORED) -->
             <div class="mb-4 p-3 border rounded bg-light">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5><i class="fas fa-boxes text-info"></i> C. Shipment Items (Add Multiple)</h5>
+                    <h5>C. Shipment Items (Add Multiple)</h5>
                     <button type="button" class="btn btn-outline-primary" onclick="addShipmentItem()">
-                        <i class="fas fa-plus"></i> Add Item
+                        Add Item
                     </button>
                 </div>
                 <div id="shipmentItems">
@@ -154,15 +153,14 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 </div>
                 <div class="mt-3">
                     <button type="button" class="btn btn-success btn-lg" onclick="nextTab()">
-                        Next: Sales Charges <i class="fas fa-arrow-right"></i>
-                    </button>
+                        Next: Sales Charges </button>
                 </div>
             </div>
         </div>
 
         <!-- TAB 2: SALES CHARGES (UNCHANGED - ALL FIELDS) -->
         <div class="tab-pane fade" id="tab2" role="tabpanel">
-            <h5 class="mb-4"><i class="fas fa-dollar-sign text-warning"></i> Sales Charges</h5>
+            <h5 class="mb-4">Sales Charges</h5>
 
             <div class="row mb-3">
                 <div class="col-md-3">
@@ -221,9 +219,9 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                             <h5>Total Amount: <span id="totalAmount" class="text-success">₹0.00</span></h5>
                             <button type="submit" id="mainSubmitBtn" class="btn btn-success btn-lg w-100">
                                 <?php if (isset($isEdit) && $isEdit): ?>
-                                    <i class="fas fa-save"></i> Update Booking
+                                    Update Booking
                                 <?php else: ?>
-                                    <i class="fas fa-save"></i> Save Complete Booking
+                                    Save Complete Booking
                                 <?php endif; ?>
                             </button>
                         </div>
@@ -243,7 +241,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     let shipmentsData = <?= json_encode($shipments ?? []) ?>;
     let isEditMode = <?= isset($isEdit) && $isEdit ? 'true' : 'false' ?>;
 
-    // ✅ FIXED COMPLETE INITIALIZATION
+    //  FIXED COMPLETE INITIALIZATION
     $(document).ready(function() {
         if (isEditMode && shipmentsData.length > 0) {
         // EDIT MODE: Load existing data FIRST
@@ -267,7 +265,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     function loadShipmentData(item, index) {
         const row = $('.shipment-item').eq(index);
 
-        // ALL FIELDS LOADED ✅
+        // ALL FIELDS LOADED 
         row.find('[name*="[id]"]').val(item.id || '');
         row.find('[name*="customer_name"]').val(item.customer_name || '');
         row.find('[name*="bill_to"]').val(item.bill_to || '');
@@ -287,7 +285,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         row.find('[name*="eway_bill_date"]').val(item.eway_bill_date || '');
         row.find('[name*="rate"]').val(item.rate || 0);
 
-        // ALL CHARGES ✅
+        // ALL CHARGES 
         row.find('[name*="delivery_charges"]').val(item.delivery_charges || 0);
         row.find('[name*="docket_charges"]').val(item.docket_charges || 0);
         row.find('[name*="pickup_charges"]').val(item.pickup_charges || 0);
@@ -417,7 +415,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         <div class="col-12">
             <button type="button" class="btn btn-sm btn-danger position-absolute" 
                     style="top:10px; right:10px;" onclick="removeItem(${itemCounter})" aria-label="Remove Item ${itemCounter}">
-                <i class="fas fa-trash" aria-hidden="true"></i> Remove
+                Remove
             </button>
         </div>
 
@@ -494,7 +492,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     $('#bookingForm').on('submit', function() {
         const btn = $('#mainSubmitBtn');
         btn.prop('disabled', true);
-        btn.html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+        btn.html('Saving...');
     });
 
 </script>

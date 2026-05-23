@@ -3,16 +3,15 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>
-            <i class="fas fa-list text-info me-2"></i>
-            📋 Manage <?= esc($company_name ?? '') ?> Bookings
+             Manage <?= esc($company_name ?? '') ?> Bookings
         </h2>
         <div>
             <a href="<?= base_url('logistics') ?>" class="btn btn-secondary me-2">
-                <i class="fas fa-arrow-left"></i> Dashboard
+                Dashboard
             </a>
             <?php if (($permissions['can_create'] ?? 0) == 1): ?>
             <a href="<?= base_url('logistics/create') ?>" class="btn btn-success">
-                <i class="fas fa-plus"></i> New Booking
+                New Booking
             </a>
             <?php endif; ?>
         </div>
@@ -20,7 +19,6 @@
 
     <?php if (empty($bookings)): ?>
     <div class="alert alert-info text-center">
-        <i class="fas fa-inbox fa-2x mb-3"></i>
         <h5>No bookings found</h5>
         <p class="mb-0">Create your first booking to get started!</p>
         <?php if (($permissions['can_create'] ?? 0) == 1): ?>
@@ -31,7 +29,7 @@
     <div class="table-responsive">
         <!-- Add Export button -->
 <button type="button" class="btn btn-success mb-3" onclick="exportSelected()">
-    <i class="fas fa-file-excel"></i> Export Excel
+    Export Excel
 </button>
         <table class="table table-hover table-striped">
             <thead class="table-dark">
@@ -72,16 +70,13 @@
                     <td><strong class="text-success">₹<?= number_format($totalAmount, 0) ?></strong></td>
                     <td>
                         <a href="<?= base_url('logistics/view/' . $booking['id']) ?>" class="btn btn-sm btn-outline-primary me-1">
-                            <i class="fas fa-eye"></i>
-                        </a>
+                            View</a>
                         <a href="<?= base_url('logistics/edit/' . $booking['id']) ?>" class="btn btn-sm btn-outline-warning me-1">
-                            <i class="fas fa-edit"></i>
-                        </a>
+                            Edit</a>
                         <?php if (($permissions['can_delete'] ?? 0) == 1): ?>
                         <button class="btn btn-sm btn-outline-danger delete-btn" 
                                 data-id="<?= $booking['id'] ?>" data-awb="<?= esc($booking['awb_no']) ?>">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                            Delete</button>
                         <?php endif; ?>
                     </td>
                 </tr>

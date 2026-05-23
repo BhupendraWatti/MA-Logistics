@@ -2,15 +2,15 @@
 <?= $this->section('content') ?>
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="fas fa-list"></i> Search Results</h2>
+        <h2>Search Results</h2>
         <a href="<?= base_url('logistics/search') ?>" class="btn btn-secondary">
-            <i class="fas fa-search"></i> New Search
+            New Search
         </a>
     </div>
 
     <?php if (empty($bookings)): ?>
         <div class="alert alert-info">
-            <i class="fas fa-info-circle"></i> No results found for your search.
+            No results found for your search.
         </div>
     <?php else: ?>
         <div class="table-responsive">
@@ -47,16 +47,13 @@
                         <td>
                             <?php if ((session()->get('permissions')['can_edit'] ?? 0) == 1): ?>
                             <a href="<?= base_url('logistics/view/' . $booking['id']) ?>" class="btn btn-sm btn-outline-primary me-1" title="View">
-                                <i class="fas fa-eye"></i>
-                            </a>
+                                View</a>
                             <a href="<?= base_url('logistics/edit/' . $booking['id']) ?>" class="btn btn-sm btn-outline-warning me-1" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </a>
+                                Edit</a>
                             <?php endif; ?>
                             <?php if ((session()->get('permissions')['can_delete'] ?? 0) == 1): ?>
                                 <button class="btn btn-sm btn-outline-danger delete-btn" data-id="<?= $booking['id'] ?>" data-awb="<?= esc($booking['awb_no']) ?>" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                    Delete</button>
                             <?php endif; ?>
                         </td>
                         </tr>

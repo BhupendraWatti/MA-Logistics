@@ -2,19 +2,19 @@
 <?= $this->section('content') ?>
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="fas fa-eye"></i> AWB Details: <?= esc($booking['awb_no']) ?></h2>
+        <h2>AWB Details: <?= esc($booking['awb_no']) ?></h2>
         <div>
             <a href="<?= base_url('logistics') ?>" class="btn btn-secondary me-2">
-                <i class="fas fa-arrow-left"></i> Back
+                Back
             </a>
             <?php if ((session()->get('permissions')['can_edit'] ?? 0) == 1): ?>
                 <a href="<?= base_url('logistics/edit/' . $booking['id']) ?>" class="btn btn-primary">
-                    <i class="fas fa-edit"></i> Edit
+                    Edit
                 </a>
             <?php endif; ?>
             <!-- Add after Edit button -->
             <a href="<?= base_url('logistics/exportPdf/' . $booking['id']) ?>" class="btn btn-danger">
-                <i class="fas fa-file-pdf"></i> Export PDF
+                Export PDF
             </a>
         </div>
     </div>
@@ -24,7 +24,7 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h5><i class="fas fa-file-alt"></i> Basic Booking Information</h5>
+                    <h5>Basic Booking Information</h5>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -57,7 +57,7 @@
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header bg-success text-white">
-                    <h6><i class="fas fa-boxes"></i> Shipment Items (<?= count($shipments) ?> items)</h6>
+                    <h6>Shipment Items (<?= count($shipments) ?> items)</h6>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -98,7 +98,7 @@
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header bg-info text-white">
-                    <h6><i class="fas fa-dollar-sign"></i> Sales Charges</h6>
+                    <h6>Sales Charges</h6>
                 </div>
                 <div class="card-body">
                     <?php if ($sales): 

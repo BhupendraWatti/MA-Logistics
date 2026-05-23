@@ -4,7 +4,7 @@
     <div class="col-md-8">
         <div class="card">
             <div class="card-header">
-                <h3><i class="fas fa-search"></i> 🔍 Preliminary Search & Security Gateway</h3>
+                <h3> Preliminary Search & Security Gateway</h3>
             </div>
             <div class="card-body">
                 <?php //= form_open('logistics/searchResult') ?>
@@ -32,7 +32,7 @@
                     </div>
                 </div>
                 <button type="submit" class="btn btn-success mt-3 w-100">
-                    <i class="fas fa-search"></i> Search
+                    Search
                 </button>
                 <?= form_close() ?>
             </div>
