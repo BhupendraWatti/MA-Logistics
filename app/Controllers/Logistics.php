@@ -658,49 +658,65 @@ public function exportPdf($id)
     $pdf->AddPage();
     $pdf->SetFont('helvetica', '', 8);
 
-    $html = '<table cellpadding="4" cellspacing="0" style="width:100%; font-size:9px; border-collapse:collapse;">';
-    $html .= '<tr><td colspan="3" style="text-align:center; font-size:14px; font-weight:bold;">M.A.LOGISTICS</td></tr>';
-    $html .= '<tr><td colspan="3" style="text-align:center; font-size:10px;">Sr.No.34/2, plot No. -69, Rajkamal Bldg, Lane No.10(10A) Vidya Nagar, Tingre Nagar, Pune 411 032<br>Office Ph.7719868468, Mob.7620829619, Email ID : malogistics.pune@gmail.com</td></tr>';
-    $html .= '<tr><td colspan="3" style="text-align:center; font-size:10px;"><b>GSTIN :</b> 27AICPD8922A1ZQ &nbsp;&nbsp; <b>SAC CODE :</b> 996531 &nbsp;&nbsp; <b>PAN :</b> AICPD8922A</td></tr>';
-    $html .= '<tr><td colspan="3" style="text-align:center; font-size:12px; font-weight:bold; padding:6px 0;">INVOICE</td></tr>';
-    $html .= '<tr><td style="width:60%; vertical-align:top;">';
-    $html .= '<strong>TO :</strong><br>' . htmlspecialchars($recipientName, ENT_QUOTES, 'UTF-8') . '<br>' . htmlspecialchars($recipientAddress, ENT_QUOTES, 'UTF-8') . '</td>';
-    $html .= '<td style="width:40%; vertical-align:top;">';
-    $html .= '<table cellpadding="3" cellspacing="0" style="width:100%; font-size:9px; border-collapse:collapse;">';
-    $html .= '<tr><td style="width:40%;"><strong>Invoice No :</strong></td><td>' . htmlspecialchars($invoiceNo, ENT_QUOTES, 'UTF-8') . '</td></tr>';
-    $html .= '<tr><td><strong>Invoice Period Date :</strong></td><td>' . htmlspecialchars($invoicePeriod, ENT_QUOTES, 'UTF-8') . '</td></tr>';
-    $html .= '<tr><td><strong>Invoice Date :</strong></td><td>' . htmlspecialchars($invoiceDate, ENT_QUOTES, 'UTF-8') . '</td></tr>';
-    $html .= '<tr><td><strong>Billing Branch :</strong></td><td>' . htmlspecialchars($billingBranch, ENT_QUOTES, 'UTF-8') . '</td></tr>';
-    $html .= '<tr><td><strong>MODE :</strong></td><td>' . htmlspecialchars($modeTransport, ENT_QUOTES, 'UTF-8') . '</td></tr>';
-    $html .= '</table></td></tr>';
-    $html .= '</table><br>';
-
-    $html .= '<table border="1" cellpadding="4" cellspacing="0" style="width:100%; border-collapse:collapse; font-size:8px;">';
-    $html .= '<tr style="background-color:#000; color:#fff; text-align:center; font-weight:bold;">';
-    $html .= '<td style="width:3%;">SR NO</td>';
+    $html = '<table border="1" cellpadding="4" cellspacing="0" style="width:100%; font-size:9px; border-collapse:collapse; font-family:helvetica;">';
+    
+    // Header block
+    $html .= '<tr><td colspan="16" style="text-align:center;">';
+    $html .= '<span style="font-size:24px; font-weight:bold; font-family:times;">M.A.LOGISTICS</span><br>';
+    $html .= '<span style="font-size:10px;">Sr.No.34/2, plot No. -69, Rajkamal Bldg, Lane No.10(10A) Vidya Nagar, Tingre Nagar, Pune 411 032</span><br>';
+    $html .= '<span style="font-size:10px;">Office Ph.7719868468, Mob.7620829619. Email ID : malogistics.pune@gmail.com</span>';
+    $html .= '</td></tr>';
+    
+    // GSTIN, SAC, PAN
+    $html .= '<tr>';
+    $html .= '<td colspan="5" style="font-size:10px; font-weight:bold;">GSTIN : 27AICPD8922A1ZQ</td>';
+    $html .= '<td colspan="5" style="font-size:10px; font-weight:bold; text-align:center;">SAC CODE : 996531</td>';
+    $html .= '<td colspan="6" style="font-size:10px; font-weight:bold; text-align:center;">PAN : AICPD8922A</td>';
+    $html .= '</tr>';
+    
+    // INVOICE title
+    $html .= '<tr><td colspan="16" style="text-align:center; font-size:14px; font-weight:bold; letter-spacing:2px;">INVOICE</td></tr>';
+    
+    // TO Details
+    $html .= '<tr>';
+    $html .= '<td colspan="8" style="vertical-align:top;">';
+    $html .= '<strong>TO : ' . htmlspecialchars($recipientName, ENT_QUOTES, 'UTF-8') . '</strong><br>';
+    $html .= htmlspecialchars($recipientAddress, ENT_QUOTES, 'UTF-8');
+    $html .= '</td>';
+    $html .= '<td colspan="8" style="vertical-align:top;">';
+    $html .= '<table cellpadding="1" cellspacing="0" style="width:100%;">';
+    $html .= '<tr><td style="width:40%;"><strong>Invoice No</strong></td><td>: ' . htmlspecialchars($invoiceNo, ENT_QUOTES, 'UTF-8') . '</td></tr>';
+    $html .= '<tr><td><strong>Invoice Period Date</strong></td><td>: ' . htmlspecialchars($invoicePeriod, ENT_QUOTES, 'UTF-8') . '</td></tr>';
+    $html .= '<tr><td><strong>Invoice Date</strong></td><td>: ' . htmlspecialchars($invoiceDate, ENT_QUOTES, 'UTF-8') . '</td></tr>';
+    $html .= '<tr><td><strong>Billing Branch</strong></td><td>: ' . htmlspecialchars($billingBranch, ENT_QUOTES, 'UTF-8') . '</td></tr>';
+    $html .= '<tr><td><strong>MODE</strong></td><td>: ' . htmlspecialchars($modeTransport, ENT_QUOTES, 'UTF-8') . '</td></tr>';
+    $html .= '</table>';
+    $html .= '</td>';
+    $html .= '</tr>';
+    
+    // Table Headers
+    $html .= '<tr style="text-align:center; font-weight:bold; font-size:8px;">';
+    $html .= '<td style="width:3%;">SR<br>NO</td>';
     $html .= '<td style="width:6%;">DATE</td>';
-    $html .= '<td style="width:8%;">LR NO</td>';
+    $html .= '<td style="width:8%;">LR NO.</td>';
     $html .= '<td style="width:11%;">INVOICE NUMBER</td>';
-    $html .= '<td style="width:8%;">ORIGIN</td>';
-    $html .= '<td style="width:8%;">DEST</td>';
-    $html .= '<td style="width:5%;">NO. OF BOX</td>';
+    $html .= '<td style="width:6%;">ORIGIN</td>';
+    $html .= '<td style="width:6%;">DEST</td>';
+    $html .= '<td style="width:5%;">NO. OF<br>BOX</td>';
     $html .= '<td style="width:5%;">WT</td>';
-    $html .= '<td style="width:6%;">RATE</td>';
-    $html .= '<td style="width:6%;">Fuel Surcharge</td>';
+    $html .= '<td style="width:5%;">RATE</td>';
+    $html .= '<td style="width:5%;">Fuel<br>Surcharge</td>';
     $html .= '<td style="width:6%;">FREIGHT</td>';
-    $html .= '<td style="width:6%;">Fuel surcharge Amount</td>';
-    $html .= '<td style="width:6%;">DOCKET</td>';
-    $html .= '<td style="width:6%;">PICK UP CHARGE</td>';
-    $html .= '<td style="width:7%;">DELIVER CHARGE</td>';
-    $html .= '<td style="width:8%;">TAXABLE AMOUNT</td>';
+    $html .= '<td style="width:7%;">Fuel<br>surcharge<br>Amount</td>';
+    $html .= '<td style="width:7%;">DOCKET</td>';
+    $html .= '<td style="width:6%;">PICK UP<br>CHARGE</td>';
+    $html .= '<td style="width:6%;">DELIVER<br>CHARGE</td>';
+    $html .= '<td style="width:8%;">TAXABLE<br>AMOUNT</td>';
     $html .= '</tr>';
 
     $serial = 1;
-    $totalFreight = 0;
-    $totalFuelAmt = 0;
-    $totalDock = 0;
-    $totalPickup = 0;
-    $totalDelivery = 0;
+    $totalBoxes = 0;
+    $totalWt = 0;
     $totalTaxable = 0;
 
     foreach ($shipments as $item) {
@@ -720,11 +736,8 @@ public function exportPdf($id)
         $delivery = floatval($item['delivery_charges'] ?? 0);
         $taxable = $freight + $fuelAmt + $docket + $pickup + $delivery;
 
-        $totalFreight += $freight;
-        $totalFuelAmt += $fuelAmt;
-        $totalDock += $docket;
-        $totalPickup += $pickup;
-        $totalDelivery += $delivery;
+        $totalBoxes += $boxes;
+        $totalWt += $wt;
         $totalTaxable += $taxable;
 
         $html .= '<tr style="font-size:8px;">';
@@ -735,44 +748,78 @@ public function exportPdf($id)
         $html .= '<td style="text-align:center;">' . htmlspecialchars($origin, ENT_QUOTES, 'UTF-8') . '</td>';
         $html .= '<td style="text-align:center;">' . htmlspecialchars($destination, ENT_QUOTES, 'UTF-8') . '</td>';
         $html .= '<td style="text-align:center;">' . $boxes . '</td>';
-        $html .= '<td style="text-align:right;">' . number_format($wt, 2) . '</td>';
-        $html .= '<td style="text-align:right;">' . number_format($rate, 2) . '</td>';
-        $html .= '<td style="text-align:right;">' . number_format($fuelSur, 2) . '</td>';
-        $html .= '<td style="text-align:right;">' . number_format($freight, 2) . '</td>';
-        $html .= '<td style="text-align:right;">' . number_format($fuelAmt, 2) . '</td>';
-        $html .= '<td style="text-align:right;">' . number_format($docket, 2) . '</td>';
-        $html .= '<td style="text-align:right;">' . number_format($pickup, 2) . '</td>';
-        $html .= '<td style="text-align:right;">' . number_format($delivery, 2) . '</td>';
-        $html .= '<td style="text-align:right; font-weight:bold;">' . number_format($taxable, 2) . '</td>';
+        $html .= '<td style="text-align:center;">' . (float)$wt . '</td>';
+        $html .= '<td style="text-align:center;">' . (float)$rate . '</td>';
+        $html .= '<td style="text-align:center;">' . (float)$fuelSur . '</td>';
+        $html .= '<td style="text-align:center;">' . (float)$freight . '</td>';
+        $html .= '<td style="text-align:center;">' . (float)$fuelAmt . '</td>';
+        $html .= '<td style="text-align:center;">' . (float)$docket . '</td>';
+        $html .= '<td style="text-align:center;">' . (float)$pickup . '</td>';
+        $html .= '<td style="text-align:center;">' . (float)$delivery . '</td>';
+        $html .= '<td style="text-align:center;">' . (float)$taxable . '</td>';
         $html .= '</tr>';
 
         $serial++;
     }
 
-    $html .= '<tr style="font-weight:bold; background-color:#f0f0f0;">';
-    $html .= '<td colspan="10" style="text-align:right;">TOTAL</td>';
-    $html .= '<td style="text-align:right;">' . number_format($totalFreight, 2) . '</td>';
-    $html .= '<td style="text-align:right;">' . number_format($totalFuelAmt, 2) . '</td>';
-    $html .= '<td style="text-align:right;">' . number_format($totalDock, 2) . '</td>';
-    $html .= '<td style="text-align:right;">' . number_format($totalPickup, 2) . '</td>';
-    $html .= '<td style="text-align:right;">' . number_format($totalDelivery, 2) . '</td>';
-    $html .= '<td style="text-align:right;">' . number_format($totalTaxable, 2) . '</td>';
+    $html .= '<tr style="font-size:8px;">';
+    $html .= '<td colspan="6"></td>';
+    $html .= '<td style="text-align:center; font-weight:bold;">' . $totalBoxes . '</td>';
+    $html .= '<td style="text-align:center; font-weight:bold;">' . (float)$totalWt . '</td>';
+    $html .= '<td></td>';
+    $html .= '<td></td>';
+    $html .= '<td colspan="5" style="text-align:center; font-weight:bold;">TAXABLE AMOUNT</td>';
+    $html .= '<td style="text-align:center; font-weight:bold;">' . round($totalTaxable) . '</td>';
+    $html .= '</tr>';
+
+    $cgst = round($totalTaxable * 0.09);
+    $sgst = round($totalTaxable * 0.09);
+    $igst = 0;
+    $netPayable = round($totalTaxable + $cgst + $sgst + $igst);
+
+    $html .= '<tr style="font-size:8px; font-weight:bold;">';
+    $html .= '<td colspan="10" rowspan="4"></td>';
+    $html .= '<td colspan="5" style="text-align:left;">C.GST - 9%</td>';
+    $html .= '<td style="text-align:center;">' . $cgst . '</td>';
+    $html .= '</tr>';
+
+    $html .= '<tr style="font-size:8px; font-weight:bold;">';
+    $html .= '<td colspan="5" style="text-align:left;">S.GST - 9%</td>';
+    $html .= '<td style="text-align:center;">' . $sgst . '</td>';
+    $html .= '</tr>';
+
+    $html .= '<tr style="font-size:8px; font-weight:bold;">';
+    $html .= '<td colspan="5" style="text-align:left;">I.GST - 18%</td>';
+    $html .= '<td style="text-align:center;">' . $igst . '</td>';
+    $html .= '</tr>';
+
+    $html .= '<tr style="font-size:8px; font-weight:bold;">';
+    $html .= '<td colspan="5" style="text-align:left;">NET PAYABLE AMOUNT</td>';
+    $html .= '<td style="text-align:center;">' . $netPayable . '</td>';
+    $html .= '</tr>';
+
+    $html .= '<tr><td colspan="16" style="font-size:10px; font-weight:bold;">';
+    $html .= 'Rs. (In Word) ' . strtoupper($this->formatAmountInWords($netPayable)) . ' RUPEES ONLY ./-';
+    $html .= '</td></tr>';
+
+    $html .= '<tr>';
+    $html .= '<td colspan="11" style="vertical-align:top; font-size:9px;">';
+    $html .= '<b>Service Catagory : Courier & Cargo</b><br><br>';
+    $html .= '<b>Terms & Conditions :</b><br>';
+    $html .= 'i. Difference if any may be notified within 7 days of receipt of bills.<br>';
+    $html .= 'ii. Subject to Pune Jurisdiction<br>';
+    $html .= 'iii. E & O.E.<br>';
+    $html .= 'iv. Draw Cheque in favour of "MA LOGISTICS"<br>';
+    $html .= 'v. For NEFT/RTGS: Bank Details are as follows :-<br>';
+    $html .= '&nbsp;&nbsp;&nbsp;Bank Name : AXIS BANK, &nbsp;&nbsp; Branch: Bund Garden,Pune<br>';
+    $html .= '&nbsp;&nbsp;&nbsp;Current Account No : 914020014273896<br>';
+    $html .= '&nbsp;&nbsp;&nbsp;IFSC : UTIB0000073';
+    $html .= '</td>';
+    $html .= '<td colspan="5" style="vertical-align:top; text-align:center; font-size:10px; font-weight:bold;">';
+    $html .= 'For M.A LOGISTICS<br><br><br><br><br><br><br><br>Authorised signatory';
+    $html .= '</td>';
     $html .= '</tr>';
     $html .= '</table>';
-
-    $cgst = round($totalTaxable * 0.09, 2);
-    $sgst = round($totalTaxable * 0.09, 2);
-    $igst = 0.00;
-    $netPayable = round($totalTaxable + $cgst + $sgst + $igst, 2);
-
-    $html .= '<br><table cellpadding="4" cellspacing="0" style="width:40%; border-collapse:collapse; font-size:8px; float:right;">';
-    $html .= '<tr><td style="width:60%;">TAXABLE AMOUNT</td><td style="text-align:right;">' . number_format($totalTaxable, 2) . '</td></tr>';
-    $html .= '<tr><td>C.GST - 9%</td><td style="text-align:right;">' . number_format($cgst, 2) . '</td></tr>';
-    $html .= '<tr><td>S.GST - 9%</td><td style="text-align:right;">' . number_format($sgst, 2) . '</td></tr>';
-    $html .= '<tr><td>I.GST - 18%</td><td style="text-align:right;">' . number_format($igst, 2) . '</td></tr>';
-    $html .= '<tr style="background-color:#e9ecef; font-weight:bold;"><td>NET PAYABLE AMOUNT</td><td style="text-align:right;">' . number_format($netPayable, 2) . '</td></tr>';
-    $html .= '</table><div style="clear:both;"></div>';
-    $html .= '<p style="font-size:8px; margin-top:10px;"><strong>Amount (In Words):</strong> ' . ucfirst($this->formatAmountInWords($netPayable)) . ' only.</p>';
 
     $pdf->writeHTML($html, true, false, true, false, '');
     $pdf->Output('AWB-' . $booking['awb_no'] . '.pdf', 'D');
