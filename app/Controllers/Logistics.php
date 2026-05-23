@@ -209,6 +209,29 @@ public function create()
         'misc_charges' => $this->request->getPost('misc_charges') ?? 0
     ];
 
+    // Calculate total amount
+    $totalAmount = (floatval($salesData['rate']) * floatval($salesData['weight']))
+        + floatval($salesData['ddc'])
+        + floatval($salesData['ssc'])
+        + floatval($salesData['btc'])
+        + floatval($salesData['flc'])
+        + floatval($salesData['doc'])
+        + floatval($salesData['inbound_tsp'])
+        + floatval($salesData['outbound_tsp'])
+        + floatval($salesData['tcp'])
+        + floatval($salesData['utility_charges'])
+        + floatval($salesData['xray_charges'])
+        + floatval($salesData['ado'])
+        + floatval($salesData['awb_fees_agent'])
+        + floatval($salesData['awb_fees_carrier'])
+        + floatval($salesData['admin_charges'])
+        + floatval($salesData['delivery_order_charges'])
+        + floatval($salesData['inbound_handling'])
+        + floatval($salesData['inbound_storage'])
+        + floatval($salesData['outbound_storage'])
+        + floatval($salesData['misc_charges']);
+    $salesData['total_amount'] = $totalAmount;
+
     $salesModel->insert($salesData);
 
     return redirect()->to('/logistics')->with('success', '✅ Booking created successfully! AWB: ' . $bookingData['awb_no']);
@@ -301,9 +324,8 @@ public function edit($id)
 
     $bookingModel->update($id, $bookingData);
 
-    // Delete old shipments and sales, insert new ones
+    // Delete old shipments, insert new ones
     $shipmentModel->where('booking_id', $id)->delete();
-    $salesModel->where('booking_id', $id)->delete();
 
     // Insert new shipments
     $items = $this->request->getPost('items') ?? [];
@@ -367,7 +389,36 @@ public function edit($id)
         'misc_charges' => $this->request->getPost('misc_charges') ?? 0
     ];
 
-    $salesModel->insert($salesData);
+    // Calculate total amount
+    $totalAmount = (floatval($salesData['rate']) * floatval($salesData['weight']))
+        + floatval($salesData['ddc'])
+        + floatval($salesData['ssc'])
+        + floatval($salesData['btc'])
+        + floatval($salesData['flc'])
+        + floatval($salesData['doc'])
+        + floatval($salesData['inbound_tsp'])
+        + floatval($salesData['outbound_tsp'])
+        + floatval($salesData['tcp'])
+        + floatval($salesData['utility_charges'])
+        + floatval($salesData['xray_charges'])
+        + floatval($salesData['ado'])
+        + floatval($salesData['awb_fees_agent'])
+        + floatval($salesData['awb_fees_carrier'])
+        + floatval($salesData['admin_charges'])
+        + floatval($salesData['delivery_order_charges'])
+        + floatval($salesData['inbound_handling'])
+        + floatval($salesData['inbound_storage'])
+        + floatval($salesData['outbound_storage'])
+        + floatval($salesData['misc_charges']);
+    $salesData['total_amount'] = $totalAmount;
+
+    // Check if sales charge record already exists
+    $existingSales = $salesModel->where('booking_id', $id)->first();
+    if ($existingSales) {
+        $salesModel->update($existingSales['id'], $salesData);
+    } else {
+        $salesModel->insert($salesData);
+    }
 
     return redirect()->to('/logistics')->with('success', '✅ Booking updated successfully! AWB: ' . $bookingData['awb_no']);
   }
