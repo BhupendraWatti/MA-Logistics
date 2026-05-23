@@ -55,6 +55,10 @@ class CreateUsersTable extends Migration
                 'constraint' => 1,
                 'default'    => 0,
             ],
+            'created_at' => [
+                'type' => 'DATETIME',
+                'null' => true,
+            ],
         ]);
         $this->forge->addKey('id', true);
         $this->forge->addUniqueKey('username');

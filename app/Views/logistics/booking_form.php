@@ -268,6 +268,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         const row = $('.shipment-item').eq(index);
 
         // ALL FIELDS LOADED ✅
+        row.find('[name*="[id]"]').val(item.id || '');
         row.find('[name*="customer_name"]').val(item.customer_name || '');
         row.find('[name*="bill_to"]').val(item.bill_to || '');
         row.find('[name*="consignee"]').val(item.consignee || '');
@@ -301,6 +302,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         itemCounter++;
         const template = `
     <div class="shipment-item row border p-3 mb-3 rounded bg-light position-relative" data-item="${itemCounter}">
+        <input type="hidden" name="items[${itemCounter}][id]" value="">
         <!-- 1-3. PARTIES (REQUIRED) -->
         <div class="col-md-4">
             <label class="fw-bold">Customer (Shipper) <span class="text-danger">*</span></label>

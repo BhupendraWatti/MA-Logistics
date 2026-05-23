@@ -8,15 +8,14 @@ class UserModel extends Model
     protected $table = 'users';
     protected $primaryKey = 'id';
     
-    // ✅ NO timestamps - manual control
-    protected $useTimestamps = false;
+    protected $useTimestamps = true;
     protected $createdField  = 'created_at';
-    protected $updatedField  = 'updated_at';
+    protected $updatedField  = '';
     protected $useSoftDeletes = false;
     
     protected $allowedFields = [
         'username', 'email', 'password', 'role', 'is_active', 
-        'can_create', 'can_edit', 'can_delete'
+        'can_create', 'can_edit', 'can_delete', 'created_at'
     ];
 
     protected $beforeInsert = ['hashPassword'];

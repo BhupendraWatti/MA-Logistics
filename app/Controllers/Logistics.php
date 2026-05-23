@@ -324,14 +324,17 @@ public function edit($id)
 
     $bookingModel->update($id, $bookingData);
 
-    // Delete old shipments, insert new ones
-    $shipmentModel->where('booking_id', $id)->delete();
+    // Get all existing shipments for this booking
+    $existingShipments = $shipmentModel->where('booking_id', $id)->findAll();
+    $existingIds = array_column($existingShipments, 'id');
 
-    // Insert new shipments
+    // Process shipments
     $items = $this->request->getPost('items') ?? [];
+    $submittedIds = [];
+
     foreach ($items as $item) {
         if (!empty($item['customer_name'])) {
-            $shipmentModel->insert([
+            $shipmentData = [
                 'booking_id' => $id,
                 'customer_name' => $item['customer_name'],
                 'bill_to' => $item['bill_to'],
@@ -357,8 +360,23 @@ public function edit($id)
                 'fov_charges' => $item['fov_charges'] ?? 0,
                 'handling_charges' => $item['handling_charges'] ?? 0,
                 'service_charges' => $item['service_charges'] ?? 0
-            ]);
+            ];
+
+            if (!empty($item['id']) && in_array($item['id'], $existingIds)) {
+                // Update existing item
+                $shipmentModel->update($item['id'], $shipmentData);
+                $submittedIds[] = $item['id'];
+            } else {
+                // Insert new item
+                $shipmentModel->insert($shipmentData);
+            }
         }
+    }
+
+    // Delete shipments that were removed by the user
+    $idsToDelete = array_diff($existingIds, $submittedIds);
+    if (!empty($idsToDelete)) {
+        $shipmentModel->whereIn('id', $idsToDelete)->delete();
     }
 
     // Insert new sales charges

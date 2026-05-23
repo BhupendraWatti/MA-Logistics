@@ -7,7 +7,7 @@ class ShipmentItemModel extends Model
 {
     protected $table = 'shipment_items';
     protected $primaryKey = 'id';
-    protected $useTimestamps = false;
+    protected $useTimestamps = true;
     
     protected $allowedFields = [
         'booking_id', 'customer_name', 'bill_to', 'consignee', 'docket_no',
@@ -15,7 +15,7 @@ class ShipmentItemModel extends Model
         'width', 'height', 'volumetric_weight', 'chargeable_weight', 'pieces', 
         'eway_bill_no', 'eway_bill_date', 'rate', 'delivery_charges',
         'docket_charges', 'pickup_charges', 'fuel_surcharge', 'fov_charges',
-        'handling_charges', 'service_charges'
+        'handling_charges', 'service_charges', 'created_at', 'updated_at'
     ];
 
     protected $validationRules = [
