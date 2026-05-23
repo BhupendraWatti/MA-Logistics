@@ -2,7 +2,7 @@
 <?php 
 $permissions = session()->get('permissions') ?? [];
 if (!$permissions['can_create'] && !isset($isEdit)) {
-    echo '<div class="alert alert-danger text-center"><h3>❌ Access Denied</h3><p>Create permission required!</p><a href="/logistics" class="btn btn-primary">Go to Dashboard</a></div>';
+    echo '<div class="alert alert-danger text-center"><h3>Access Denied</h3><p>Create permission required!</p><a href="/logistics" class="btn btn-primary">Go to Dashboard</a></div>';
     return;
 }
 ?>
@@ -219,7 +219,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     <div class="card">
                         <div class="card-body text-center">
                             <h5>Total Amount: <span id="totalAmount" class="text-success">₹0.00</span></h5>
-                            <button type="submit" class="btn btn-success btn-lg w-100">
+                            <button type="submit" id="mainSubmitBtn" class="btn btn-success btn-lg w-100">
                                 <?php if (isset($isEdit) && $isEdit): ?>
                                     <i class="fas fa-save"></i> Update Booking
                                 <?php else: ?>
@@ -297,7 +297,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         row.find('[name*="service_charges"]').val(item.service_charges || 0);
     }
 
-    // ✅ PERFECT SHIPMENT TEMPLATE WITH ALL FIELDS RESTORED
+    // PERFECT SHIPMENT TEMPLATE WITH ACCESSIBILITY
     function addShipmentItem() {
         itemCounter++;
         const template = `
@@ -306,118 +306,118 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         <!-- 1-3. PARTIES (REQUIRED) -->
         <div class="col-md-4">
             <label class="fw-bold">Customer (Shipper) <span class="text-danger">*</span></label>
-            <input type="text" name="items[${itemCounter}][customer_name]" class="form-control" required>
+            <input type="text" name="items[${itemCounter}][customer_name]" class="form-control" aria-label="Customer Name for Item ${itemCounter}" required>
         </div>
         <div class="col-md-4">
             <label class="fw-bold">Bill To <span class="text-danger">*</span></label>
-            <input type="text" name="items[${itemCounter}][bill_to]" class="form-control" required>
+            <input type="text" name="items[${itemCounter}][bill_to]" class="form-control" aria-label="Bill To for Item ${itemCounter}" required>
         </div>
         <div class="col-md-4">
             <label class="fw-bold">Consignee <span class="text-danger">*</span></label>
-            <input type="text" name="items[${itemCounter}][consignee]" class="form-control" required>
+            <input type="text" name="items[${itemCounter}][consignee]" class="form-control" aria-label="Consignee for Item ${itemCounter}" required>
         </div>
 
         <!-- 4-7. DOC NUMBERS -->
         <div class="col-md-3 mt-3">
             <label>Docket No.</label>
-            <input type="text" name="items[${itemCounter}][docket_no]" class="form-control">
+            <input type="text" name="items[${itemCounter}][docket_no]" class="form-control" aria-label="Docket Number for Item ${itemCounter}">
         </div>
         <div class="col-md-3 mt-3">
             <label>Part No.</label>
-            <input type="text" name="items[${itemCounter}][part_no]" class="form-control">
+            <input type="text" name="items[${itemCounter}][part_no]" class="form-control" aria-label="Part Number for Item ${itemCounter}">
         </div>
         <div class="col-md-3 mt-3">
             <label>Invoice No.</label>
-            <input type="text" name="items[${itemCounter}][invoice_no]" class="form-control">
+            <input type="text" name="items[${itemCounter}][invoice_no]" class="form-control" aria-label="Invoice Number for Item ${itemCounter}">
         </div>
         <div class="col-md-3 mt-3">
             <label>Inv. Date</label>
-            <input type="date" name="items[${itemCounter}][invoice_date]" class="form-control">
+            <input type="date" name="items[${itemCounter}][invoice_date]" class="form-control" aria-label="Invoice Date for Item ${itemCounter}">
         </div>
 
         <!-- 8-13. WEIGHT & DIMENSIONS -->
         <div class="col-md-3 mt-3">
             <label><strong>Actual Wt (KG) <span class="text-danger">*</span></strong></label>
-            <input type="number" step="0.01" name="items[${itemCounter}][actual_weight]" class="form-control calc-weight" required>
+            <input type="number" step="0.01" name="items[${itemCounter}][actual_weight]" class="form-control calc-weight" aria-label="Actual Weight for Item ${itemCounter}" required>
         </div>
         <div class="col-md-2 mt-3">
             <label>L (CM)</label>
-            <input type="number" name="items[${itemCounter}][length]" class="form-control calc-dim">
+            <input type="number" name="items[${itemCounter}][length]" class="form-control calc-dim" aria-label="Length for Item ${itemCounter}">
         </div>
         <div class="col-md-2 mt-3">
             <label>W (CM)</label>
-            <input type="number" name="items[${itemCounter}][width]" class="form-control calc-dim">
+            <input type="number" name="items[${itemCounter}][width]" class="form-control calc-dim" aria-label="Width for Item ${itemCounter}">
         </div>
         <div class="col-md-2 mt-3">
             <label>H (CM)</label>
-            <input type="number" name="items[${itemCounter}][height]" class="form-control calc-dim">
+            <input type="number" name="items[${itemCounter}][height]" class="form-control calc-dim" aria-label="Height for Item ${itemCounter}">
         </div>
         <div class="col-md-3 mt-3">
             <label><strong>Vol. Wt <small>(Auto)</small></strong></label>
-            <input type="number" step="0.01" name="items[${itemCounter}][volumetric_weight]" class="form-control bg-light" readonly>
+            <input type="number" step="0.01" name="items[${itemCounter}][volumetric_weight]" class="form-control bg-light" aria-label="Volumetric Weight for Item ${itemCounter}" readonly>
         </div>
         <div class="col-md-3 mt-3">
             <label><strong>Chg. Wt <small>(Min 45kg)</small></strong></label>
-            <input type="number" step="0.01" name="items[${itemCounter}][chargeable_weight]" class="form-control bg-success text-white fw-bold" readonly>
+            <input type="number" step="0.01" name="items[${itemCounter}][chargeable_weight]" class="form-control bg-success text-white fw-bold" aria-label="Chargeable Weight for Item ${itemCounter}" readonly>
         </div>
 
         <!-- 14. PIECES -->
         <div class="col-md-2 mt-3">
             <label>Pieces</label>
-            <input type="number" name="items[${itemCounter}][pieces]" class="form-control" value="1" min="1">
+            <input type="number" name="items[${itemCounter}][pieces]" class="form-control" value="1" min="1" aria-label="Number of Pieces for Item ${itemCounter}">
         </div>
 
         <!-- 15-16. E-WAY BILL -->
         <div class="col-md-2 mt-3">
             <label>E-Way No.</label>
-            <input type="text" name="items[${itemCounter}][eway_bill_no]" class="form-control">
+            <input type="text" name="items[${itemCounter}][eway_bill_no]" class="form-control" aria-label="E-Way Bill Number for Item ${itemCounter}">
         </div>
         <div class="col-md-2 mt-3">
             <label>E-Way Date</label>
-            <input type="date" name="items[${itemCounter}][eway_bill_date]" class="form-control">
+            <input type="date" name="items[${itemCounter}][eway_bill_date]" class="form-control" aria-label="E-Way Bill Date for Item ${itemCounter}">
         </div>
 
         <!-- 17. RATE -->
         <div class="col-md-3 mt-3">
             <label>Rate (₹/KG)</label>
-            <input type="number" step="0.01" name="items[${itemCounter}][rate]" class="form-control">
+            <input type="number" step="0.01" name="items[${itemCounter}][rate]" class="form-control" aria-label="Rate for Item ${itemCounter}">
         </div>
 
-        <!-- ✅ 18-23. ALL CHARGES RESTORED (MOST IMPORTANT!) -->
+        <!-- 18-23. ALL CHARGES -->
         <div class="col-md-2 mt-3">
             <label>Delivery Charges</label>
-            <input type="number" step="0.01" name="items[${itemCounter}][delivery_charges]" class="form-control">
+            <input type="number" step="0.01" name="items[${itemCounter}][delivery_charges]" class="form-control" aria-label="Delivery Charges for Item ${itemCounter}">
         </div>
         <div class="col-md-2 mt-3">
             <label>Docket Charges</label>
-            <input type="number" step="0.01" name="items[${itemCounter}][docket_charges]" class="form-control">
+            <input type="number" step="0.01" name="items[${itemCounter}][docket_charges]" class="form-control" aria-label="Docket Charges for Item ${itemCounter}">
         </div>
         <div class="col-md-2 mt-3">
             <label>Pickup Charges</label>
-            <input type="number" step="0.01" name="items[${itemCounter}][pickup_charges]" class="form-control">
+            <input type="number" step="0.01" name="items[${itemCounter}][pickup_charges]" class="form-control" aria-label="Pickup Charges for Item ${itemCounter}">
         </div>
         <div class="col-md-2 mt-3">
             <label>Fuel Surcharge</label>
-            <input type="number" step="0.01" name="items[${itemCounter}][fuel_surcharge]" class="form-control">
+            <input type="number" step="0.01" name="items[${itemCounter}][fuel_surcharge]" class="form-control" aria-label="Fuel Surcharge for Item ${itemCounter}">
         </div>
         <div class="col-md-2 mt-3">
             <label>FOV Charges</label>
-            <input type="number" step="0.01" name="items[${itemCounter}][fov_charges]" class="form-control">
+            <input type="number" step="0.01" name="items[${itemCounter}][fov_charges]" class="form-control" aria-label="FOV Charges for Item ${itemCounter}">
         </div>
         <div class="col-md-2 mt-3">
             <label>Handling Charges</label>
-            <input type="number" step="0.01" name="items[${itemCounter}][handling_charges]" class="form-control">
+            <input type="number" step="0.01" name="items[${itemCounter}][handling_charges]" class="form-control" aria-label="Handling Charges for Item ${itemCounter}">
         </div>
         <div class="col-md-2 mt-3">
             <label>Service Charges</label>
-            <input type="number" step="0.01" name="items[${itemCounter}][service_charges]" class="form-control">
+            <input type="number" step="0.01" name="items[${itemCounter}][service_charges]" class="form-control" aria-label="Service Charges for Item ${itemCounter}">
         </div>
 
         <!-- Remove Button -->
         <div class="col-12">
             <button type="button" class="btn btn-sm btn-danger position-absolute" 
-                    style="top:10px; right:10px;" onclick="removeItem(${itemCounter})">
-                <i class="fas fa-trash"></i> Remove
+                    style="top:10px; right:10px;" onclick="removeItem(${itemCounter})" aria-label="Remove Item ${itemCounter}">
+                <i class="fas fa-trash" aria-hidden="true"></i> Remove
             </button>
         </div>
 
@@ -490,6 +490,12 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         $('#totalAmount').text('₹' + total.toFixed(2));
     });
 
+    // Async Form Submit
+    $('#bookingForm').on('submit', function() {
+        const btn = $('#mainSubmitBtn');
+        btn.prop('disabled', true);
+        btn.html('<i class="fas fa-spinner fa-spin"></i> Saving...');
+    });
 
 </script>
 <?= $this->endSection() ?>

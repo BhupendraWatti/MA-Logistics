@@ -27,17 +27,17 @@ private function enforcePermissions($action)
     switch($action) {
         case 'create':
             if (!($permissions['can_create'] ?? 0)) {
-                return redirect()->to('/logistics')->with('error', '❌ Create permission denied!');
+                return redirect()->to('/logistics')->with('error', 'Create permission denied!');
             }
             break;
         case 'edit':
             if (!($permissions['can_edit'] ?? 0)) {
-                return redirect()->to('/logistics')->with('error', '❌ Edit permission denied!');
+                return redirect()->to('/logistics')->with('error', 'Edit permission denied!');
             }
             break;
         case 'delete':
             if (!($permissions['can_delete'] ?? 0)) {
-                return redirect()->to('/logistics')->with('error', '❌ Delete permission denied!');
+                return redirect()->to('/logistics')->with('error', 'Delete permission denied!');
             }
             break;
     }
@@ -96,7 +96,7 @@ public function create()
     // ✅ TRIPLE CHECK
     if (!($permissions['can_create'] ?? 0)) {
         return redirect()->to('/logistics')
-            ->with('error', '❌ You do not have permission to create bookings!');
+            ->with('error', 'You do not have permission to create bookings!');
     }
     
     $data['user'] = session()->get();
@@ -114,127 +114,15 @@ public function create()
   {
     $this->checkPermission('can_create');
     
-    $bookingModel = new BookingModel();
-    $shipmentModel = new ShipmentItemModel();
-    $salesModel = new SalesChargeModel();
-
-    // 1. Insert Booking (Tab 1 Basic)
-    $bookingData = [
-        'awb_no' => $this->request->getPost('awb_no'),
-        'company_id' => $this->request->getPost('company_id'),
-        'booking_date' => $this->request->getPost('booking_date'),
-        'origin' => $this->request->getPost('origin'),
-        'destination' => $this->request->getPost('destination'),
-        'mode_transport' => $this->request->getPost('mode_transport'),
-        'material_type' => $this->request->getPost('material_type'),
-        'material_details' => $this->request->getPost('material_details'),
-        'material_category' => $this->request->getPost('material_category'),
-        'status' => $this->request->getPost('status') ?? 'Draft',
-        'driver_name' => $this->request->getPost('driver_name'),
-        'driver_mobile' => $this->request->getPost('driver_mobile'),
-        'vehicle_no' => $this->request->getPost('vehicle_no'),
-        'total_pieces' => $this->request->getPost('total_pieces'),
-        'flight_number' => $this->request->getPost('flight_number'),
-        'airlines' => $this->request->getPost('airlines'),
-        'created_by' => session()->get('user_id')
-    ];
-
-    if (!$bookingModel->insert($bookingData)) {
-        return redirect()->back()->with('error', 'Failed to create booking: ' . implode(', ', $bookingModel->errors()));
+    $bookingService = new \App\Services\BookingService();
+    
+    try {
+        $bookingService->createBooking($this->request->getPost(), session()->get('user_id'));
+        $awb_no = $this->request->getPost('awb_no');
+        return redirect()->to('/logistics')->with('success', 'Booking created successfully! AWB: ' . $awb_no);
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', $e->getMessage());
     }
-
-    $bookingId = $bookingModel->getInsertID();
-
-    // 2. Insert Shipment Items (Multiple)
-    $items = $this->request->getPost('items') ?? [];
-    foreach ($items as $item) {
-        if (!empty($item['customer_name'])) {
-            $shipmentData = [
-                'booking_id' => $bookingId,
-                'customer_name' => $item['customer_name'],
-                'bill_to' => $item['bill_to'],
-                'consignee' => $item['consignee'],
-                'docket_no' => $item['docket_no'] ?? '',
-                'part_no' => $item['part_no'] ?? '',
-                'invoice_no' => $item['invoice_no'] ?? '',
-                'invoice_date' => $item['invoice_date'] ?? null,
-                'actual_weight' => $item['actual_weight'] ?? 0,
-                'length' => $item['length'] ?? 0,
-                'width' => $item['width'] ?? 0,
-                'height' => $item['height'] ?? 0,
-                'volumetric_weight' => $item['volumetric_weight'] ?? 0,
-                'chargeable_weight' => $item['chargeable_weight'] ?? 0,
-                'pieces' => $item['pieces'] ?? 1,
-                'eway_bill_no' => $item['eway_bill_no'] ?? '',
-                'eway_bill_date' => $item['eway_bill_date'] ?? null,
-                'rate' => $item['rate'] ?? 0,
-                'delivery_charges' => $item['delivery_charges'] ?? 0,
-                'docket_charges' => $item['docket_charges'] ?? 0,
-                'pickup_charges' => $item['pickup_charges'] ?? 0,
-                'fuel_surcharge' => $item['fuel_surcharge'] ?? 0,
-                'fov_charges' => $item['fov_charges'] ?? 0,
-                'handling_charges' => $item['handling_charges'] ?? 0,
-                'service_charges' => $item['service_charges'] ?? 0
-            ];
-            
-            $shipmentModel->insert($shipmentData);
-        }
-    }
-
-    // 3. Insert Sales Charges (Tab 2)
-    $salesData = [
-        'booking_id' => $bookingId,
-        'flight_number' => $this->request->getPost('flight_number'),
-        'airlines' => $this->request->getPost('airlines'),
-        'rate' => $this->request->getPost('rate'),
-        'weight' => $this->request->getPost('weight'),
-        'ddc' => $this->request->getPost('ddc') ?? 0,
-        'ssc' => $this->request->getPost('ssc') ?? 0,
-        'btc' => $this->request->getPost('btc') ?? 0,
-        'flc' => $this->request->getPost('flc') ?? 0,
-        'doc' => $this->request->getPost('doc') ?? 0,
-        'inbound_tsp' => $this->request->getPost('inbound_tsp') ?? 0,
-        'outbound_tsp' => $this->request->getPost('outbound_tsp') ?? 0,
-        'tcp' => $this->request->getPost('tcp') ?? 0,
-        'utility_charges' => $this->request->getPost('utility_charges') ?? 0,
-        'xray_charges' => $this->request->getPost('xray_charges') ?? 0,
-        'ado' => $this->request->getPost('ado') ?? 0,
-        'awb_fees_agent' => $this->request->getPost('awb_fees_agent') ?? 0,
-        'awb_fees_carrier' => $this->request->getPost('awb_fees_carrier') ?? 0,
-        'admin_charges' => $this->request->getPost('admin_charges') ?? 0,
-        'delivery_order_charges' => $this->request->getPost('delivery_order_charges') ?? 0,
-        'inbound_handling' => $this->request->getPost('inbound_handling') ?? 0,
-        'inbound_storage' => $this->request->getPost('inbound_storage') ?? 0,
-        'outbound_storage' => $this->request->getPost('outbound_storage') ?? 0,
-        'misc_charges' => $this->request->getPost('misc_charges') ?? 0
-    ];
-
-    // Calculate total amount
-    $totalAmount = (floatval($salesData['rate']) * floatval($salesData['weight']))
-        + floatval($salesData['ddc'])
-        + floatval($salesData['ssc'])
-        + floatval($salesData['btc'])
-        + floatval($salesData['flc'])
-        + floatval($salesData['doc'])
-        + floatval($salesData['inbound_tsp'])
-        + floatval($salesData['outbound_tsp'])
-        + floatval($salesData['tcp'])
-        + floatval($salesData['utility_charges'])
-        + floatval($salesData['xray_charges'])
-        + floatval($salesData['ado'])
-        + floatval($salesData['awb_fees_agent'])
-        + floatval($salesData['awb_fees_carrier'])
-        + floatval($salesData['admin_charges'])
-        + floatval($salesData['delivery_order_charges'])
-        + floatval($salesData['inbound_handling'])
-        + floatval($salesData['inbound_storage'])
-        + floatval($salesData['outbound_storage'])
-        + floatval($salesData['misc_charges']);
-    $salesData['total_amount'] = $totalAmount;
-
-    $salesModel->insert($salesData);
-
-    return redirect()->to('/logistics')->with('success', '✅ Booking created successfully! AWB: ' . $bookingData['awb_no']);
   }
 
 
@@ -297,148 +185,15 @@ public function edit($id)
   {
     $this->checkPermission('can_edit');
     
-    $bookingModel = new BookingModel();
-    $shipmentModel = new ShipmentItemModel();
-    $salesModel = new SalesChargeModel();
-
-    // Update Booking
-    $bookingData = [
-        'awb_no' => $this->request->getPost('awb_no'),
-        'company_id' => $this->request->getPost('company_id'),
-        'booking_date' => $this->request->getPost('booking_date'),
-        'origin' => $this->request->getPost('origin'),
-        'destination' => $this->request->getPost('destination'),
-        'mode_transport' => $this->request->getPost('mode_transport'),
-        'material_type' => $this->request->getPost('material_type'),
-        'material_details' => $this->request->getPost('material_details'),
-        'material_category' => $this->request->getPost('material_category'),
-        'status' => $this->request->getPost('status'),
-        'driver_name' => $this->request->getPost('driver_name'),
-        'driver_mobile' => $this->request->getPost('driver_mobile'),
-        'vehicle_no' => $this->request->getPost('vehicle_no'),
-        'total_pieces' => $this->request->getPost('total_pieces'),
-        'flight_number' => $this->request->getPost('flight_number'),
-        'airlines' => $this->request->getPost('airlines'),
-        'created_by' => session()->get('user_id')
-    ];
-
-    $bookingModel->update($id, $bookingData);
-
-    // Get all existing shipments for this booking
-    $existingShipments = $shipmentModel->where('booking_id', $id)->findAll();
-    $existingIds = array_column($existingShipments, 'id');
-
-    // Process shipments
-    $items = $this->request->getPost('items') ?? [];
-    $submittedIds = [];
-
-    foreach ($items as $item) {
-        if (!empty($item['customer_name'])) {
-            $shipmentData = [
-                'booking_id' => $id,
-                'customer_name' => $item['customer_name'],
-                'bill_to' => $item['bill_to'],
-                'consignee' => $item['consignee'],
-                'docket_no' => $item['docket_no'] ?? '',
-                'part_no' => $item['part_no'] ?? '',
-                'invoice_no' => $item['invoice_no'] ?? '',
-                'invoice_date' => $item['invoice_date'] ?? null,
-                'actual_weight' => $item['actual_weight'] ?? 0,
-                'length' => $item['length'] ?? 0,
-                'width' => $item['width'] ?? 0,
-                'height' => $item['height'] ?? 0,
-                'volumetric_weight' => $item['volumetric_weight'] ?? 0,
-                'chargeable_weight' => $item['chargeable_weight'] ?? 0,
-                'pieces' => $item['pieces'] ?? 1,
-                'eway_bill_no' => $item['eway_bill_no'] ?? '',
-                'eway_bill_date' => $item['eway_bill_date'] ?? null,
-                'rate' => $item['rate'] ?? 0,
-                'delivery_charges' => $item['delivery_charges'] ?? 0,
-                'docket_charges' => $item['docket_charges'] ?? 0,
-                'pickup_charges' => $item['pickup_charges'] ?? 0,
-                'fuel_surcharge' => $item['fuel_surcharge'] ?? 0,
-                'fov_charges' => $item['fov_charges'] ?? 0,
-                'handling_charges' => $item['handling_charges'] ?? 0,
-                'service_charges' => $item['service_charges'] ?? 0
-            ];
-
-            if (!empty($item['id']) && in_array($item['id'], $existingIds)) {
-                // Update existing item
-                $shipmentModel->update($item['id'], $shipmentData);
-                $submittedIds[] = $item['id'];
-            } else {
-                // Insert new item
-                $shipmentModel->insert($shipmentData);
-            }
-        }
+    $bookingService = new \App\Services\BookingService();
+    
+    try {
+        $bookingService->updateBooking($id, $this->request->getPost(), session()->get('user_id'));
+        $awb_no = $this->request->getPost('awb_no');
+        return redirect()->to('/logistics')->with('success', 'Booking updated successfully! AWB: ' . $awb_no);
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', $e->getMessage());
     }
-
-    // Delete shipments that were removed by the user
-    $idsToDelete = array_diff($existingIds, $submittedIds);
-    if (!empty($idsToDelete)) {
-        $shipmentModel->whereIn('id', $idsToDelete)->delete();
-    }
-
-    // Insert new sales charges
-    $salesData = [
-        'booking_id' => $id,
-        'flight_number' => $this->request->getPost('flight_number'),
-        'airlines' => $this->request->getPost('airlines'),
-        'rate' => $this->request->getPost('rate'),
-        'weight' => $this->request->getPost('weight'),
-        'ddc' => $this->request->getPost('ddc') ?? 0,
-        'ssc' => $this->request->getPost('ssc') ?? 0,
-        'btc' => $this->request->getPost('btc') ?? 0,
-        'flc' => $this->request->getPost('flc') ?? 0,
-        'doc' => $this->request->getPost('doc') ?? 0,
-        'inbound_tsp' => $this->request->getPost('inbound_tsp') ?? 0,
-        'outbound_tsp' => $this->request->getPost('outbound_tsp') ?? 0,
-        'tcp' => $this->request->getPost('tcp') ?? 0,
-        'utility_charges' => $this->request->getPost('utility_charges') ?? 0,
-        'xray_charges' => $this->request->getPost('xray_charges') ?? 0,
-        'ado' => $this->request->getPost('ado') ?? 0,
-        'awb_fees_agent' => $this->request->getPost('awb_fees_agent') ?? 0,
-        'awb_fees_carrier' => $this->request->getPost('awb_fees_carrier') ?? 0,
-        'admin_charges' => $this->request->getPost('admin_charges') ?? 0,
-        'delivery_order_charges' => $this->request->getPost('delivery_order_charges') ?? 0,
-        'inbound_handling' => $this->request->getPost('inbound_handling') ?? 0,
-        'inbound_storage' => $this->request->getPost('inbound_storage') ?? 0,
-        'outbound_storage' => $this->request->getPost('outbound_storage') ?? 0,
-        'misc_charges' => $this->request->getPost('misc_charges') ?? 0
-    ];
-
-    // Calculate total amount
-    $totalAmount = (floatval($salesData['rate']) * floatval($salesData['weight']))
-        + floatval($salesData['ddc'])
-        + floatval($salesData['ssc'])
-        + floatval($salesData['btc'])
-        + floatval($salesData['flc'])
-        + floatval($salesData['doc'])
-        + floatval($salesData['inbound_tsp'])
-        + floatval($salesData['outbound_tsp'])
-        + floatval($salesData['tcp'])
-        + floatval($salesData['utility_charges'])
-        + floatval($salesData['xray_charges'])
-        + floatval($salesData['ado'])
-        + floatval($salesData['awb_fees_agent'])
-        + floatval($salesData['awb_fees_carrier'])
-        + floatval($salesData['admin_charges'])
-        + floatval($salesData['delivery_order_charges'])
-        + floatval($salesData['inbound_handling'])
-        + floatval($salesData['inbound_storage'])
-        + floatval($salesData['outbound_storage'])
-        + floatval($salesData['misc_charges']);
-    $salesData['total_amount'] = $totalAmount;
-
-    // Check if sales charge record already exists
-    $existingSales = $salesModel->where('booking_id', $id)->first();
-    if ($existingSales) {
-        $salesModel->update($existingSales['id'], $salesData);
-    } else {
-        $salesModel->insert($salesData);
-    }
-
-    return redirect()->to('/logistics')->with('success', '✅ Booking updated successfully! AWB: ' . $bookingData['awb_no']);
   }
 
 
@@ -511,12 +266,12 @@ public function companySelection()
                 'selected_company_name' => $company['name']
             ]);
             return redirect()->to('/logistics')
-                ->with('success', '✅ Welcome to ' . $company['name'] . ' Dashboard!');
+                ->with('success', 'Welcome to ' . $company['name'] . ' Dashboard!');
         }
     }
     
     return redirect()->back()
-        ->with('error', '❌ Invalid company selection!');
+        ->with('error', 'Invalid company selection!');
   }
 
 
@@ -544,22 +299,22 @@ public function companySelection()
 
     // ✅ FIXED: ONLY Admin can create companies (ignores can_create permission)
     if (session()->get('role') !== 'admin') {
-        return redirect()->to('/logistics')->with('error', '❌ Admin access required!');
+        return redirect()->to('/logistics')->with('error', 'Admin access required!');
     }
 
       $name = $this->request->getPost('name');
       if (empty($name)) {
-          return redirect()->back()->with('error', '❌ Company name is required!');
+          return redirect()->back()->with('error', 'Company name is required!');
       }
 
       $companyModel = new CompanyModel();
       // Check if already exists
       if ($companyModel->where('name', $name)->first()) {
-          return redirect()->back()->with('error', '❌ Company already exists!');
+          return redirect()->back()->with('error', 'Company already exists!');
       }
 
       $companyModel->insert(['name' => $name]);
-      return redirect()->back()->with('success', '✅ Company "' . esc($name) . '" created successfully!');
+      return redirect()->back()->with('success', 'Company "' . esc($name) . '" created successfully!');
   }
 
   public function deleteCompany($id)
@@ -572,13 +327,13 @@ public function companySelection()
 
     // ✅ FIXED: ONLY Admin can delete companies (ignores can_delete permission)
     if (session()->get('role') !== 'admin') {
-        return redirect()->to('/logistics')->with('error', '❌ Admin access required!');
+        return redirect()->to('/logistics')->with('error', 'Admin access required!');
     }
       $companyModel = new CompanyModel();
       $company = $companyModel->find($id);
 
       if (!$company) {
-          return redirect()->back()->with('error', '❌ Company not found!');
+          return redirect()->back()->with('error', 'Company not found!');
       }
 
       // Delete company (MySQL will cascade delete related bookings)
@@ -589,7 +344,7 @@ public function companySelection()
           session()->remove(['selected_company_id', 'selected_company_name']);
       }
 
-      return redirect()->back()->with('success', '✅ Company "' . esc($company['name']) . '" and all its associated records deleted successfully!');
+      return redirect()->back()->with('success', 'Company "' . esc($company['name']) . '" and all its associated records deleted successfully!');
   }
 
 
@@ -658,66 +413,11 @@ public function exportPdf($id)
     $pdf->AddPage();
     $pdf->SetFont('helvetica', '', 8);
 
-    $html = '<table border="1" cellpadding="4" cellspacing="0" style="width:100%; font-size:9px; border-collapse:collapse; font-family:helvetica;">';
-    
-    // Header block
-    $html .= '<tr><td colspan="16" style="text-align:center;">';
-    $html .= '<span style="font-size:24px; font-weight:bold; font-family:times;">M.A.LOGISTICS</span><br>';
-    $html .= '<span style="font-size:10px;">Sr.No.34/2, plot No. -69, Rajkamal Bldg, Lane No.10(10A) Vidya Nagar, Tingre Nagar, Pune 411 032</span><br>';
-    $html .= '<span style="font-size:10px;">Office Ph.7719868468, Mob.7620829619. Email ID : malogistics.pune@gmail.com</span>';
-    $html .= '</td></tr>';
-    
-    // GSTIN, SAC, PAN
-    $html .= '<tr>';
-    $html .= '<td colspan="5" style="font-size:10px; font-weight:bold;">GSTIN : 27AICPD8922A1ZQ</td>';
-    $html .= '<td colspan="5" style="font-size:10px; font-weight:bold; text-align:center;">SAC CODE : 996531</td>';
-    $html .= '<td colspan="6" style="font-size:10px; font-weight:bold; text-align:center;">PAN : AICPD8922A</td>';
-    $html .= '</tr>';
-    
-    // INVOICE title
-    $html .= '<tr><td colspan="16" style="text-align:center; font-size:14px; font-weight:bold; letter-spacing:2px;">INVOICE</td></tr>';
-    
-    // TO Details
-    $html .= '<tr>';
-    $html .= '<td colspan="8" style="vertical-align:top;">';
-    $html .= '<strong>TO : ' . htmlspecialchars($recipientName, ENT_QUOTES, 'UTF-8') . '</strong><br>';
-    $html .= htmlspecialchars($recipientAddress, ENT_QUOTES, 'UTF-8');
-    $html .= '</td>';
-    $html .= '<td colspan="8" style="vertical-align:top;">';
-    $html .= '<table cellpadding="1" cellspacing="0" style="width:100%;">';
-    $html .= '<tr><td style="width:40%;"><strong>Invoice No</strong></td><td>: ' . htmlspecialchars($invoiceNo, ENT_QUOTES, 'UTF-8') . '</td></tr>';
-    $html .= '<tr><td><strong>Invoice Period Date</strong></td><td>: ' . htmlspecialchars($invoicePeriod, ENT_QUOTES, 'UTF-8') . '</td></tr>';
-    $html .= '<tr><td><strong>Invoice Date</strong></td><td>: ' . htmlspecialchars($invoiceDate, ENT_QUOTES, 'UTF-8') . '</td></tr>';
-    $html .= '<tr><td><strong>Billing Branch</strong></td><td>: ' . htmlspecialchars($billingBranch, ENT_QUOTES, 'UTF-8') . '</td></tr>';
-    $html .= '<tr><td><strong>MODE</strong></td><td>: ' . htmlspecialchars($modeTransport, ENT_QUOTES, 'UTF-8') . '</td></tr>';
-    $html .= '</table>';
-    $html .= '</td>';
-    $html .= '</tr>';
-    
-    // Table Headers
-    $html .= '<tr style="text-align:center; font-weight:bold; font-size:8px;">';
-    $html .= '<td style="width:3%;">SR<br>NO</td>';
-    $html .= '<td style="width:6%;">DATE</td>';
-    $html .= '<td style="width:8%;">LR NO.</td>';
-    $html .= '<td style="width:11%;">INVOICE NUMBER</td>';
-    $html .= '<td style="width:6%;">ORIGIN</td>';
-    $html .= '<td style="width:6%;">DEST</td>';
-    $html .= '<td style="width:5%;">NO. OF<br>BOX</td>';
-    $html .= '<td style="width:5%;">WT</td>';
-    $html .= '<td style="width:5%;">RATE</td>';
-    $html .= '<td style="width:5%;">Fuel<br>Surcharge</td>';
-    $html .= '<td style="width:6%;">FREIGHT</td>';
-    $html .= '<td style="width:7%;">Fuel<br>surcharge<br>Amount</td>';
-    $html .= '<td style="width:7%;">DOCKET</td>';
-    $html .= '<td style="width:6%;">PICK UP<br>CHARGE</td>';
-    $html .= '<td style="width:6%;">DELIVER<br>CHARGE</td>';
-    $html .= '<td style="width:8%;">TAXABLE<br>AMOUNT</td>';
-    $html .= '</tr>';
-
     $serial = 1;
     $totalBoxes = 0;
     $totalWt = 0;
     $totalTaxable = 0;
+    $shipmentRows = [];
 
     foreach ($shipments as $item) {
         $date = !empty($item['invoice_date']) ? date('d.m.y', strtotime($item['invoice_date'])) : '-';
@@ -740,86 +440,52 @@ public function exportPdf($id)
         $totalWt += $wt;
         $totalTaxable += $taxable;
 
-        $html .= '<tr style="font-size:8px;">';
-        $html .= '<td style="text-align:center;">' . $serial . '</td>';
-        $html .= '<td style="text-align:center;">' . $date . '</td>';
-        $html .= '<td style="text-align:center;">' . htmlspecialchars($lrNo, ENT_QUOTES, 'UTF-8') . '</td>';
-        $html .= '<td>' . htmlspecialchars($invoiceNumber, ENT_QUOTES, 'UTF-8') . '</td>';
-        $html .= '<td style="text-align:center;">' . htmlspecialchars($origin, ENT_QUOTES, 'UTF-8') . '</td>';
-        $html .= '<td style="text-align:center;">' . htmlspecialchars($destination, ENT_QUOTES, 'UTF-8') . '</td>';
-        $html .= '<td style="text-align:center;">' . $boxes . '</td>';
-        $html .= '<td style="text-align:center;">' . (float)$wt . '</td>';
-        $html .= '<td style="text-align:center;">' . (float)$rate . '</td>';
-        $html .= '<td style="text-align:center;">' . (float)$fuelSur . '</td>';
-        $html .= '<td style="text-align:center;">' . (float)$freight . '</td>';
-        $html .= '<td style="text-align:center;">' . (float)$fuelAmt . '</td>';
-        $html .= '<td style="text-align:center;">' . (float)$docket . '</td>';
-        $html .= '<td style="text-align:center;">' . (float)$pickup . '</td>';
-        $html .= '<td style="text-align:center;">' . (float)$delivery . '</td>';
-        $html .= '<td style="text-align:center;">' . (float)$taxable . '</td>';
-        $html .= '</tr>';
-
+        $shipmentRows[] = [
+            'serial' => $serial,
+            'date' => $date,
+            'lrNo' => $lrNo,
+            'invoiceNumber' => $invoiceNumber,
+            'origin' => $origin,
+            'destination' => $destination,
+            'boxes' => $boxes,
+            'wt' => $wt,
+            'rate' => $rate,
+            'fuelSur' => $fuelSur,
+            'freight' => $freight,
+            'fuelAmt' => $fuelAmt,
+            'docket' => $docket,
+            'pickup' => $pickup,
+            'delivery' => $delivery,
+            'taxable' => $taxable
+        ];
         $serial++;
     }
-
-    $html .= '<tr style="font-size:8px;">';
-    $html .= '<td colspan="6"></td>';
-    $html .= '<td style="text-align:center; font-weight:bold;">' . $totalBoxes . '</td>';
-    $html .= '<td style="text-align:center; font-weight:bold;">' . (float)$totalWt . '</td>';
-    $html .= '<td></td>';
-    $html .= '<td></td>';
-    $html .= '<td colspan="5" style="text-align:center; font-weight:bold;">TAXABLE AMOUNT</td>';
-    $html .= '<td style="text-align:center; font-weight:bold;">' . round($totalTaxable) . '</td>';
-    $html .= '</tr>';
 
     $cgst = round($totalTaxable * 0.09);
     $sgst = round($totalTaxable * 0.09);
     $igst = 0;
     $netPayable = round($totalTaxable + $cgst + $sgst + $igst);
 
-    $html .= '<tr style="font-size:8px; font-weight:bold;">';
-    $html .= '<td colspan="10" rowspan="4"></td>';
-    $html .= '<td colspan="5" style="text-align:left;">C.GST - 9%</td>';
-    $html .= '<td style="text-align:center;">' . $cgst . '</td>';
-    $html .= '</tr>';
+    $viewData = [
+        'recipientName' => $recipientName,
+        'recipientAddress' => $recipientAddress,
+        'invoiceNo' => $invoiceNo,
+        'invoicePeriod' => $invoicePeriod,
+        'invoiceDate' => $invoiceDate,
+        'billingBranch' => $billingBranch,
+        'modeTransport' => $modeTransport,
+        'shipmentRows' => $shipmentRows,
+        'totalBoxes' => $totalBoxes,
+        'totalWt' => $totalWt,
+        'totalTaxable' => $totalTaxable,
+        'cgst' => $cgst,
+        'sgst' => $sgst,
+        'igst' => $igst,
+        'netPayable' => $netPayable,
+        'amountInWords' => $this->formatAmountInWords($netPayable)
+    ];
 
-    $html .= '<tr style="font-size:8px; font-weight:bold;">';
-    $html .= '<td colspan="5" style="text-align:left;">S.GST - 9%</td>';
-    $html .= '<td style="text-align:center;">' . $sgst . '</td>';
-    $html .= '</tr>';
-
-    $html .= '<tr style="font-size:8px; font-weight:bold;">';
-    $html .= '<td colspan="5" style="text-align:left;">I.GST - 18%</td>';
-    $html .= '<td style="text-align:center;">' . $igst . '</td>';
-    $html .= '</tr>';
-
-    $html .= '<tr style="font-size:8px; font-weight:bold;">';
-    $html .= '<td colspan="5" style="text-align:left;">NET PAYABLE AMOUNT</td>';
-    $html .= '<td style="text-align:center;">' . $netPayable . '</td>';
-    $html .= '</tr>';
-
-    $html .= '<tr><td colspan="16" style="font-size:10px; font-weight:bold;">';
-    $html .= 'Rs. (In Word) ' . strtoupper($this->formatAmountInWords($netPayable)) . ' RUPEES ONLY ./-';
-    $html .= '</td></tr>';
-
-    $html .= '<tr>';
-    $html .= '<td colspan="11" style="vertical-align:top; font-size:9px;">';
-    $html .= '<b>Service Catagory : Courier & Cargo</b><br><br>';
-    $html .= '<b>Terms & Conditions :</b><br>';
-    $html .= 'i. Difference if any may be notified within 7 days of receipt of bills.<br>';
-    $html .= 'ii. Subject to Pune Jurisdiction<br>';
-    $html .= 'iii. E & O.E.<br>';
-    $html .= 'iv. Draw Cheque in favour of "MA LOGISTICS"<br>';
-    $html .= 'v. For NEFT/RTGS: Bank Details are as follows :-<br>';
-    $html .= '&nbsp;&nbsp;&nbsp;Bank Name : AXIS BANK, &nbsp;&nbsp; Branch: Bund Garden,Pune<br>';
-    $html .= '&nbsp;&nbsp;&nbsp;Current Account No : 914020014273896<br>';
-    $html .= '&nbsp;&nbsp;&nbsp;IFSC : UTIB0000073';
-    $html .= '</td>';
-    $html .= '<td colspan="5" style="vertical-align:top; text-align:center; font-size:10px; font-weight:bold;">';
-    $html .= 'For M.A LOGISTICS<br><br><br><br><br><br><br><br>Authorised signatory';
-    $html .= '</td>';
-    $html .= '</tr>';
-    $html .= '</table>';
+    $html = view('pdfs/invoice', $viewData);
 
     $pdf->writeHTML($html, true, false, true, false, '');
     $pdf->Output('AWB-' . $booking['awb_no'] . '.pdf', 'D');
@@ -1042,6 +708,7 @@ public function exportExcel()
 
 
 // =========== Export Excel End ============
+
 
 
 
