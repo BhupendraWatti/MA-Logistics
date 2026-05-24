@@ -120,8 +120,8 @@ public function create()
         $bookingService->createBooking($this->request->getPost(), session()->get('user_id'));
         $awb_no = $this->request->getPost('awb_no');
         return redirect()->to('/logistics')->with('success', 'Booking created successfully! AWB: ' . $awb_no);
-    } catch (\Exception $e) {
-        return redirect()->back()->with('error', $e->getMessage());
+    } catch (\Throwable $e) {
+        return redirect()->back()->with('error', 'SYSTEM ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
     }
   }
 
@@ -191,8 +191,8 @@ public function edit($id)
         $bookingService->updateBooking($id, $this->request->getPost(), session()->get('user_id'));
         $awb_no = $this->request->getPost('awb_no');
         return redirect()->to('/logistics')->with('success', 'Booking updated successfully! AWB: ' . $awb_no);
-    } catch (\Exception $e) {
-        return redirect()->back()->with('error', $e->getMessage());
+    } catch (\Throwable $e) {
+        return redirect()->back()->with('error', 'SYSTEM ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
     }
   }
 

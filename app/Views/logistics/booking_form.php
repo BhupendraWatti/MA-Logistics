@@ -437,7 +437,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         const w = parseFloat(row.find('[name*="width"]').val()) || 0;
         const h = parseFloat(row.find('[name*="height"]').val()) || 0;
 
-        const volumetric = (l * w * h) / 5000;
+        const volumetric = (l * w * h) / 6000;
         const chargeable = Math.max(actual, volumetric, 45);
 
         row.find('[name*="volumetric_weight"]').val(volumetric.toFixed(2));

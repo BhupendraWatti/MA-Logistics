@@ -34,7 +34,7 @@ class ShipmentItemModel extends Model
 
     public function calculateChargeableWeight($actual_weight, $length, $width, $height)
     {
-        $volumetric = ($length * $width * $height) / 5000;
+        $volumetric = ($length * $width * $height) / 6000;
         $chargeable = max($actual_weight, $volumetric);
         return max($chargeable, 45); // Minimum 45 KG
     }
