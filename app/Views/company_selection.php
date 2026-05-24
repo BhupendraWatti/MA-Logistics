@@ -40,15 +40,13 @@
                 <h5 class="text-center mb-3">⚙️ Manage Companies</h5>
                 <?php endif; ?>
                 
-                <!-- Create Company option disabled -->
-                <?php if (false): ?>
+                <!-- Create Company Option -->
                 <?= form_open('logistics/createCompany', ['class' => 'mb-3 d-flex']) ?>
                     <input type="text" name="name" class="form-control me-2" placeholder="New Company Name" required>
                     <button type="submit" class="btn btn-success text-nowrap">
-                        <i class="fas fa-plus"></i> Add
+                        Add
                     </button>
                 <?= form_close() ?>
-                <?php endif; ?>
 
                 <?php //if ($role === 'admin' || !empty($permissions['can_delete'])): ?>
                 <?php if (session()->get('role') === 'admin'): ?>
