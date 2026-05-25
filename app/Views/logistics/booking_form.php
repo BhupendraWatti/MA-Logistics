@@ -279,7 +279,9 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         row.find('[name*="width"]').val(item.width || 0);
         row.find('[name*="height"]').val(item.height || 0);
         row.find('[name*="volumetric_weight"]').val(item.volumetric_weight || 0);
-        row.find('[name*="chargeable_weight"]').val(item.chargeable_weight || 45);
+        // Populate calculated chargeable weight if available
+        row.find('[name*="calculated_chargeable_weight"]').val(item.calculated_chargeable_weight || 45);
+        row.find('[name*="chargeable_weight"]').val(item.final_chargeable_weight || 45);
         row.find('[name*="pieces"]').val(item.pieces || 1);
         row.find('[name*="eway_bill_no"]').val(item.eway_bill_no || '');
         row.find('[name*="eway_bill_date"]').val(item.eway_bill_date || '');
@@ -356,7 +358,8 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         </div>
         <div class="col-md-3 mt-3">
             <label><strong>Chg. Wt <small>(Min 45kg)</small></strong></label>
-            <input type="number" step="0.01" name="items[${itemCounter}][chargeable_weight]" class="form-control bg-success text-white fw-bold" aria-label="Chargeable Weight for Item ${itemCounter}" readonly>
+            <input type="hidden" name="items[${itemCounter}][calculated_chargeable_weight]">
+            <input type="number" step="0.01" name="items[${itemCounter}][chargeable_weight]" class="form-control bg-success text-white fw-bold" aria-label="Chargeable Weight for Item ${itemCounter}">
         </div>
 
         <!-- 14. PIECES -->
@@ -441,6 +444,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         const chargeable = Math.max(actual, volumetric, 45);
 
         row.find('[name*="volumetric_weight"]').val(volumetric.toFixed(2));
+        row.find('[name*="calculated_chargeable_weight"]').val(chargeable.toFixed(2));
         row.find('[name*="chargeable_weight"]').val(chargeable.toFixed(2));
     });
 

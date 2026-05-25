@@ -47,6 +47,9 @@ $routes->post('admin/toggleStatus', 'AdminController::toggleStatus');
 // Change Password Route
 $routes->post('admin/changePassword', 'AdminController::changePassword');
 
+// Export CSV Full
+$routes->get('logistics/export', 'Logistics::export');
+
 // ExportExcel
 $routes->get('logistics/exportExcel', 'Logistics::exportExcel');
 $routes->match(['get', 'post'], 'logistics/exportExcel', 'Logistics::exportExcel');

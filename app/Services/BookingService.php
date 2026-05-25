@@ -116,7 +116,8 @@ class BookingService
                     'width' => $this->validateNumeric($item['width'] ?? 0),
                     'height' => $this->validateNumeric($item['height'] ?? 0),
                     'volumetric_weight' => $this->validateNumeric($item['volumetric_weight'] ?? 0),
-                    'chargeable_weight' => $this->validateNumeric($item['chargeable_weight'] ?? 0),
+                    'calculated_chargeable_weight' => $this->validateNumeric($item['calculated_chargeable_weight'] ?? 0),
+                    'final_chargeable_weight' => $this->validateNumeric($item['chargeable_weight'] ?? 0),
                     'pieces' => intval($item['pieces'] ?? 1),
                     'eway_bill_no' => $item['eway_bill_no'] ?? '',
                     'eway_bill_date' => $item['eway_bill_date'] ?? null,
@@ -133,8 +134,14 @@ class BookingService
                 if (!empty($item['id']) && in_array($item['id'], $existingIds)) {
                     $this->shipmentModel->update($item['id'], $shipmentData);
                     $submittedIds[] = $item['id'];
+                    $recordId = $item['id'];
                 } else {
                     $this->shipmentModel->insert($shipmentData);
+                    $recordId = $this->shipmentModel->getInsertID();
+                }
+
+                if ($shipmentData['final_chargeable_weight'] != $shipmentData['calculated_chargeable_weight']) {
+                    $this->logAudit('shipment_items', $recordId, 'chargeable_weight_override', $shipmentData['calculated_chargeable_weight'], $shipmentData['final_chargeable_weight']);
                 }
             }
         }
@@ -211,7 +218,8 @@ class BookingService
                     'width' => $this->validateNumeric($item['width'] ?? 0),
                     'height' => $this->validateNumeric($item['height'] ?? 0),
                     'volumetric_weight' => $this->validateNumeric($item['volumetric_weight'] ?? 0),
-                    'chargeable_weight' => $this->validateNumeric($item['chargeable_weight'] ?? 0),
+                    'calculated_chargeable_weight' => $this->validateNumeric($item['calculated_chargeable_weight'] ?? 0),
+                    'final_chargeable_weight' => $this->validateNumeric($item['chargeable_weight'] ?? 0),
                     'pieces' => intval($item['pieces'] ?? 1),
                     'eway_bill_no' => $item['eway_bill_no'] ?? '',
                     'eway_bill_date' => $item['eway_bill_date'] ?? null,
@@ -226,6 +234,11 @@ class BookingService
                 ];
                 
                 $this->shipmentModel->insert($shipmentData);
+                $recordId = $this->shipmentModel->getInsertID();
+
+                if ($shipmentData['final_chargeable_weight'] != $shipmentData['calculated_chargeable_weight']) {
+                    $this->logAudit('shipment_items', $recordId, 'chargeable_weight_override', $shipmentData['calculated_chargeable_weight'], $shipmentData['final_chargeable_weight']);
+                }
             }
         }
     }
@@ -273,12 +286,27 @@ class BookingService
         }
     }
 
-    private function validateNumeric($val)
+    private function validateNumeric($value)
     {
-        if (!is_numeric($val) && !empty($val)) {
-            throw new Exception("Invalid numeric format detected in financial fields.");
+        if (is_numeric($value)) {
+            return (float)$value;
         }
-        return floatval($val);
+        return 0.00;
+    }
+
+    private function logAudit($tableName, $recordId, $fieldName, $oldValue, $newValue)
+    {
+        if ((string)$oldValue !== (string)$newValue) {
+            $this->db->table('audit_logs')->insert([
+                'table_name' => $tableName,
+                'record_id'  => $recordId,
+                'field_name' => $fieldName,
+                'old_value'  => $oldValue,
+                'new_value'  => $newValue,
+                'changed_by' => session()->get('user_id'),
+                'created_at' => date('Y-m-d H:i:s')
+            ]);
+        }
     }
 
     private function calculateTotalAmount(array $salesData)

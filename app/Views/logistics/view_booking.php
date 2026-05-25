@@ -83,7 +83,7 @@
                                     <td><?= esc($item['docket_no']) ?></td>
                                     <td><?= number_format($item['actual_weight'], 2) ?>kg</td>
                                     <td><?= $item['length'] ?>x<?= $item['width'] ?>x<?= $item['height'] ?>cm</td>
-                                    <td><strong><?= number_format($item['chargeable_weight'], 2) ?>kg</strong></td>
+                                    <td><strong><?= number_format($item['final_chargeable_weight'], 2) ?>kg</strong></td>
                                     <td>₹<?= number_format($item['rate'], 2) ?></td>
                                 </tr>
                                 <?php endforeach; ?>

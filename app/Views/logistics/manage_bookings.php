@@ -48,9 +48,9 @@
             <tbody>
                 <?php foreach($bookings as $booking): 
                     $shipmentModel = new \App\Models\ShipmentItemModel();
-                    $totalWeight = $shipmentModel->selectSum('chargeable_weight')
+                    $totalWeight = $shipmentModel->selectSum('final_chargeable_weight')
                                                ->where('booking_id', $booking['id'])
-                                               ->first()['chargeable_weight'] ?? 0;
+                                               ->first()['final_chargeable_weight'] ?? 0;
                     $salesModel = new \App\Models\SalesChargeModel();
                     $totalAmount = $salesModel->select('(rate * weight) + ddc + ssc + btc + flc + doc + inbound_tsp + outbound_tsp + tcp + utility_charges + xray_charges + ado + awb_fees_agent + awb_fees_carrier + admin_charges + delivery_order_charges + inbound_handling + inbound_storage + outbound_storage + misc_charges AS total_amount', false)->where('booking_id', $booking['id'])->first()['total_amount'] ?? 0;
                 ?>

@@ -623,6 +623,65 @@ private function numberToWords($number)
 //     exit;
 // }
 
+public function export()
+{
+    $db = \Config\Database::connect();
+    $companyId = session()->get('selected_company_id');
+    
+    if (!$companyId) {
+        return redirect()->back()->with('error', 'Please select a company first.');
+    }
+    
+    $builder = $db->table('shipment_items s');
+    $builder->select('
+        b.awb_no, b.booking_date, b.origin, b.destination, b.mode_transport,
+        s.docket_no, s.customer_name as shipper, s.consignee, 
+        s.actual_weight, s.calculated_chargeable_weight, s.final_chargeable_weight, s.pieces,
+        c.total_amount as parent_sales_charges
+    ');
+    $builder->join('bookings b', 'b.id = s.booking_id', 'left');
+    $builder->join('sales_charges c', 'c.booking_id = b.id', 'left');
+    $builder->where('b.company_id', $companyId);
+    $builder->orderBy('b.id', 'DESC');
+    
+    $query = $builder->get();
+    
+    $filename = 'Malogistics_Export_' . date('Y-m-d_H-i') . '.csv';
+    
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    
+    $output = fopen('php://output', 'w');
+    
+    fputcsv($output, [
+        'AWB No', 'Booking Date', 'Origin', 'Destination', 'Mode',
+        'Docket No', 'Shipper', 'Consignee', 
+        'Actual Weight', 'Calculated Chargeable Wt', 'Final Chargeable Wt', 'Pieces',
+        'Parent Sales Charges'
+    ]);
+    
+    foreach ($query->getResultArray() as $row) {
+        fputcsv($output, [
+            $row['awb_no'],
+            $row['booking_date'],
+            $row['origin'],
+            $row['destination'],
+            $row['mode_transport'],
+            $row['docket_no'],
+            $row['shipper'],
+            $row['consignee'],
+            $row['actual_weight'],
+            $row['calculated_chargeable_weight'],
+            $row['final_chargeable_weight'],
+            $row['pieces'],
+            $row['parent_sales_charges']
+        ]);
+    }
+    
+    fclose($output);
+    exit;
+}
+
 public function exportExcel()
 {
     $bookingModel = new BookingModel();

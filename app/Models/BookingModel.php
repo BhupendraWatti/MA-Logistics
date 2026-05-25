@@ -19,7 +19,7 @@ class BookingModel extends Model
     public function searchByCompany($companyId, $searchValue)
     {
         return $this->select('bookings.*, companies.name as company_name, 
-           COALESCE(SUM(shipment_items.chargeable_weight), 0) as total_chargeable_weight')
+           COALESCE(SUM(shipment_items.final_chargeable_weight), 0) as total_chargeable_weight')
         ->join('companies', 'companies.id = bookings.company_id')
         ->join('shipment_items', 'shipment_items.booking_id = bookings.id', 'left')
         ->where('bookings.company_id', $companyId)
