@@ -5,6 +5,11 @@ use App\Models\CompanyModel;
 use App\Models\BookingModel;
 use App\Models\ShipmentItemModel;
 use App\Models\SalesChargeModel;
+use App\Models\CustomerModel;
+use App\Models\TransporterModel;
+use App\Models\DriverModel;
+use App\Models\AirlineModel;
+use App\Models\LookupValueModel;
 
 class Logistics extends BaseController
 {
@@ -99,13 +104,29 @@ public function create()
             ->with('error', 'You do not have permission to create bookings!');
     }
     
+    $companyId = (int) session()->get('selected_company_id');
     $data['user'] = session()->get();
-    $data['selected_company_id'] = session()->get('selected_company_id');
+    $data['selected_company_id']   = $companyId;
     $data['selected_company_name'] = session()->get('selected_company_name');
     
-    if (!$data['selected_company_id']) {
+    if (!$companyId) {
         return redirect()->to('/company-selection')->with('error', 'Please select company first!');
     }
+    
+    // Master data for dropdowns
+    $data['customers']    = (new CustomerModel())->getByCompany($companyId);
+    $data['transporters'] = (new TransporterModel())->getByCompany($companyId);
+    $data['drivers']      = (new DriverModel())->getByCompany($companyId);
+    $data['airlines']     = (new AirlineModel())->getByCompany($companyId);
+    $data['lookups']      = [
+        'origin'            => (new LookupValueModel())->getByType($companyId, 'origin'),
+        'destination'       => (new LookupValueModel())->getByType($companyId, 'destination'),
+        'mode'              => (new LookupValueModel())->getByType($companyId, 'mode'),
+        'material_type'     => (new LookupValueModel())->getByType($companyId, 'material_type'),
+        'material_category' => (new LookupValueModel())->getByType($companyId, 'material_category'),
+        'payment_type'      => (new LookupValueModel())->getByType($companyId, 'payment_type'),
+    ];
+    $data['company'] = (new CompanyModel())->find($companyId);
     
     return view('logistics/booking_form', $data);
 }
@@ -117,7 +138,9 @@ public function create()
     $bookingService = new \App\Services\BookingService();
     
     try {
-        $bookingService->createBooking($this->request->getPost(), session()->get('user_id'));
+        $companyId = session()->get('selected_company_id');
+        if (!$companyId) return redirect()->to('/company-selection');
+        $bookingService->createBooking($this->request->getPost(), session()->get('user_id'), $companyId);
         $awb_no = $this->request->getPost('awb_no');
         return redirect()->to('/logistics')->with('success', 'Booking created successfully! AWB: ' . $awb_no);
     } catch (\Throwable $e) {
@@ -133,8 +156,8 @@ public function create()
     $salesModel = new SalesChargeModel();
     
     $booking = $bookingModel->getFullBooking($id);
-    if (!$booking) {
-        return redirect()->back()->with('error', 'Booking not found!');
+    if (!$booking || $booking['company_id'] != session()->get('selected_company_id')) {
+        return redirect()->back()->with('error', 'Booking not found or access denied!');
     }
     
     $shipments = $shipmentModel->where('booking_id', $id)->findAll();
@@ -155,26 +178,39 @@ public function edit($id)
 {
     $this->checkPermission('can_edit');
     
-    $bookingModel = new BookingModel();
+    $bookingModel  = new BookingModel();
     $shipmentModel = new ShipmentItemModel();
-    $salesModel = new SalesChargeModel();
-    //$companyModel = new CompanyModel();
+    $salesModel    = new SalesChargeModel();
+    $companyId     = (int) session()->get('selected_company_id');
     
     $booking = $bookingModel->getFullBooking($id);
-    if (!$booking) {
-        return redirect()->back()->with('error', 'Booking not found!');
+    if (!$booking || $booking['company_id'] != $companyId) {
+        return redirect()->back()->with('error', 'Booking not found or access denied!');
     }
     
     $data = [
-        'booking' => $booking,
-        'shipments' => $shipmentModel->where('booking_id', $id)->findAll(),
-        'sales' => $salesModel->where('booking_id', $id)->first(),
-        //'companies' => $companyModel->findAll(),  // ← ADD THIS
-        'isEdit' => true,
-        'bookingId' => $id,
-        'selected_company_id' => session()->get('selected_company_id'), // ✅ Auto company
-        'selected_company_name' => session()->get('selected_company_name'), // Add this for Auto
-        'user' => session()->get()
+        'booking'              => $booking,
+        'shipments'            => $shipmentModel->where('booking_id', $id)->findAll(),
+        'sales'                => $salesModel->where('booking_id', $id)->first(),
+        'isEdit'               => true,
+        'bookingId'            => $id,
+        'selected_company_id'  => $companyId,
+        'selected_company_name'=> session()->get('selected_company_name'),
+        'user'                 => session()->get(),
+        // Master data for dropdowns
+        'customers'    => (new CustomerModel())->getByCompany($companyId),
+        'transporters' => (new TransporterModel())->getByCompany($companyId),
+        'drivers'      => (new DriverModel())->getByCompany($companyId),
+        'airlines'     => (new AirlineModel())->getByCompany($companyId),
+        'lookups'      => [
+            'origin'            => (new LookupValueModel())->getByType($companyId, 'origin'),
+            'destination'       => (new LookupValueModel())->getByType($companyId, 'destination'),
+            'mode'              => (new LookupValueModel())->getByType($companyId, 'mode'),
+            'material_type'     => (new LookupValueModel())->getByType($companyId, 'material_type'),
+            'material_category' => (new LookupValueModel())->getByType($companyId, 'material_category'),
+            'payment_type'      => (new LookupValueModel())->getByType($companyId, 'payment_type'),
+        ],
+        'company' => (new CompanyModel())->find($companyId),
     ];
     
     return view('logistics/booking_form', $data);
@@ -188,7 +224,9 @@ public function edit($id)
     $bookingService = new \App\Services\BookingService();
     
     try {
-        $bookingService->updateBooking($id, $this->request->getPost(), session()->get('user_id'));
+        $companyId = session()->get('selected_company_id');
+        if (!$companyId) return redirect()->to('/company-selection');
+        $bookingService->updateBooking($id, $this->request->getPost(), session()->get('user_id'), $companyId);
         $awb_no = $this->request->getPost('awb_no');
         return redirect()->to('/logistics')->with('success', 'Booking updated successfully! AWB: ' . $awb_no);
     } catch (\Throwable $e) {
@@ -204,8 +242,8 @@ public function edit($id)
     $bookingModel = new BookingModel();
     $booking = $bookingModel->find($id);
     
-    if (!$booking) {
-        return $this->response->setJSON(['success' => false, 'message' => 'Booking not found']);
+    if (!$booking || $booking['company_id'] != session()->get('selected_company_id')) {
+        return $this->response->setJSON(['success' => false, 'message' => 'Booking not found or access denied']);
     }
     
     // Cascade delete shipments and sales
@@ -383,8 +421,8 @@ public function exportPdf($id)
     $shipments = $shipmentModel->where('booking_id', $id)->findAll();
     $sales = $salesModel->where('booking_id', $id)->first();
     
-    if (!$booking) {
-        return redirect()->back()->with('error', 'Booking not found!');
+    if (!$booking || $booking['company_id'] != session()->get('selected_company_id')) {
+        return redirect()->back()->with('error', 'Booking not found or access denied!');
     }
     
     if (empty($shipments)) {
@@ -461,12 +499,30 @@ public function exportPdf($id)
         $serial++;
     }
 
-    $cgst = round($totalTaxable * 0.09);
-    $sgst = round($totalTaxable * 0.09);
-    $igst = 0;
+    // Load GST rates from company master (not hardcoded)
+    $companyData = (new CompanyModel())->select('name, address, email, mobile, gstin, pan, cgst_rate, sgst_rate, igst_rate, terms_conditions, signature_path')
+                                       ->find($booking['company_id']);
+                                       
+    $cgstRate = (float) ($companyData['cgst_rate'] ?? 9);
+    $sgstRate = (float) ($companyData['sgst_rate'] ?? 9);
+    $igstRate = (float) ($companyData['igst_rate'] ?? 0);
+    
+    // BUG FIX: Only apply GST if the booking has gst_applied checked
+    if (isset($booking['gst_applied']) && $booking['gst_applied'] == 1) {
+        // If state logic is complex, for now we apply what's configured in Company Master
+        $cgst = round($totalTaxable * $cgstRate / 100);
+        $sgst = round($totalTaxable * $sgstRate / 100);
+        $igst = round($totalTaxable * $igstRate / 100);
+    } else {
+        $cgst = 0;
+        $sgst = 0;
+        $igst = 0;
+    }
+    
     $netPayable = round($totalTaxable + $cgst + $sgst + $igst);
 
     $viewData = [
+        'company' => $companyData,
         'recipientName' => $recipientName,
         'recipientAddress' => $recipientAddress,
         'invoiceNo' => $invoiceNo,

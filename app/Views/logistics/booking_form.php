@@ -2,7 +2,7 @@
 <?php 
 $permissions = session()->get('permissions') ?? [];
 if (!$permissions['can_create'] && !isset($isEdit)) {
-    echo '<div class="alert alert-danger text-center"><h3>Access Denied</h3><p>Create permission required!</p><a href="/logistics" class="btn btn-primary">Go to Dashboard</a></div>';
+    echo '<div class="alert alert-danger text-center"><h3>Access Denied</h3><p>Create permission required!</p><a href="' . base_url('logistics') . '" class="btn btn-primary">Go to Dashboard</a></div>';
     return;
 }
 ?>
@@ -77,36 +77,54 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-bold">Origin <span class="text-danger">*</span></label>
-                    <input type="text" name="origin" class="form-control" 
+                    <input type="text" name="origin" list="originList" class="form-control" 
                     value="<?= $booking['origin'] ?? '' ?>" required>
+                    <datalist id="originList">
+                        <?php foreach($lookups['origin'] ?? [] as $l): ?>
+                            <option value="<?= esc($l['value']) ?>">
+                        <?php endforeach; ?>
+                    </datalist>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-bold">Destination <span class="text-danger">*</span></label>
-                    <input type="text" name="destination" class="form-control" 
+                    <input type="text" name="destination" list="destList" class="form-control" 
                     value="<?= $booking['destination'] ?? '' ?>" required>
+                    <datalist id="destList">
+                        <?php foreach($lookups['destination'] ?? [] as $l): ?>
+                            <option value="<?= esc($l['value']) ?>">
+                        <?php endforeach; ?>
+                    </datalist>
                 </div>
                 <div class="col-md-3 mt-2">
                     <label class="form-label fw-bold">Mode</label>
                     <select name="mode_transport" class="form-select">
-                        <option value="Air" <?= ($booking['mode_transport'] ?? '') == 'Air' ? 'selected' : '' ?>>Air</option>
-                        <option value="Road" <?= ($booking['mode_transport'] ?? '') == 'Road' ? 'selected' : '' ?>>Road</option>
-                        <option value="Rail" <?= ($booking['mode_transport'] ?? '') == 'Rail' ? 'selected' : '' ?>>Rail</option>
+                        <option value="">--Select Mode--</option>
+                        <?php foreach($lookups['mode'] ?? [] as $l): ?>
+                            <option value="<?= esc($l['value']) ?>" <?= ($booking['mode_transport'] ?? '') == $l['value'] ? 'selected' : '' ?>><?= esc($l['value']) ?></option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="col-md-3 mt-2">
                     <label class="form-label">Material Type</label>
                     <select name="material_type" class="form-select">
-                        <option value="Perishable" <?= ($booking['material_type'] ?? '') == 'Perishable' ? 'selected' : '' ?>>Perishable</option>
-                        <option value="Non-Perishable" <?= ($booking['material_type'] ?? '') == 'Non-Perishable' ? 'selected' : '' ?>>Non-Perishable</option>
+                        <option value="">--Select Type--</option>
+                        <?php foreach($lookups['material_type'] ?? [] as $l): ?>
+                            <option value="<?= esc($l['value']) ?>" <?= ($booking['material_type'] ?? '') == $l['value'] ? 'selected' : '' ?>><?= esc($l['value']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-3 mt-2">
+                    <label class="form-label">Material Category</label>
+                    <select name="material_category" class="form-select">
+                        <option value="">--Select Category--</option>
+                        <?php foreach($lookups['material_category'] ?? [] as $l): ?>
+                            <option value="<?= esc($l['value']) ?>" <?= ($booking['material_category'] ?? '') == $l['value'] ? 'selected' : '' ?>><?= esc($l['value']) ?></option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="col-md-3 mt-2">
                     <label class="form-label">Material Details</label>
                     <textarea name="material_details" class="form-control" rows="1"><?= $booking['material_details'] ?? '' ?></textarea>
-                </div>
-                <div class="col-md-3 mt-2">
-                    <label class="form-label">Material Category</label>
-                    <input type="text" name="material_category" class="form-control" value="<?= $booking['material_category'] ?? '' ?>">
                 </div>
                 <!-- <div class="col-md-3 mt-2">
                     <label class="form-label">Status</label>
@@ -117,26 +135,77 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                         <option value="Delivered" <?//= ($booking['status'] ?? '') == 'Delivered' ? 'selected' : '' ?>>Delivered</option>
                     </select>
                 </div> -->
+                <div class="col-md-3 mt-2">
+                    <label class="form-label">Payment Type</label>
+                    <select name="payment_type" id="payment_type" class="form-select">
+                        <option value="">--Select Payment Type--</option>
+                        <?php foreach($lookups['payment_type'] ?? [] as $l): ?>
+                            <option value="<?= esc($l['value']) ?>" <?= ($booking['payment_type'] ?? '') == $l['value'] ? 'selected' : '' ?>><?= esc($l['value']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-3 mt-2">
+                    <label class="form-label">Narration</label>
+                    <input type="text" name="narration" id="narration" class="form-control" value="<?= esc($booking['narration'] ?? '') ?>">
+                </div>
+                <div class="col-md-3 mt-2 d-flex align-items-center">
+                    <div class="form-check mt-4">
+                        <input class="form-check-input" type="checkbox" name="gst_applied" id="gst_applied" value="1" <?= (!isset($booking['id']) || !empty($booking['gst_applied'])) ? 'checked' : '' ?>>
+                        <label class="form-check-label fw-bold" for="gst_applied">
+                            GST Applied
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-3 mt-2">
+                    <label class="form-label fw-bold">Volumetric Formula</label>
+                    <input type="number" name="volumetric_formula" id="volumetric_formula" class="form-control" value="<?= esc($booking['volumetric_formula'] ?? 6000) ?>" onchange="recalcAllItems()">
+                </div>
             </div>
 
             <!-- B. TRANSPORT DETAILS -->
             <div class="row mb-4 p-3 border rounded bg-light">
                 <h5>B. Transport & Driver Details</h5>
                 <div class="col-md-3">
+                    <label>Transporter Name</label>
+                    <input type="text" name="transporter_name" id="transporter_name" list="transporterList" class="form-control" value="<?= $booking['transporter_name'] ?? '' ?>" onchange="autoFillTransporter()">
+                    <datalist id="transporterList">
+                        <?php foreach($transporters ?? [] as $t): ?>
+                            <option value="<?= esc($t['name']) ?>" data-mobile="<?= esc($t['mobile']) ?>">
+                        <?php endforeach; ?>
+                    </datalist>
+                </div>
+                <div class="col-md-3">
+                    <label>Transporter Mobile</label>
+                    <input type="text" name="transporter_mobile" id="transporter_mobile" class="form-control" value="<?= $booking['transporter_mobile'] ?? '' ?>">
+                </div>
+                <div class="col-md-3">
                     <label>Driver Name</label>
-                    <input type="text" name="driver_name" class="form-control" value="<?= $booking['driver_name'] ?? '' ?>">
+                    <input type="text" name="driver_name" id="driver_name" list="driverList" class="form-control" value="<?= $booking['driver_name'] ?? '' ?>" onchange="autoFillDriver()">
+                    <datalist id="driverList">
+                        <?php foreach($drivers ?? [] as $d): ?>
+                            <option value="<?= esc($d['name']) ?>" data-mobile="<?= esc($d['mobile']) ?>" data-vehicle="<?= esc($d['vehicle_no']) ?>" data-license="<?= esc($d['license_no']) ?>">
+                        <?php endforeach; ?>
+                    </datalist>
                 </div>
                 <div class="col-md-3">
                     <label>Driver Mobile</label>
-                    <input type="text" name="driver_mobile" class="form-control" value="<?= $booking['driver_mobile'] ?? '' ?>">
+                    <input type="text" name="driver_mobile" id="driver_mobile" class="form-control" value="<?= $booking['driver_mobile'] ?? '' ?>">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3 mt-3">
                     <label>Vehicle No.</label>
-                    <input type="text" name="vehicle_no" class="form-control" value="<?= $booking['vehicle_no'] ?? '' ?>">
+                    <input type="text" name="vehicle_no" id="vehicle_no" class="form-control" value="<?= $booking['vehicle_no'] ?? '' ?>">
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-3 mt-3">
+                    <label>Driver License</label>
+                    <input type="text" name="driver_license_no" id="driver_license_no" class="form-control" value="<?= $booking['driver_license_no'] ?? '' ?>">
+                </div>
+                <div class="col-md-3 mt-3">
                     <label>Total Pieces</label>
-                    <input type="number" name="total_pieces" class="form-control" value="<?= $booking['total_pieces'] ?? '' ?>">
+                    <input type="number" name="total_pieces" id="total_pieces" class="form-control" value="<?= $booking['total_pieces'] ?? '' ?>" readonly>
+                </div>
+                <div class="col-md-3 mt-3">
+                    <label>Total Weight</label>
+                    <input type="number" step="0.01" name="total_weight" id="total_weight" class="form-control" value="<?= $booking['total_weight'] ?? '' ?>" readonly>
                 </div>
             </div>
 
@@ -216,8 +285,9 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 <div class="col-md-6 offset-md-3">
                     <div class="card">
                         <div class="card-body text-center">
-                            <h5>Total Amount: <span id="totalAmount" class="text-success">₹0.00</span></h5>
-                            <button type="submit" id="mainSubmitBtn" class="btn btn-success btn-lg w-100">
+                            <h5>Total Taxable Amount: <span id="totalTaxableAmount" class="text-primary">₹0.00</span></h5>
+                            <h6 class="text-muted">Net Payable (Incl. GST): <span id="netPayableAmount" class="text-success fw-bold">₹0.00</span></h6>
+                            <button type="submit" id="mainSubmitBtn" class="btn btn-success btn-lg w-100 mt-3">
                                 <?php if (isset($isEdit) && $isEdit): ?>
                                     Update Booking
                                 <?php else: ?>
@@ -232,6 +302,13 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     </div>
 
     <?= form_close() ?>
+
+    <!-- Master Datalists -->
+    <datalist id="customerList">
+        <?php foreach($customers ?? [] as $c): ?>
+            <option value="<?= esc($c['name']) ?>">
+        <?php endforeach; ?>
+    </datalist>
 </div>
 <?= $this->endSection() ?>
 
@@ -240,6 +317,15 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     let itemCounter = 0;
     let shipmentsData = <?= json_encode($shipments ?? []) ?>;
     let isEditMode = <?= isset($isEdit) && $isEdit ? 'true' : 'false' ?>;
+
+    // Grid Memory & Master Data
+    let _lastRow = { shipper: '', bill_to: '', consignee: '', docket_no: '' };
+    const _customers = <?= json_encode($customers ?? []) ?>;
+    const _companyGst = {
+        cgst: <?= $company['cgst_rate'] ?? 9 ?>,
+        sgst: <?= $company['sgst_rate'] ?? 9 ?>,
+        igst: <?= $company['igst_rate'] ?? 0 ?>
+    };
 
     //  FIXED COMPLETE INITIALIZATION
     $(document).ready(function() {
@@ -280,8 +366,8 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         row.find('[name*="height"]').val(item.height || 0);
         row.find('[name*="volumetric_weight"]').val(item.volumetric_weight || 0);
         // Populate calculated chargeable weight if available
-        row.find('[name*="calculated_chargeable_weight"]').val(item.calculated_chargeable_weight || 45);
-        row.find('[name*="chargeable_weight"]').val(item.final_chargeable_weight || 45);
+        row.find('[name*="calculated_chargeable_weight"]').val(item.calculated_chargeable_weight || 0);
+        row.find('[name*="chargeable_weight"]').val(item.final_chargeable_weight || 0);
         row.find('[name*="pieces"]').val(item.pieces || 1);
         row.find('[name*="eway_bill_no"]').val(item.eway_bill_no || '');
         row.find('[name*="eway_bill_date"]').val(item.eway_bill_date || '');
@@ -306,15 +392,15 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         <!-- 1-3. PARTIES (REQUIRED) -->
         <div class="col-md-4">
             <label class="fw-bold">Customer (Shipper) <span class="text-danger">*</span></label>
-            <input type="text" name="items[${itemCounter}][customer_name]" class="form-control" aria-label="Customer Name for Item ${itemCounter}" required>
+            <input type="text" name="items[${itemCounter}][customer_name]" id="shipper_${itemCounter}" list="customerList" class="form-control" aria-label="Customer Name for Item ${itemCounter}" onchange="autoFillShipper(${itemCounter})" required>
         </div>
         <div class="col-md-4">
             <label class="fw-bold">Bill To <span class="text-danger">*</span></label>
-            <input type="text" name="items[${itemCounter}][bill_to]" class="form-control" aria-label="Bill To for Item ${itemCounter}" required>
+            <textarea name="items[${itemCounter}][bill_to]" id="bill_to_${itemCounter}" class="form-control" rows="2" aria-label="Bill To for Item ${itemCounter}" required></textarea>
         </div>
         <div class="col-md-4">
             <label class="fw-bold">Consignee <span class="text-danger">*</span></label>
-            <input type="text" name="items[${itemCounter}][consignee]" class="form-control" aria-label="Consignee for Item ${itemCounter}" required>
+            <textarea name="items[${itemCounter}][consignee]" id="consignee_${itemCounter}" class="form-control" rows="2" aria-label="Consignee for Item ${itemCounter}" required></textarea>
         </div>
 
         <!-- 4-7. DOC NUMBERS -->
@@ -425,27 +511,98 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         </div>`;
 
         $('#shipmentItems').append(template);
+
+        // Apply grid memory for new rows
+        if (_lastRow.shipper) {
+            $(`#shipper_${itemCounter}`).val(_lastRow.shipper);
+            $(`#bill_to_${itemCounter}`).val(_lastRow.bill_to);
+            $(`#consignee_${itemCounter}`).val(_lastRow.consignee);
+            $(`[name="items[${itemCounter}][docket_no]"]`).val(_lastRow.docket_no);
+        }
     }
 
     function removeItem(itemId) {
         $(`.shipment-item[data-item="${itemId}"]`).remove();
+        recalcAllItems();
+    }
+
+    // Capture changes to update grid memory
+    $(document).on('change', '[name*="[customer_name]"], [name*="[bill_to]"], [name*="[consignee]"], [name*="[docket_no]"]', function() {
+        const row = $(this).closest('.shipment-item');
+        _lastRow.shipper = row.find('[name*="[customer_name]"]').val();
+        _lastRow.bill_to = row.find('[name*="[bill_to]"]').val();
+        _lastRow.consignee = row.find('[name*="[consignee]"]').val();
+        _lastRow.docket_no = row.find('[name*="[docket_no]"]').val();
+    });
+
+    // Auto-fill Functions for Masters
+    function autoFillShipper(id) {
+        const name = $(`#shipper_${id}`).val();
+        const c = _customers.find(x => x.name === name);
+        if (c) {
+            if (c.bill_to) $(`#bill_to_${id}`).val(c.bill_to);
+            if (c.consignee) $(`#consignee_${id}`).val(c.consignee);
+            if (c.payment_type) $('#payment_type').val(c.payment_type);
+            if (c.narration) $('#narration').val(c.narration);
+            $(`#shipper_${id}`).trigger('change'); // update memory
+        }
+    }
+
+    function autoFillTransporter() {
+        const val = $('#transporter_name').val();
+        const opt = $('#transporterList option').filter(function() { return this.value === val; });
+        if (opt.length) {
+            $('#transporter_mobile').val(opt.data('mobile'));
+        }
+    }
+
+    function autoFillDriver() {
+        const val = $('#driver_name').val();
+        const opt = $('#driverList option').filter(function() { return this.value === val; });
+        if (opt.length) {
+            $('#driver_mobile').val(opt.data('mobile'));
+            $('#vehicle_no').val(opt.data('vehicle'));
+            $('#driver_license_no').val(opt.data('license'));
+        }
     }
 
 
     // WEIGHT CALCULATIONS
-    $(document).on('input', '.calc-weight, .calc-dim', function() {
-        const row = $(this).closest('.shipment-item');
-        const actual = parseFloat(row.find('.calc-weight').val()) || 0;
-        const l = parseFloat(row.find('[name*="length"]').val()) || 0;
-        const w = parseFloat(row.find('[name*="width"]').val()) || 0;
-        const h = parseFloat(row.find('[name*="height"]').val()) || 0;
+    // RECALCULATE ALL
+    function recalcAllItems() {
+        $('.calc-weight').trigger('input');
+    }
 
-        const volumetric = (l * w * h) / 6000;
-        const chargeable = Math.max(actual, volumetric, 45);
+    // WEIGHT CALCULATIONS & TOTALS
+    $(document).on('input', '.calc-weight, .calc-dim, [name*="[pieces]"]', function() {
+        let totalWt = 0;
+        let totalPc = 0;
+        const volFormula = parseFloat($('#volumetric_formula').val()) || 6000;
 
-        row.find('[name*="volumetric_weight"]').val(volumetric.toFixed(2));
-        row.find('[name*="calculated_chargeable_weight"]').val(chargeable.toFixed(2));
-        row.find('[name*="chargeable_weight"]').val(chargeable.toFixed(2));
+        $('.shipment-item').each(function() {
+            const row = $(this);
+            const actual = parseFloat(row.find('.calc-weight').val()) || 0;
+            const l = parseFloat(row.find('[name*="length"]').val()) || 0;
+            const w = parseFloat(row.find('[name*="width"]').val()) || 0;
+            const h = parseFloat(row.find('[name*="height"]').val()) || 0;
+            const pieces = parseInt(row.find('[name*="[pieces]"]').val()) || 1;
+
+            const volumetric = (l * w * h) / volFormula;
+            const chargeable = Math.max(actual, volumetric);
+
+            row.find('[name*="volumetric_weight"]').val(volumetric.toFixed(2));
+            row.find('[name*="calculated_chargeable_weight"]').val(chargeable.toFixed(2));
+            
+            // Only update chargeable_weight if it hasn't been manually overridden
+            // We can assume if they are editing weight/dims, we recalculate
+            row.find('[name*="chargeable_weight"]').val(chargeable.toFixed(2));
+            
+            totalWt += chargeable;
+            totalPc += pieces;
+        });
+        
+        $('#total_weight').val(totalWt.toFixed(2));
+        $('#total_pieces').val(totalPc);
     });
 
     // TAB NAVIGATION
@@ -478,18 +635,25 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     });
 
     $(document).on('input', '[name="rate"], [name="weight"], [name="ddc"], [name="ssc"], [name="btc"], [name="flc"], [name="doc"], [name="inbound_tsp"], [name="outbound_tsp"], [name="tcp"], [name="utility_charges"], [name="xray_charges"], [name="ado"], [name="awb_fees_agent"], [name="awb_fees_carrier"], [name="admin_charges"], [name="delivery_order_charges"], [name="inbound_handling"], [name="inbound_storage"], [name="outbound_storage"], [name="misc_charges"]', function() {
-        let total = 0;
+        let taxable = 0;
 
         // Freight: Rate × Weight (MAIN REVENUE)
         const rate = parseFloat($('[name="rate"]').val()) || 0;
         const weight = parseFloat($('[name="weight"]').val()) || 0;
-        total += rate * weight;
+        taxable += rate * weight;
 
         // All Individual Charges
         const charges = ['ddc','ssc','btc','flc','doc','inbound_tsp','outbound_tsp','tcp','utility_charges','xray_charges','ado','awb_fees_agent','awb_fees_carrier','admin_charges','delivery_order_charges','inbound_handling','inbound_storage','outbound_storage','misc_charges'];
-        charges.forEach(field => total += parseFloat($(`[name="${field}"]`).val()) || 0);
+        charges.forEach(field => taxable += parseFloat($(`[name="${field}"]`).val()) || 0);
 
-        $('#totalAmount').text('₹' + total.toFixed(2));
+        // GST Calculation
+        let cgst = Math.round(taxable * (_companyGst.cgst / 100));
+        let sgst = Math.round(taxable * (_companyGst.sgst / 100));
+        let igst = Math.round(taxable * (_companyGst.igst / 100));
+        let netPayable = taxable + cgst + sgst + igst;
+
+        $('#totalTaxableAmount').text('₹' + taxable.toFixed(2));
+        $('#netPayableAmount').text('₹' + netPayable.toFixed(2));
     });
 
     // Async Form Submit

@@ -10,9 +10,10 @@ class BookingModel extends Model
     protected $allowedFields = [
         'awb_no', 'company_id', 'booking_date', 'origin', 'destination', 
         'mode_transport', 'material_type', 'material_details', 
-        'material_category', 'status', 'driver_name', 'driver_mobile', 
-        'vehicle_no', 'total_pieces', 'flight_number', 'airlines', 
-        'status', 'created_by'
+        'material_category', 'status', 'transporter_name', 'transporter_mobile', 
+        'driver_name', 'driver_mobile', 'driver_license_no', 
+        'vehicle_no', 'total_pieces', 'total_weight', 'flight_number', 'airlines', 
+        'volumetric_formula', 'gst_applied', 'payment_type', 'narration', 'created_by'
     ];
     protected $useTimestamps = true;
 

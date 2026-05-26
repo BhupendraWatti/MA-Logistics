@@ -121,13 +121,25 @@
     </div>
     
     <?php if (isset($user['role']) && $user['role'] === 'admin'): ?>
-    <div class="col-md-4 mb-4">
+    <div class="col-md-3 mb-4">
         <div class="card text-center h-100 shadow-sm border-warning">
             <div class="card-body">
                 <h5>️ Admin Panel</h5>
                 <p class="text-muted small mb-3">User Management</p>
                 <a href="<?= base_url('admin') ?>" class="btn btn-warning w-100">
                     Admin
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card text-center h-100 shadow-sm border-dark">
+            <div class="card-body">
+                <h5>⚙️ Settings</h5>
+                <p class="text-muted small mb-3">Company PDF & GST</p>
+                <a href="<?= base_url('company/settings') ?>" class="btn btn-dark w-100">
+                    Company Settings
                 </a>
             </div>
         </div>

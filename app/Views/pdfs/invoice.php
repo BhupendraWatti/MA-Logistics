@@ -1,15 +1,15 @@
 <table border="1" cellpadding="4" cellspacing="0" style="width:100%; font-size:9px; border-collapse:collapse; font-family:helvetica;">
     <tr>
         <td colspan="16" style="text-align:center;">
-            <span style="font-size:24px; font-weight:bold; font-family:times;">M.A.LOGISTICS</span><br>
-            <span style="font-size:10px;">Sr.No.34/2, plot No. -69, Rajkamal Bldg, Lane No.10(10A) Vidya Nagar, Tingre Nagar, Pune 411 032</span><br>
-            <span style="font-size:10px;">Office Ph.7719868468, Mob.7620829619. Email ID : malogistics.pune@gmail.com</span>
+            <span style="font-size:24px; font-weight:bold; font-family:times;"><?= esc($company['name'] ?? 'M.A.LOGISTICS') ?></span><br>
+            <span style="font-size:10px;"><?= esc($company['address'] ?? '') ?></span><br>
+            <span style="font-size:10px;">Mobile: <?= esc($company['mobile'] ?? '') ?> | Email ID: <?= esc($company['email'] ?? '') ?></span>
         </td>
     </tr>
     <tr>
-        <td colspan="5" style="font-size:10px; font-weight:bold;">GSTIN : 27AICPD8922A1ZQ</td>
-        <td colspan="5" style="font-size:10px; font-weight:bold; text-align:center;">SAC CODE : 996531</td>
-        <td colspan="6" style="font-size:10px; font-weight:bold; text-align:center;">PAN : AICPD8922A</td>
+        <td colspan="5" style="font-size:10px; font-weight:bold;">GSTIN : <?= esc($company['gstin'] ?? '') ?></td>
+        <td colspan="5" style="font-size:10px; font-weight:bold; text-align:center;">SAC CODE : <?= esc($company['sac_code'] ?? '') ?></td>
+        <td colspan="6" style="font-size:10px; font-weight:bold; text-align:center;">PAN : <?= esc($company['pan'] ?? '') ?></td>
     </tr>
     <tr>
         <td colspan="16" style="text-align:center; font-size:14px; font-weight:bold; letter-spacing:2px;">INVOICE</td>
@@ -103,19 +103,18 @@
     </tr>
     <tr>
         <td colspan="11" style="vertical-align:top; font-size:9px;">
-            <b>Service Catagory : Courier & Cargo</b><br><br>
+            <b>Service Category : Courier & Cargo</b><br><br>
             <b>Terms & Conditions :</b><br>
-            i. Difference if any may be notified within 7 days of receipt of bills.<br>
-            ii. Subject to Pune Jurisdiction<br>
-            iii. E & O.E.<br>
-            iv. Draw Cheque in favour of "MA LOGISTICS"<br>
-            v. For NEFT/RTGS: Bank Details are as follows :-<br>
-            &nbsp;&nbsp;&nbsp;Bank Name : AXIS BANK, &nbsp;&nbsp; Branch: Bund Garden,Pune<br>
-            &nbsp;&nbsp;&nbsp;Current Account No : 914020014273896<br>
-            &nbsp;&nbsp;&nbsp;IFSC : UTIB0000073
+            <?= nl2br(esc($company['terms_conditions'] ?? 'No terms specified.')) ?>
         </td>
         <td colspan="5" style="vertical-align:top; text-align:center; font-size:10px; font-weight:bold;">
-            For M.A LOGISTICS<br><br><br><br><br><br><br><br>Authorised signatory
+            For <?= esc($company['name'] ?? 'M.A LOGISTICS') ?><br><br>
+            <?php if (!empty($company['signature_path']) && file_exists(FCPATH . $company['signature_path'])): ?>
+                <img src="<?= base_url($company['signature_path']) ?>" style="height: 60px; max-width: 150px; margin-top: 10px; margin-bottom: 5px;"><br>
+            <?php else: ?>
+                <br><br><br><br>
+            <?php endif; ?>
+            Authorised signatory
         </td>
     </tr>
 </table>

@@ -30,6 +30,23 @@
                 <?php if (session()->get('user_id')): ?>
                     <?php if (session()->get('role') === 'admin'): ?>
                         <a class="nav-link top-nav-link" href="<?= base_url('admin') ?>"><i class="fas fa-users-cog"></i> Admin</a>
+                        <!-- Masters Dropdown -->
+                        <div class="nav-item dropdown">
+                            <a class="nav-link top-nav-link dropdown-toggle" href="#" id="mastersDropdown"
+                               role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-database"></i> Masters
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="mastersDropdown">
+                                <li><a class="dropdown-item" href="<?= base_url('masters/company') ?>">⚙️ Company Settings</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="<?= base_url('masters/customers') ?>">👥 Customers / Shippers</a></li>
+                                <li><a class="dropdown-item" href="<?= base_url('masters/transporters') ?>">🚛 Transporters</a></li>
+                                <li><a class="dropdown-item" href="<?= base_url('masters/drivers') ?>">🧑‍✈️ Drivers</a></li>
+                                <li><a class="dropdown-item" href="<?= base_url('masters/airlines') ?>">✈️ Airlines</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="<?= base_url('masters/lookups/origin') ?>">📋 Lookup Values</a></li>
+                            </ul>
+                        </div>
                     <?php endif; ?>
                     <!-- <a class="nav-link top-nav-link" href="#"><i class="fas fa-search"></i> Search</a> -->
                     <?php if ((session()->get('permissions')['can_create'] ?? 0) == 1): ?>

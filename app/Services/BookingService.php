@@ -22,7 +22,7 @@ class BookingService
         $this->db = \Config\Database::connect();
     }
 
-    public function createBooking(array $postData, int $userId)
+    public function createBooking(array $postData, int $userId, int $companyId)
     {
         $this->validateBasicData($postData);
 
@@ -30,7 +30,7 @@ class BookingService
 
         $bookingData = [
             'awb_no' => $postData['awb_no'] ?? '',
-            'company_id' => $postData['company_id'] ?? null,
+            'company_id' => $companyId,
             'booking_date' => $postData['booking_date'] ?? null,
             'origin' => $postData['origin'] ?? '',
             'destination' => $postData['destination'] ?? '',
@@ -39,10 +39,18 @@ class BookingService
             'material_details' => $postData['material_details'] ?? '',
             'material_category' => $postData['material_category'] ?? '',
             'status' => $postData['status'] ?? 'Draft',
+            'transporter_name' => $postData['transporter_name'] ?? '',
+            'transporter_mobile' => $postData['transporter_mobile'] ?? '',
             'driver_name' => $postData['driver_name'] ?? '',
             'driver_mobile' => $postData['driver_mobile'] ?? '',
+            'driver_license_no' => $postData['driver_license_no'] ?? '',
             'vehicle_no' => $postData['vehicle_no'] ?? '',
             'total_pieces' => $postData['total_pieces'] ?? 1,
+            'total_weight' => $postData['total_weight'] ?? 0,
+            'volumetric_formula' => $postData['volumetric_formula'] ?? 6000,
+            'gst_applied' => isset($postData['gst_applied']) ? 1 : 0,
+            'payment_type' => $postData['payment_type'] ?? '',
+            'narration' => $postData['narration'] ?? '',
             'flight_number' => $postData['flight_number'] ?? '',
             'airlines' => $postData['airlines'] ?? '',
             'created_by' => $userId
@@ -66,7 +74,7 @@ class BookingService
         return $bookingId;
     }
 
-    public function updateBooking(int $id, array $postData, int $userId)
+    public function updateBooking(int $id, array $postData, int $userId, int $companyId)
     {
         $this->validateBasicData($postData);
 
@@ -74,7 +82,7 @@ class BookingService
 
         $bookingData = [
             'awb_no' => $postData['awb_no'] ?? '',
-            'company_id' => $postData['company_id'] ?? null,
+            'company_id' => $companyId,
             'booking_date' => $postData['booking_date'] ?? null,
             'origin' => $postData['origin'] ?? '',
             'destination' => $postData['destination'] ?? '',
@@ -83,10 +91,18 @@ class BookingService
             'material_details' => $postData['material_details'] ?? '',
             'material_category' => $postData['material_category'] ?? '',
             'status' => $postData['status'] ?? 'Draft',
+            'transporter_name' => $postData['transporter_name'] ?? '',
+            'transporter_mobile' => $postData['transporter_mobile'] ?? '',
             'driver_name' => $postData['driver_name'] ?? '',
             'driver_mobile' => $postData['driver_mobile'] ?? '',
+            'driver_license_no' => $postData['driver_license_no'] ?? '',
             'vehicle_no' => $postData['vehicle_no'] ?? '',
             'total_pieces' => $postData['total_pieces'] ?? 1,
+            'total_weight' => $postData['total_weight'] ?? 0,
+            'volumetric_formula' => $postData['volumetric_formula'] ?? 6000,
+            'gst_applied' => isset($postData['gst_applied']) ? 1 : 0,
+            'payment_type' => $postData['payment_type'] ?? '',
+            'narration' => $postData['narration'] ?? '',
             'flight_number' => $postData['flight_number'] ?? '',
             'airlines' => $postData['airlines'] ?? '',
             'created_by' => $userId
