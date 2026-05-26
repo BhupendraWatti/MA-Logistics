@@ -1,121 +1,206 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Malogistics Management System</title>
+    <title>Logistics ERP Operational Hub</title>
     <!-- ANTI-CACHE HEADERS -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    
-    <!-- SIMPLE ANTI-CACHE -->
+    <meta name="csrf-token" content="<?= csrf_hash() ?>">
+    <meta name="csrf-header" content="<?= csrf_header() ?>">
     <script>
-        // Force reload on back/forward
         if (performance.navigation.type === 2) {
             window.location.reload(true);
         }
     </script>
-    <!-- CUSTOM CSS -->
-    <link href="<?= base_url('css/style.css') ?>" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- DataTables & SweetAlert2 CSS -->
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    
+    <link href="<?= base_url('css/style.css') ?>" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* ERP Table Overrides */
+        table.dataTable { border-collapse: collapse !important; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button { padding: 0 !important; margin: 0 !important; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover { border: none !important; background: none !important; }
+    </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="<?= base_url('logistics') ?>">
-                <i class="fas fa-truck"></i> Malogistics
-            </a>
-            <div class="navbar-nav ms-auto">
-                <?php if (session()->get('user_id')): ?>
-                    <?php if (session()->get('role') === 'admin'): ?>
-                        <a class="nav-link top-nav-link" href="<?= base_url('admin') ?>"><i class="fas fa-users-cog"></i> Admin</a>
-                        <!-- Masters Dropdown -->
-                        <div class="nav-item dropdown">
-                            <a class="nav-link top-nav-link dropdown-toggle" href="#" id="mastersDropdown"
-                               role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-database"></i> Masters
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="mastersDropdown">
-                                <li><a class="dropdown-item" href="<?= base_url('masters/company') ?>">⚙️ Company Settings</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="<?= base_url('masters/customers') ?>">👥 Customers / Shippers</a></li>
-                                <li><a class="dropdown-item" href="<?= base_url('masters/transporters') ?>">🚛 Transporters</a></li>
-                                <li><a class="dropdown-item" href="<?= base_url('masters/drivers') ?>">🧑‍✈️ Drivers</a></li>
-                                <li><a class="dropdown-item" href="<?= base_url('masters/airlines') ?>">✈️ Airlines</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="<?= base_url('masters/lookups/origin') ?>">📋 Lookup Values</a></li>
-                            </ul>
-                        </div>
-                    <?php endif; ?>
-                    <!-- <a class="nav-link top-nav-link" href="#"><i class="fas fa-search"></i> Search</a> -->
-                    <?php if ((session()->get('permissions')['can_create'] ?? 0) == 1): ?>
-                        <a class="nav-link top-nav-link" href="<?= base_url('logistics/create') ?>"><i class="fas fa-plus"></i> New Booking</a>
-                    <?php endif; ?>
-                    <span class="navbar-text me-3 top-nav-link">
-                        <i class="fas fa-user"></i> <?= session()->get('username') ?> 
-                        (<?= ucfirst(session()->get('role')) ?>)
-                    </span>
-                    <a class="nav-link top-nav-link" href="<?= base_url('auth/logout') ?>"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    <?php 
+        $success = session()->getFlashdata('success'); 
+        $error = session()->getFlashdata('error'); 
+        $info = session()->getFlashdata('info'); 
+    ?>
+    <?php if (session()->get('user_id')): ?>
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <a class="sidebar-brand" href="<?= base_url('logistics') ?>">
+                    <i class="fas fa-box text-primary"></i> 
+                    <div>
+                        <div class="text-primary" style="line-height: 1;">Logistics ERP</div>
+                        <div style="font-size: 0.75rem; color: #64748b; font-weight: normal; margin-top:4px;">Operational Hub</div>
+                    </div>
+                </a>
+            </div>
+            
+            <div class="sidebar-nav">
+                <?php $uri = service('uri'); $seg1 = $uri->getSegment(1); $seg2 = $uri->getSegment(2); ?>
+                
+                <a href="<?= base_url('logistics') ?>" class="sidebar-nav-item <?= ($seg1 == 'logistics' && $seg2 == '') ? 'active' : '' ?>">
+                    <i class="fas fa-th-large"></i> Dashboard
+                </a>
+                
+                <?php if ((session()->get('permissions')['can_create'] ?? 0) == 1): ?>
+                <a href="<?= base_url('logistics/create') ?>" class="sidebar-nav-item <?= ($seg2 == 'create') ? 'active' : '' ?>">
+                    <i class="fas fa-truck"></i> Shipment Entry
+                </a>
+                <?php endif; ?>
+                
+                <?php if (session()->get('role') === 'admin'): ?>
+                <!-- Masters Dropdown -->
+                <div class="dropdown mt-2 px-3">
+                    <button class="btn btn-light dropdown-toggle w-100 text-start text-secondary border shadow-none fw-semibold" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-database me-2 text-primary"></i> Masters
+                    </button>
+                    <ul class="dropdown-menu shadow border-0 w-100 mt-1">
+                        <li><h6 class="dropdown-header text-uppercase fs-7">Primary Masters</h6></li>
+                        <li><a class="dropdown-item <?= ($seg1 == 'masters' && $seg2 == 'customers') ? 'active' : '' ?>" href="<?= base_url('masters/customers') ?>"><i class="fas fa-user-friends me-2 text-muted"></i> Customer Master</a></li>
+                        <li><a class="dropdown-item <?= ($seg1 == 'masters' && $seg2 == 'transporters') ? 'active' : '' ?>" href="<?= base_url('masters/transporters') ?>"><i class="fas fa-truck-moving me-2 text-muted"></i> Transporters</a></li>
+                        <li><a class="dropdown-item <?= ($seg1 == 'masters' && $seg2 == 'drivers') ? 'active' : '' ?>" href="<?= base_url('masters/drivers') ?>"><i class="fas fa-id-card me-2 text-muted"></i> Drivers</a></li>
+                        <li><a class="dropdown-item <?= ($seg1 == 'masters' && $seg2 == 'airlines') ? 'active' : '' ?>" href="<?= base_url('masters/airlines') ?>"><i class="fas fa-plane me-2 text-muted"></i> Airlines</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item <?= ($seg1 == 'masters' && $seg2 == 'lookups') ? 'active' : '' ?>" href="<?= base_url('masters/lookups/origin') ?>"><i class="fas fa-list me-2 text-muted"></i> Lookup Values</a></li>
+                    </ul>
+                </div>
+
+                <a href="<?= base_url('logistics/manage') ?>" class="sidebar-nav-item <?= ($seg2 == 'manage') ? 'active' : '' ?> mt-2">
+                    <i class="fas fa-map-marker-alt"></i> Tracking
+                </a>
+                
+                <a href="<?= base_url('logistics/export') ?>" class="sidebar-nav-item <?= ($seg2 == 'export') ? 'active' : '' ?>">
+                    <i class="fas fa-chart-bar"></i> Reports
+                </a>
+                
+                <!-- Settings Dropdown -->
+                <div class="dropdown mt-2 px-3">
+                    <button class="btn btn-light dropdown-toggle w-100 text-start text-secondary border shadow-none fw-semibold" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-cog me-2 text-secondary"></i> Settings
+                    </button>
+                    <ul class="dropdown-menu shadow border-0 w-100 mt-1">
+                        <li><a class="dropdown-item" href="<?= base_url('masters/company') ?>"><i class="fas fa-building me-2 text-muted"></i> Company Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="<?= base_url('admin') ?>"><i class="fas fa-users-cog me-2 text-muted"></i> User Management</a></li>
+                    </ul>
+                </div>
                 <?php endif; ?>
             </div>
+            
+            <div class="sidebar-footer">
+                <img src="https://ui-avatars.com/api/?name=<?= urlencode(session()->get('username')) ?>&background=0f172a&color=fff&rounded=true&size=36" alt="Profile">
+                <div class="user-info w-100 ps-2">
+                    <div class="user-name" style="font-size: 0.9rem; font-weight: 600; color: #334155;"><?= esc(session()->get('username')) ?></div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span style="font-size: 0.8rem; color: #64748b;"><?= ucfirst(session()->get('role')) ?></span>
+                        <a href="<?= base_url('auth/logout') ?>" class="text-danger" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
+                    </div>
+                </div>
+            </div>
         </div>
-    </nav>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Header -->
+            <div class="top-header">
+                <div class="search-bar">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+                        <input type="text" class="form-control bg-light border-start-0 shadow-none" placeholder="Search AWB, Customer... ( / )">
+                    </div>
+                </div>
+                <div class="header-actions d-flex align-items-center">
+                    <?php if(session()->get('selected_company_name')): ?>
+                    <div class="dropdown me-3">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle bg-white shadow-none fw-semibold" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-building text-primary me-1"></i> <?= esc(session()->get('selected_company_name')) ?>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-1">
+                            <li><h6 class="dropdown-header">Active Company</h6></li>
+                            <li><a class="dropdown-item py-2" href="<?= base_url('logistics/clearCompany') ?>"><i class="fas fa-exchange-alt me-2 text-muted"></i> Switch Company</a></li>
+                        </ul>
+                    </div>
+                    <?php endif; ?>
+                    <button class="btn btn-link text-secondary position-relative me-3 shadow-none">
+                        <i class="far fa-bell fs-5"></i>
+                    </button>
+                    <button class="btn btn-link text-secondary me-3 shadow-none">
+                        <i class="far fa-question-circle fs-5"></i>
+                    </button>
+                    <button class="btn btn-sm" style="background-color: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;">
+                        <i class="fas fa-exclamation-triangle"></i> Validation Alerts (3)
+                    </button>
+                </div>
+            </div>
 
-    <div class="container mt-4">
-
-<!-- <?php //if (session()->getFlashdata('success')): ?>
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <?//= session()->getFlashdata('success') ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-<?php //endif; ?>
-
-<?php //if (session()->getFlashdata('error')): ?>
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <?//= session()->getFlashdata('error') ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-<?php //endif; ?>
-
-<?php //if (session()->getFlashdata('info')): ?>
-    <div class="alert alert-info alert-dismissible fade show" role="alert">
-        <?//= session()->getFlashdata('info') ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-<?php //endif; ?> -->
-
-<?php $success = session()->getFlashdata('success'); ?>
-<?php $error = session()->getFlashdata('error'); ?>
-<?php $info = session()->getFlashdata('info'); ?>
-
-<?php if ($success): ?>
-    <div class="alert alert-success alert-dismissible fade show">
-        <?= esc($success) ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-<?php endif; ?>
-
-<?php if ($error): ?>
-    <div class="alert alert-danger alert-dismissible fade show">
-        <?= esc($error) ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-<?php endif; ?>
-
-<?php if ($info): ?>
-    <div class="alert alert-info alert-dismissible fade show">
-        <?= esc($info) ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-<?php endif; ?>
-
-
-        <?= $this->renderSection('content') ?>
-    </div>
+            <div class="p-4 flex-grow-1">
+                
+                <?= $this->renderSection('content') ?>
+            </div>
+        </div>
+    <?php else: ?>
+        <div class="container mt-5">
+            <?= $this->renderSection('content') ?>
+        </div>
+    <?php endif; ?>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- DataTables & SweetAlert2 JS -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Global ERP Utilities -->
+    <script>const BASE_URL = '<?= base_url() ?>';</script>
+    <script src="<?= base_url('js/erp-utils.js') ?>"></script>
+    
+    <!-- Global Error Handler -->
+    <script>
+        window.onerror = function(msg, url, line, col, error) {
+            console.error("Global Error Caught: ", msg, url, line, col, error);
+            if(typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'JavaScript Error',
+                    html: `<b>Message:</b> ${msg}<br><b>Line:</b> ${line}:${col}`,
+                    toast: true,
+                    position: 'bottom-end',
+                    showConfirmButton: false,
+                    timer: 10000
+                });
+            }
+            return false;
+        };
+
+        // Flash Messages via SweetAlert
+        <?php if ($success): ?>
+            ERPUtils.showSuccess('Success!', '<?= esc(addslashes($success)) ?>');
+        <?php endif; ?>
+        <?php if ($error): ?>
+            ERPUtils.showError('Error!', '<?= esc(addslashes($error)) ?>');
+        <?php endif; ?>
+        <?php if ($info): ?>
+            Swal.fire({icon: 'info', title: 'Information', text: '<?= esc(addslashes($info)) ?>', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000});
+        <?php endif; ?>
+    </script>
+    
     <?= $this->renderSection('scripts') ?>
 </body>
 </html>

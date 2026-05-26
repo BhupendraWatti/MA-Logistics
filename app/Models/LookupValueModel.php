@@ -27,7 +27,6 @@ class LookupValueModel extends Model
     {
         return $this->where('company_id', $companyId)
                     ->where('type', $type)
-                    ->where('is_active', 1)
                     ->orderBy('sort_order')
                     ->orderBy('value')
                     ->findAll();

@@ -388,17 +388,12 @@ public function companySelection()
 
  public function manageBookings()
  {
-
     $companyId = session()->get('selected_company_id');
     if (!$companyId) {
         return redirect()->to('/company-selection');
     }
     
-    $bookingModel = new BookingModel();
     $data = [
-        'bookings' => $bookingModel->where('company_id', $companyId)
-                                  ->orderBy('booking_date', 'DESC')
-                                  ->findAll(),
         'company_name' => session()->get('selected_company_name'),
         'company_id' => $companyId,
         'user' => session()->get(),
@@ -406,6 +401,87 @@ public function companySelection()
     ];
     
     return view('logistics/manage_bookings', $data);
+ }
+
+ public function ajaxDatatable()
+ {
+    $companyId = session()->get('selected_company_id');
+    if (!$companyId) {
+        return $this->response->setJSON(['error' => 'No company selected']);
+    }
+
+    $post = $this->request->getPost();
+    $draw = (int) ($post['draw'] ?? 1);
+    $start = (int) ($post['start'] ?? 0);
+    $length = (int) ($post['length'] ?? 10);
+    $searchValue = $post['search']['value'] ?? '';
+
+    $db = \Config\Database::connect();
+    $builder = $db->table('bookings b');
+
+    // Select core columns + aggregated columns
+    // Select core columns + optimized aggregated joins
+    $builder->select("
+        b.id,
+        b.awb_no,
+        b.booking_date,
+        b.origin,
+        b.destination,
+        b.status,
+        b.total_pieces,
+        COALESCE(si.total_weight, 0) AS total_weight,
+        COALESCE(sc.total_amount, 0) AS total_amount
+    ");
+    
+    // Aggregated Subqueries via Hash Joins
+    $builder->join("(SELECT booking_id, SUM(final_chargeable_weight) AS total_weight FROM shipment_items GROUP BY booking_id) si", "si.booking_id = b.id", "left");
+    $builder->join("(SELECT booking_id, ((COALESCE(rate,0) * COALESCE(weight,0)) + COALESCE(ddc,0) + COALESCE(ssc,0) + COALESCE(btc,0) + COALESCE(flc,0) + COALESCE(doc,0) + COALESCE(inbound_tsp,0) + COALESCE(outbound_tsp,0) + COALESCE(tcp,0) + COALESCE(utility_charges,0) + COALESCE(xray_charges,0) + COALESCE(ado,0) + COALESCE(awb_fees_agent,0) + COALESCE(awb_fees_carrier,0) + COALESCE(admin_charges,0) + COALESCE(delivery_order_charges,0) + COALESCE(inbound_handling,0) + COALESCE(inbound_storage,0) + COALESCE(outbound_storage,0) + COALESCE(misc_charges,0)) AS total_amount FROM sales_charges) sc", "sc.booking_id = b.id", "left");
+    
+    $builder->where('b.company_id', $companyId);
+
+    // Total records
+    $totalRecords = $builder->countAllResults(false);
+
+    // Search
+    if (!empty($searchValue)) {
+        $builder->groupStart()
+                ->like('b.awb_no', $searchValue)
+                ->orLike('b.origin', $searchValue)
+                ->orLike('b.destination', $searchValue)
+                ->orLike('b.status', $searchValue)
+                ->groupEnd();
+    }
+    $filteredRecords = $builder->countAllResults(false);
+
+    // Pagination
+    if ($length != -1) {
+        $builder->limit($length, $start);
+    }
+
+    $builder->orderBy('b.id', 'desc');
+
+    $data = $builder->get()->getResultArray();
+
+    // Permissions
+    $permissions = session()->get('permissions') ?? [];
+    $canEdit = $permissions['can_edit'] ?? 0;
+    $canDelete = $permissions['can_delete'] ?? 0;
+
+    // Formatting
+    foreach ($data as &$row) {
+        $row['total_weight'] = number_format((float)$row['total_weight'], 1);
+        $row['total_amount'] = number_format((float)$row['total_amount'], 0);
+        $row['booking_date'] = date('d-M-Y H:i', strtotime($row['booking_date']));
+        $row['can_edit'] = $canEdit;
+        $row['can_delete'] = $canDelete;
+    }
+
+    return $this->response->setJSON([
+        'draw' => $draw,
+        'recordsTotal' => $totalRecords,
+        'recordsFiltered' => $filteredRecords,
+        'data' => $data
+    ]);
  }
 
 

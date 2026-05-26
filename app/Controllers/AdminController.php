@@ -16,8 +16,51 @@ class AdminController extends BaseController
         return view('admin/users', $data);
     }
 
+    public function ajaxDatatable()
+    {
+        if (session()->get('role') !== 'admin') {
+            return $this->response->setJSON(['error' => 'Admin only!']);
+        }
 
+        $post = $this->request->getPost();
+        $draw = (int) ($post['draw'] ?? 1);
+        $start = (int) ($post['start'] ?? 0);
+        $length = (int) ($post['length'] ?? 10);
+        $searchValue = $post['search']['value'] ?? '';
 
+        $userModel = new UserModel();
+        $builder = $userModel->builder();
+
+        // Total records
+        $totalRecords = $builder->countAllResults(false);
+
+        // Search
+        if (!empty($searchValue)) {
+            $builder->groupStart()
+                    ->like('username', $searchValue)
+                    ->orLike('email', $searchValue)
+                    ->orLike('role', $searchValue)
+                    ->groupEnd();
+        }
+        $filteredRecords = $builder->countAllResults(false);
+
+        // Pagination
+        if ($length != -1) {
+            $builder->limit($length, $start);
+        }
+
+        // We'll just order by ID desc
+        $builder->orderBy('id', 'desc');
+
+        $data = $builder->get()->getResultArray();
+
+        return $this->response->setJSON([
+            'draw' => $draw,
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $data
+        ]);
+    }
     public function togglePermission()
     {
         if (session()->get('role') !== 'admin') {

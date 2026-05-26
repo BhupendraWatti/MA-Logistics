@@ -43,7 +43,7 @@
                             </span>
                         </td>
                         <td><?= $booking['total_pieces'] ?></td>
-                        <td><?= number_format($booking['total_chargeable_weight'], 2) ?> KG</td>
+                        <td><?= number_format((float)$booking['total_chargeable_weight'], 2) ?> KG</td>
                         <td>
                             <?php if ((session()->get('permissions')['can_edit'] ?? 0) == 1): ?>
                             <a href="<?= base_url('logistics/view/' . $booking['id']) ?>" class="btn btn-sm btn-outline-primary me-1" title="View">

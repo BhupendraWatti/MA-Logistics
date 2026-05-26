@@ -62,7 +62,7 @@ class BookingModel extends Model
         return [
             'total_bookings' => $totalBookings,
             'total_shipments' => $totalShipments,
-            'total_charges' => '₹' . number_format($totalCharges ?: 0, 0),  // ✅ Shows real ₹ amount!
+            'total_charges' => '₹' . number_format((float)($totalCharges ?: 0), 0),  // ✅ Shows real ₹ amount!
             'status' => 'Active'
         ];
     }

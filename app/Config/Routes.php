@@ -12,13 +12,18 @@ $routes->get('auth/logout', 'AuthController::logout');
 $routes->get('company/settings', 'CompanyController::settings');
 $routes->post('company/settings/update', 'CompanyController::updateSettings');
 
-// Fallback logic inside AdminController
+// ====== ADMIN/USER MANAGEMENT ======
 $routes->get('admin', 'AdminController::index');
-$routes->post('admin/togglePermission', 'AdminController::togglePermission');
 $routes->post('admin/createUser', 'AdminController::createUser');
+$routes->post('admin/togglePermission', 'AdminController::togglePermission');
+$routes->post('admin/changePassword', 'AdminController::changePassword');
+$routes->post('admin/toggleStatus', 'AdminController::toggleStatus');
+$routes->post('admin/ajax-datatable', 'AdminController::ajaxDatatable');
 
 // LOGISTICS ROUTES
 $routes->get('logistics', 'Logistics::index');
+$routes->get('logistics/manage', 'Logistics::manageBookings');
+$routes->post('logistics/ajax-datatable', 'Logistics::ajaxDatatable');
 $routes->get('logistics/search', 'Logistics::search');
 $routes->post('logistics/searchResult', 'Logistics::searchResult');
 $routes->match(['get', 'post'], 'logistics/create', 'Logistics::create');
@@ -26,6 +31,7 @@ $routes->post('logistics/store', 'Logistics::store');
 $routes->get('logistics/view/(:num)', 'Logistics::view/$1');
 $routes->get('logistics/edit/(:num)', 'Logistics::edit/$1');
 $routes->post('logistics/update/(:num)', 'Logistics::update/$1');
+$routes->post('logistics/delete/(:num)', 'Logistics::delete/$1');
 $routes->get('logistics/consolidation', 'Logistics::consolidation');
 
 $routes->get('logistics/clearCompany', 'Logistics::clearCompany');
@@ -64,6 +70,9 @@ $routes->post('masters/airlines/delete/(:num)',        'MasterController::delete
 $routes->get('masters/lookups/(:segment)',              'MasterController::lookups/$1');
 $routes->post('masters/lookups/(:segment)/create',      'MasterController::createLookup/$1');
 $routes->post('masters/lookups/delete/(:num)',         'MasterController::deleteLookup/$1');
+
+// DataTables SSP Route
+$routes->post('masters/ajax-datatable/(:segment)',      'MasterController::ajaxDatatable/$1');
 
 // ====== JSON API ENDPOINTS ======
 $routes->get('api/masters/customers',                 'MasterController::apiCustomers');

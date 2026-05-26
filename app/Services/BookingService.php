@@ -294,9 +294,6 @@ class BookingService
 
     private function validateBasicData($data)
     {
-        if (empty($data['company_id'])) {
-            throw new Exception("Company ID is required.");
-        }
         if (empty($data['awb_no'])) {
             throw new Exception("AWB Number is required.");
         }

@@ -27,6 +27,7 @@
                 <div class="card-header fw-semibold">Add New <?= esc($type_label) ?></div>
                 <div class="card-body">
                     <form action="<?= base_url('masters/lookups/' . $type . '/create') ?>" method="POST">
+                        <input type="hidden" name="company_id" value="<?= session()->get('selected_company_id') ?>">
                         <?= csrf_field() ?>
                         <div class="mb-3">
                             <label class="form-label">Value *</label>

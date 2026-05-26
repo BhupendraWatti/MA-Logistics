@@ -1,0 +1,212 @@
+CRITICAL - 2026-05-26 08:15:18 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: logistics]
+in APPPATH\Views\logistics\dashboard.php on line 62.
+ 1 APPPATH\Views\logistics\dashboard.php(62): number_format('₹6,205', 0)
+ 2 SYSTEMPATH\View\View.php(240): include('D:\\Company Work\\Company projects\\MAlogistic\\app\\Views\\logistics\\dashboard.php')
+ 3 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('logistics/dashboard', [], true)
+ 5 APPPATH\Controllers\Logistics.php(72): view('logistics/dashboard', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Logistics->index()
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Logistics))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+12 SYSTEMPATH\rewrite.php(44): require_once('D:\\Company Work\\Company projects\\MAlogistic\\public\\index.php')
+CRITICAL - 2026-05-26 08:15:22 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: logistics]
+in APPPATH\Views\logistics\dashboard.php on line 62.
+ 1 APPPATH\Views\logistics\dashboard.php(62): number_format('₹6,205', 0)
+ 2 SYSTEMPATH\View\View.php(240): include('D:\\Company Work\\Company projects\\MAlogistic\\app\\Views\\logistics\\dashboard.php')
+ 3 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('logistics/dashboard', [], true)
+ 5 APPPATH\Controllers\Logistics.php(72): view('logistics/dashboard', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Logistics->index()
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Logistics))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+12 SYSTEMPATH\rewrite.php(44): require_once('D:\\Company Work\\Company projects\\MAlogistic\\public\\index.php')
+CRITICAL - 2026-05-26 08:18:32 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: logistics]
+in APPPATH\Views\logistics\dashboard.php on line 62.
+ 1 APPPATH\Views\logistics\dashboard.php(62): number_format('₹6,205', 0)
+ 2 SYSTEMPATH\View\View.php(240): include('D:\\Company Work\\Company projects\\MAlogistic\\app\\Views\\logistics\\dashboard.php')
+ 3 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('logistics/dashboard', [], true)
+ 5 APPPATH\Controllers\Logistics.php(72): view('logistics/dashboard', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Logistics->index()
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Logistics))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+12 SYSTEMPATH\rewrite.php(44): require_once('D:\\Company Work\\Company projects\\MAlogistic\\public\\index.php')
+CRITICAL - 2026-05-26 08:18:34 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: logistics]
+in APPPATH\Views\logistics\dashboard.php on line 62.
+ 1 APPPATH\Views\logistics\dashboard.php(62): number_format('₹6,205', 0)
+ 2 SYSTEMPATH\View\View.php(240): include('D:\\Company Work\\Company projects\\MAlogistic\\app\\Views\\logistics\\dashboard.php')
+ 3 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('logistics/dashboard', [], true)
+ 5 APPPATH\Controllers\Logistics.php(72): view('logistics/dashboard', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Logistics->index()
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Logistics))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+12 SYSTEMPATH\rewrite.php(44): require_once('D:\\Company Work\\Company projects\\MAlogistic\\public\\index.php')
+CRITICAL - 2026-05-26 08:18:38 --> TypeError: number_format(): Argument #1 ($num) must be of type float, string given
+[Method: GET, Route: logistics]
+in APPPATH\Views\logistics\dashboard.php on line 62.
+ 1 APPPATH\Views\logistics\dashboard.php(62): number_format('₹6,205', 0)
+ 2 SYSTEMPATH\View\View.php(240): include('D:\\Company Work\\Company projects\\MAlogistic\\app\\Views\\logistics\\dashboard.php')
+ 3 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('logistics/dashboard', [], true)
+ 5 APPPATH\Controllers\Logistics.php(72): view('logistics/dashboard', [...])
+ 6 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\Logistics->index()
+ 7 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\Logistics))
+ 8 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+ 9 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+10 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+11 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+12 SYSTEMPATH\rewrite.php(44): require_once('D:\\Company Work\\Company projects\\MAlogistic\\public\\index.php')
+ERROR - 2026-05-26 10:04:27 --> Duplicate column name 'rate'
+in SYSTEMPATH\Database\MySQLi\Connection.php on line 300.
+ 1 SYSTEMPATH\Database\MySQLi\Connection.php(300): mysqli->query('ALTER TABLE `shipment_items`
+	ADD `eway_no` VARCHAR(100) NULL,
+	ADD `eway_date` DATE NULL,
+	ADD `rate` DECIMAL(10,2) NULL,
+	ADD `delivery_charge` DECIMAL(10,2) NULL,
+	ADD `docket_charge` DECIMAL(10,2) NULL,
+	ADD `pickup_charge` DECIMAL(10,2) NULL,
+	ADD `fuel_surcharge` DECIMAL(10,2) NULL,
+	ADD `fov_charge` DECIMAL(10,2) NULL,
+	ADD `handling_charge` DECIMAL(10,2) NULL,
+	ADD `service_charge` DECIMAL(10,2) NULL', 0)
+ 2 SYSTEMPATH\Database\BaseConnection.php(910): CodeIgniter\Database\MySQLi\Connection->execute('ALTER TABLE `shipment_items`
+	ADD `eway_no` VARCHAR(100) NULL,
+	ADD `eway_date` DATE NULL,
+	ADD `rate` DECIMAL(10,2) NULL,
+	ADD `delivery_charge` DECIMAL(10,2) NULL,
+	ADD `docket_charge` DECIMAL(10,2) NULL,
+	ADD `pickup_charge` DECIMAL(10,2) NULL,
+	ADD `fuel_surcharge` DECIMAL(10,2) NULL,
+	ADD `fov_charge` DECIMAL(10,2) NULL,
+	ADD `handling_charge` DECIMAL(10,2) NULL,
+	ADD `service_charge` DECIMAL(10,2) NULL')
+ 3 SYSTEMPATH\Database\BaseConnection.php(827): CodeIgniter\Database\BaseConnection->simpleQuery('ALTER TABLE `shipment_items`
+	ADD `eway_no` VARCHAR(100) NULL,
+	ADD `eway_date` DATE NULL,
+	ADD `rate` DECIMAL(10,2) NULL,
+	ADD `delivery_charge` DECIMAL(10,2) NULL,
+	ADD `docket_charge` DECIMAL(10,2) NULL,
+	ADD `pickup_charge` DECIMAL(10,2) NULL,
+	ADD `fuel_surcharge` DECIMAL(10,2) NULL,
+	ADD `fov_charge` DECIMAL(10,2) NULL,
+	ADD `handling_charge` DECIMAL(10,2) NULL,
+	ADD `service_charge` DECIMAL(10,2) NULL')
+ 4 SYSTEMPATH\Database\Forge.php(772): CodeIgniter\Database\BaseConnection->query('ALTER TABLE `shipment_items`
+	ADD `eway_no` VARCHAR(100) NULL,
+	ADD `eway_date` DATE NULL,
+	ADD `rate` DECIMAL(10,2) NULL,
+	ADD `delivery_charge` DECIMAL(10,2) NULL,
+	ADD `docket_charge` DECIMAL(10,2) NULL,
+	ADD `pickup_charge` DECIMAL(10,2) NULL,
+	ADD `fuel_surcharge` DECIMAL(10,2) NULL,
+	ADD `fov_charge` DECIMAL(10,2) NULL,
+	ADD `handling_charge` DECIMAL(10,2) NULL,
+	ADD `service_charge` DECIMAL(10,2) NULL')
+ 5 APPPATH\Database\Migrations\2026-05-26-000002_AddChargesToShipmentItems.php(11): CodeIgniter\Database\Forge->addColumn('shipment_items', [...])
+ 6 SYSTEMPATH\Database\MigrationRunner.php(1014): App\Database\Migrations\AddChargesToShipmentItems->up()
+ 7 SYSTEMPATH\Database\MigrationRunner.php(202): CodeIgniter\Database\MigrationRunner->migrate('up', Object(stdClass))
+ 8 SYSTEMPATH\Commands\Database\Migrate.php(89): CodeIgniter\Database\MigrationRunner->latest(null)
+ 9 SYSTEMPATH\CLI\SignalTrait.php(245): CodeIgniter\Commands\Database\Migrate::CodeIgniter\Commands\Database\{closure}()
+10 SYSTEMPATH\Commands\Database\Migrate.php(88): CodeIgniter\Commands\Database\Migrate->withSignalsBlocked(Object(Closure))
+11 SYSTEMPATH\CLI\Commands.php(74): CodeIgniter\Commands\Database\Migrate->run([])
+12 SYSTEMPATH\CLI\Console.php(47): CodeIgniter\CLI\Commands->run('migrate', [])
+13 SYSTEMPATH\Boot.php(442): CodeIgniter\CLI\Console->run()
+14 SYSTEMPATH\Boot.php(166): CodeIgniter\Boot::runCommand(Object(CodeIgniter\CLI\Console))
+15 ROOTPATH\spark(87): CodeIgniter\Boot::bootSpark(Object(Config\Paths))
+CRITICAL - 2026-05-26 13:44:06 --> ErrorException: Undefined variable $success
+[Method: GET, Route: login]
+in APPPATH\Views\layout.php on line 182.
+ 1 APPPATH\Views\layout.php(182): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined variable $success', 'D:\\Company Work\\Company projects\\MAlogistic\\app\\Views\\layout.php', 182)
+ 2 SYSTEMPATH\View\View.php(240): include('D:\\Company Work\\Company projects\\MAlogistic\\app\\Views\\layout.php')
+ 3 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\View\View.php(256): CodeIgniter\View\View->render('layout', [], true)
+ 5 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('auth/login', [], true)
+ 6 APPPATH\Controllers\AuthController.php(21): view('auth/login')
+ 7 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\AuthController->login()
+ 8 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\AuthController))
+ 9 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+13 SYSTEMPATH\rewrite.php(44): require_once('D:\\Company Work\\Company projects\\MAlogistic\\public\\index.php')
+CRITICAL - 2026-05-26 13:44:13 --> ErrorException: Undefined variable $success
+[Method: GET, Route: login]
+in APPPATH\Views\layout.php on line 182.
+ 1 APPPATH\Views\layout.php(182): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined variable $success', 'D:\\Company Work\\Company projects\\MAlogistic\\app\\Views\\layout.php', 182)
+ 2 SYSTEMPATH\View\View.php(240): include('D:\\Company Work\\Company projects\\MAlogistic\\app\\Views\\layout.php')
+ 3 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\View\View.php(256): CodeIgniter\View\View->render('layout', [], true)
+ 5 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('auth/login', [], true)
+ 6 APPPATH\Controllers\AuthController.php(21): view('auth/login')
+ 7 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\AuthController->login()
+ 8 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\AuthController))
+ 9 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+13 SYSTEMPATH\rewrite.php(44): require_once('D:\\Company Work\\Company projects\\MAlogistic\\public\\index.php')
+CRITICAL - 2026-05-26 13:44:14 --> ErrorException: Undefined variable $success
+[Method: GET, Route: login]
+in APPPATH\Views\layout.php on line 182.
+ 1 APPPATH\Views\layout.php(182): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined variable $success', 'D:\\Company Work\\Company projects\\MAlogistic\\app\\Views\\layout.php', 182)
+ 2 SYSTEMPATH\View\View.php(240): include('D:\\Company Work\\Company projects\\MAlogistic\\app\\Views\\layout.php')
+ 3 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\View\View.php(256): CodeIgniter\View\View->render('layout', [], true)
+ 5 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('auth/login', [], true)
+ 6 APPPATH\Controllers\AuthController.php(21): view('auth/login')
+ 7 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\AuthController->login()
+ 8 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\AuthController))
+ 9 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+13 SYSTEMPATH\rewrite.php(44): require_once('D:\\Company Work\\Company projects\\MAlogistic\\public\\index.php')
+CRITICAL - 2026-05-26 13:44:15 --> ErrorException: Undefined variable $success
+[Method: GET, Route: login]
+in APPPATH\Views\layout.php on line 182.
+ 1 APPPATH\Views\layout.php(182): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined variable $success', 'D:\\Company Work\\Company projects\\MAlogistic\\app\\Views\\layout.php', 182)
+ 2 SYSTEMPATH\View\View.php(240): include('D:\\Company Work\\Company projects\\MAlogistic\\app\\Views\\layout.php')
+ 3 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\View\View.php(256): CodeIgniter\View\View->render('layout', [], true)
+ 5 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('auth/login', [], true)
+ 6 APPPATH\Controllers\AuthController.php(21): view('auth/login')
+ 7 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\AuthController->login()
+ 8 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\AuthController))
+ 9 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+13 SYSTEMPATH\rewrite.php(44): require_once('D:\\Company Work\\Company projects\\MAlogistic\\public\\index.php')
+CRITICAL - 2026-05-26 13:44:16 --> ErrorException: Undefined variable $success
+[Method: GET, Route: login]
+in APPPATH\Views\layout.php on line 182.
+ 1 APPPATH\Views\layout.php(182): CodeIgniter\Debug\Exceptions->errorHandler(2, 'Undefined variable $success', 'D:\\Company Work\\Company projects\\MAlogistic\\app\\Views\\layout.php', 182)
+ 2 SYSTEMPATH\View\View.php(240): include('D:\\Company Work\\Company projects\\MAlogistic\\app\\Views\\layout.php')
+ 3 SYSTEMPATH\View\View.php(243): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 4 SYSTEMPATH\View\View.php(256): CodeIgniter\View\View->render('layout', [], true)
+ 5 SYSTEMPATH\Common.php(1250): CodeIgniter\View\View->render('auth/login', [], true)
+ 6 APPPATH\Controllers\AuthController.php(21): view('auth/login')
+ 7 SYSTEMPATH\CodeIgniter.php(951): App\Controllers\AuthController->login()
+ 8 SYSTEMPATH\CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController(Object(App\Controllers\AuthController))
+ 9 SYSTEMPATH\CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest(null, Object(Config\Cache), false)
+10 SYSTEMPATH\Boot.php(417): CodeIgniter\CodeIgniter->run()
+11 SYSTEMPATH\Boot.php(68): CodeIgniter\Boot::runCodeIgniter(Object(CodeIgniter\CodeIgniter))
+12 FCPATH\index.php(59): CodeIgniter\Boot::bootWeb(Object(Config\Paths))
+13 SYSTEMPATH\rewrite.php(44): require_once('D:\\Company Work\\Company projects\\MAlogistic\\public\\index.php')

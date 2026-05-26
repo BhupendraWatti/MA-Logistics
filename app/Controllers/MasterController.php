@@ -88,8 +88,16 @@ class MasterController extends BaseController
     public function customers()
     {
         if ($r = $this->requireAdmin()) return $r;
+        $companyId = $this->companyId();
+        
+        $lookups = [
+            'payment_type' => (new LookupValueModel())->getByType($companyId, 'payment_type'),
+        ];
+        
         return view('masters/customers', [
-            'customers' => (new CustomerModel())->getByCompany($this->companyId()),
+            'customers' => (new CustomerModel())->getByCompany($companyId),
+            'contacts'  => (new \App\Models\ContactsMasterModel())->getByCompany($companyId),
+            'lookups'   => $lookups,
             'user'      => session()->get(),
         ]);
     }
@@ -98,24 +106,46 @@ class MasterController extends BaseController
     {
         if ($r = $this->requireAdmin()) return $r;
         $post = $this->request->getPost();
-        $post['company_id'] = $this->companyId();
-        (new CustomerModel())->insert($post);
+        if (empty($post['company_id'])) {
+            return redirect()->back()->with('error', 'Company ID missing from form. Please refresh.');
+        }
+        $model = new CustomerModel();
+        if (!$model->insert($post)) {
+            return redirect()->back()->with('error', implode(', ', $model->errors()));
+        }
         return redirect()->to('/masters/customers')->with('success', 'Customer created!');
     }
 
     public function editCustomer(int $id)
     {
         if ($r = $this->requireAdmin()) return $r;
-        $customer = (new CustomerModel())->where('id', $id)->where('company_id', $this->companyId())->first();
+        $companyId = $this->companyId();
+        $customer = (new CustomerModel())->where('id', $id)->where('company_id', $companyId)->first();
         if (!$customer) return redirect()->to('/masters/customers')->with('error', 'Customer not found!');
-        return view('masters/customer_form', ['customer' => $customer, 'user' => session()->get()]);
+        
+        $lookups = [
+            'payment_type' => (new LookupValueModel())->getByType($companyId, 'payment_type'),
+        ];
+        
+        return view('masters/customer_form', [
+            'customer' => $customer,
+            'contacts' => (new \App\Models\ContactsMasterModel())->getByCompany($companyId),
+            'lookups'  => $lookups,
+            'user'     => session()->get()
+        ]);
     }
 
     public function updateCustomer(int $id)
     {
         if ($r = $this->requireAdmin()) return $r;
-        (new CustomerModel())->where('id', $id)->where('company_id', $this->companyId())
-            ->set($this->request->getPost())->update();
+        $post = $this->request->getPost();
+        if (empty($post['company_id'])) {
+            return redirect()->back()->with('error', 'Company ID missing from form. Please refresh.');
+        }
+        $model = new CustomerModel();
+        if (!$model->where('id', $id)->where('company_id', $post['company_id'])->set($post)->update()) {
+            return redirect()->back()->with('error', implode(', ', $model->errors()));
+        }
         return redirect()->to('/masters/customers')->with('success', 'Customer updated!');
     }
 
@@ -143,16 +173,27 @@ class MasterController extends BaseController
     {
         if ($r = $this->requireAdmin()) return $r;
         $post = $this->request->getPost();
-        $post['company_id'] = $this->companyId();
-        (new TransporterModel())->insert($post);
+        if (empty($post['company_id'])) {
+            return redirect()->back()->with('error', 'Company ID missing from form. Please refresh.');
+        }
+        $model = new TransporterModel();
+        if (!$model->insert($post)) {
+            return redirect()->back()->with('error', implode(', ', $model->errors()));
+        }
         return redirect()->to('/masters/transporters')->with('success', 'Transporter created!');
     }
 
     public function updateTransporter(int $id)
     {
         if ($r = $this->requireAdmin()) return $r;
-        (new TransporterModel())->where('id', $id)->where('company_id', $this->companyId())
-            ->set($this->request->getPost())->update();
+        $post = $this->request->getPost();
+        if (empty($post['company_id'])) {
+            return redirect()->back()->with('error', 'Company ID missing from form. Please refresh.');
+        }
+        $model = new TransporterModel();
+        if (!$model->where('id', $id)->where('company_id', $post['company_id'])->set($post)->update()) {
+            return redirect()->back()->with('error', implode(', ', $model->errors()));
+        }
         return redirect()->to('/masters/transporters')->with('success', 'Transporter updated!');
     }
 
@@ -180,16 +221,27 @@ class MasterController extends BaseController
     {
         if ($r = $this->requireAdmin()) return $r;
         $post = $this->request->getPost();
-        $post['company_id'] = $this->companyId();
-        (new DriverModel())->insert($post);
+        if (empty($post['company_id'])) {
+            return redirect()->back()->with('error', 'Company ID missing from form. Please refresh.');
+        }
+        $model = new DriverModel();
+        if (!$model->insert($post)) {
+            return redirect()->back()->with('error', implode(', ', $model->errors()));
+        }
         return redirect()->to('/masters/drivers')->with('success', 'Driver created!');
     }
 
     public function updateDriver(int $id)
     {
         if ($r = $this->requireAdmin()) return $r;
-        (new DriverModel())->where('id', $id)->where('company_id', $this->companyId())
-            ->set($this->request->getPost())->update();
+        $post = $this->request->getPost();
+        if (empty($post['company_id'])) {
+            return redirect()->back()->with('error', 'Company ID missing from form. Please refresh.');
+        }
+        $model = new DriverModel();
+        if (!$model->where('id', $id)->where('company_id', $post['company_id'])->set($post)->update()) {
+            return redirect()->back()->with('error', implode(', ', $model->errors()));
+        }
         return redirect()->to('/masters/drivers')->with('success', 'Driver updated!');
     }
 
@@ -217,16 +269,27 @@ class MasterController extends BaseController
     {
         if ($r = $this->requireAdmin()) return $r;
         $post = $this->request->getPost();
-        $post['company_id'] = $this->companyId();
-        (new AirlineModel())->insert($post);
+        if (empty($post['company_id'])) {
+            return redirect()->back()->with('error', 'Company ID missing from form. Please refresh.');
+        }
+        $model = new AirlineModel();
+        if (!$model->insert($post)) {
+            return redirect()->back()->with('error', implode(', ', $model->errors()));
+        }
         return redirect()->to('/masters/airlines')->with('success', 'Airline created!');
     }
 
     public function updateAirline(int $id)
     {
         if ($r = $this->requireAdmin()) return $r;
-        (new AirlineModel())->where('id', $id)->where('company_id', $this->companyId())
-            ->set($this->request->getPost())->update();
+        $post = $this->request->getPost();
+        if (empty($post['company_id'])) {
+            return redirect()->back()->with('error', 'Company ID missing from form. Please refresh.');
+        }
+        $model = new AirlineModel();
+        if (!$model->where('id', $id)->where('company_id', $post['company_id'])->set($post)->update()) {
+            return redirect()->back()->with('error', implode(', ', $model->errors()));
+        }
         return redirect()->to('/masters/airlines')->with('success', 'Airline updated!');
     }
 
@@ -262,11 +325,16 @@ class MasterController extends BaseController
         if (!array_key_exists($type, LookupValueModel::TYPES)) {
             return redirect()->back()->with('error', 'Invalid lookup type!');
         }
+        $post = $this->request->getPost();
+        if (empty($post['company_id'])) {
+            return redirect()->back()->with('error', 'Company ID missing from form. Please refresh.');
+        }
         (new LookupValueModel())->insert([
-            'company_id' => $this->companyId(),
+            'company_id' => $post['company_id'],
             'type'       => $type,
-            'value'      => $this->request->getPost('value'),
-            'sort_order' => (int) $this->request->getPost('sort_order'),
+            'value'      => $post['value'],
+            'sort_order' => (int) ($post['sort_order'] ?? 0),
+            'is_active'  => 1,
         ]);
         return redirect()->to('/masters/lookups/' . $type)->with('success', 'Value added!');
     }
@@ -276,6 +344,90 @@ class MasterController extends BaseController
         if ($r = $this->requireAdmin()) return $r;
         (new LookupValueModel())->where('id', $id)->where('company_id', $this->companyId())->delete();
         return $this->response->setJSON(['success' => true]);
+    }
+
+    // ============================================================
+    // DATATABLES SERVER-SIDE PROCESSING (SSP)
+    // ============================================================
+
+    public function ajaxDatatable(string $type)
+    {
+        if ($r = $this->requireAdmin()) return $r;
+
+        $post = $this->request->getPost();
+        $draw = (int) ($post['draw'] ?? 1);
+        $start = (int) ($post['start'] ?? 0);
+        $length = (int) ($post['length'] ?? 10);
+        $searchValue = $post['search']['value'] ?? '';
+        
+        $orderColumnIdx = $post['order'][0]['column'] ?? null;
+        $orderDir = $post['order'][0]['dir'] ?? 'asc';
+        $columns = $post['columns'] ?? [];
+
+        $model = null;
+        $searchFields = [];
+        
+        switch ($type) {
+            case 'customers':
+                $model = new CustomerModel();
+                $searchFields = ['name', 'code', 'email', 'mobile'];
+                break;
+            case 'transporters':
+                $model = new TransporterModel();
+                $searchFields = ['name', 'mobile'];
+                break;
+            case 'drivers':
+                $model = new DriverModel();
+                $searchFields = ['name', 'mobile', 'vehicle_no', 'license_no'];
+                break;
+            case 'airlines':
+                $model = new AirlineModel();
+                $searchFields = ['name', 'code'];
+                break;
+            default:
+                return $this->response->setJSON(['error' => 'Invalid type']);
+        }
+
+        $builder = $model->where('company_id', $this->companyId());
+
+        // Total records
+        $totalRecords = $builder->countAllResults(false);
+
+        // Search
+        if (!empty($searchValue)) {
+            $builder->groupStart();
+            foreach ($searchFields as $field) {
+                $builder->orLike($field, $searchValue);
+            }
+            $builder->groupEnd();
+        }
+
+        $filteredRecords = $builder->countAllResults(false);
+
+        // Order
+        if ($orderColumnIdx !== null && isset($columns[$orderColumnIdx]['data'])) {
+            $orderBy = $columns[$orderColumnIdx]['data'];
+            // Basic security check: ensure column name is alphanumeric or underscore
+            if (preg_match('/^[a-zA-Z0-9_]+$/', $orderBy)) {
+                $builder->orderBy($orderBy, $orderDir);
+            }
+        } else {
+            $builder->orderBy('id', 'desc');
+        }
+
+        // Pagination
+        if ($length != -1) {
+            $builder->limit($length, $start);
+        }
+
+        $data = $builder->get()->getResultArray();
+
+        return $this->response->setJSON([
+            'draw' => $draw,
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $data
+        ]);
     }
 
     // ============================================================
