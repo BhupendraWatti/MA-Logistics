@@ -75,14 +75,31 @@
 
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label>Digital Signature (PNG format with transparent background)</label>
+                        <label>Digital Signature (Upload PNG)</label>
                         <input type="file" name="signature_image" class="form-control" accept="image/png">
                         <?php if(!empty($company['signature_path']) && file_exists(FCPATH . $company['signature_path'])): ?>
                             <div class="mt-3 p-3 bg-light border rounded text-center">
                                 <strong>Current Signature:</strong><br>
                                 <img src="<?= base_url($company['signature_path']) ?>" style="max-height: 80px; max-width: 200px; margin-top:10px; mix-blend-mode: multiply;">
+                                <div class="mt-3">
+                                    <a href="<?= base_url('company/settings/deleteSignature') ?>" class="btn btn-sm btn-danger shadow-sm" onclick="return confirm('Are you sure you want to delete the current signature?');">
+                                        <i class="fas fa-trash"></i> Delete Signature
+                                    </a>
+                                </div>
                             </div>
                         <?php endif; ?>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Or Draw Your Signature</label>
+                        <div class="border rounded bg-light p-2 text-center">
+                            <canvas id="signatureCanvas" class="bg-white border shadow-sm rounded" width="300" height="150" style="touch-action: none; cursor: crosshair;"></canvas>
+                            <div class="mt-2">
+                                <button type="button" id="clearCanvas" class="btn btn-sm btn-outline-warning text-dark fw-bold shadow-sm">
+                                    <i class="fas fa-eraser"></i> Clear Drawing
+                                </button>
+                            </div>
+                            <input type="hidden" name="signature_base64" id="signatureBase64">
+                        </div>
                     </div>
                 </div>
 
@@ -93,3 +110,27 @@
 </div>
 
 <?= $this->endSection() ?>
+
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var canvas = document.getElementById('signatureCanvas');
+        if (canvas) {
+            var signaturePad = new SignaturePad(canvas, {
+                backgroundColor: 'rgba(255, 255, 255, 0)',
+                penColor: 'rgb(0, 0, 0)'
+            });
+
+            document.getElementById('clearCanvas').addEventListener('click', function () {
+                signaturePad.clear();
+                document.getElementById('signatureBase64').value = "";
+            });
+
+            document.querySelector('form').addEventListener('submit', function(e) {
+                if (!signaturePad.isEmpty()) {
+                    document.getElementById('signatureBase64').value = signaturePad.toDataURL('image/png');
+                }
+            });
+        }
+    });
+</script>

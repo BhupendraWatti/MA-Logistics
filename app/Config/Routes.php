@@ -11,6 +11,7 @@ $routes->post('auth/attemptLogin', 'AuthController::attemptLogin');
 $routes->get('auth/logout', 'AuthController::logout');
 $routes->get('company/settings', 'CompanyController::settings');
 $routes->post('company/settings/update', 'CompanyController::updateSettings');
+$routes->get('company/settings/deleteSignature', 'CompanyController::deleteSignature');
 
 // ====== ADMIN/USER MANAGEMENT ======
 $routes->get('admin', 'AdminController::index');
@@ -46,6 +47,7 @@ $routes->post('logistics/deleteCompany/(:num)', 'Logistics::deleteCompany/$1');
 // ====== MASTER MODULE ======
 $routes->get('masters/company',                       'MasterController::editCompany');
 $routes->post('masters/company/update',               'MasterController::updateCompany');
+$routes->get('masters/company/deleteSignature',       'MasterController::deleteSignature');
 
 $routes->get('masters/customers',                     'MasterController::customers');
 $routes->post('masters/customers/create',             'MasterController::createCustomer');

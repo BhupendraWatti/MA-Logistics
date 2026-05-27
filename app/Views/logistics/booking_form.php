@@ -104,6 +104,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     </select>
                     <input type="text" id="mode_transport_other" class="form-control form-control-sm shadow-none mt-1 d-none" placeholder="Enter Mode">
                 </div>
+                
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">PAYMENT TYPE</label>
                     <select name="payment_type" id="payment_type" class="form-select form-select-sm shadow-none" onchange="handleOtherOption(this)">

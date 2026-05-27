@@ -66,19 +66,61 @@ class MasterController extends BaseController
             'terms_conditions' => $this->request->getPost('terms_conditions'),
         ];
 
+        // 1. Handle Base64 Signature Canvas first
+        $signatureBase64 = $this->request->getPost('signature_base64');
+        if (!empty($signatureBase64)) {
+            if (strpos($signatureBase64, 'image/png') !== false) {
+                return redirect()->back()->with('error', 'Please do a HARD REFRESH (Ctrl+Shift+R or Ctrl+F5) of your browser to apply the latest signature fixes, then draw again.');
+            }
+            $parts = explode(',', $signatureBase64);
+            if (count($parts) == 2) {
+                $image_base64 = base64_decode($parts[1]);
+                $fileName = 'sig_' . $companyId . '_' . time() . '_canvas.jpg';
+                $uploadPath = FCPATH . 'uploads/signatures';
+                
+                if (!is_dir($uploadPath)) {
+                    mkdir($uploadPath, 0777, true);
+                }
+                
+                file_put_contents($uploadPath . '/' . $fileName, $image_base64);
+                $data['signature_path'] = 'uploads/signatures/' . $fileName;
+            }
+        }
+
+        // 2. Handle File Upload (overrides canvas if both are somehow submitted)
         $sig = $this->request->getFile('signature');
         if ($sig && $sig->isValid() && !$sig->hasMoved()) {
-            if (!in_array($sig->getMimeType(), ['image/png', 'image/jpeg', 'image/gif'])) {
-                return redirect()->back()->with('error', 'Signature must be PNG, JPG, or GIF.');
+            if (!in_array($sig->getMimeType(), ['image/png', 'image/jpeg', 'image/jpg', 'image/gif'])) {
+                return redirect()->back()->with('error', 'Signature must be a PNG, JPG, or GIF image.');
             }
             $fileName = 'sig_' . $companyId . '_' . time() . '.' . $sig->getExtension();
-            $sig->move(WRITEPATH . 'uploads/signatures/', $fileName);
+            $sig->move(FCPATH . 'uploads/signatures/', $fileName);
             $data['signature_path'] = 'uploads/signatures/' . $fileName;
         }
 
         (new CompanyModel())->update($companyId, $data);
         session()->set('selected_company_name', $data['name']);
         return redirect()->back()->with('success', 'Company settings saved!');
+    }
+
+    public function deleteSignature()
+    {
+        if ($r = $this->requireAdmin()) return $r;
+        $companyId = $this->companyId();
+        if (!$companyId) return redirect()->to('/company-selection');
+
+        $companyModel = new CompanyModel();
+        $company = $companyModel->find($companyId);
+
+        if (!empty($company['signature_path']) && file_exists(FCPATH . $company['signature_path'])) {
+            unlink(FCPATH . $company['signature_path']);
+        } elseif (!empty($company['signature_path']) && file_exists(WRITEPATH . $company['signature_path'])) {
+            unlink(WRITEPATH . $company['signature_path']);
+        }
+
+        $companyModel->update($companyId, ['signature_path' => null]);
+        
+        return redirect()->back()->with('success', 'Signature deleted successfully!');
     }
 
     // ============================================================
@@ -106,9 +148,10 @@ class MasterController extends BaseController
     {
         if ($r = $this->requireAdmin()) return $r;
         $post = $this->request->getPost();
-        if (empty($post['company_id'])) {
-            return redirect()->back()->with('error', 'Company ID missing from form. Please refresh.');
-        }
+        
+        // SECURITY FIX: Enforce session company_id (prevent IDOR)
+        $post['company_id'] = $this->companyId();
+
         $model = new CustomerModel();
         if (!$model->insert($post)) {
             return redirect()->back()->with('error', implode(', ', $model->errors()));
@@ -139,9 +182,10 @@ class MasterController extends BaseController
     {
         if ($r = $this->requireAdmin()) return $r;
         $post = $this->request->getPost();
-        if (empty($post['company_id'])) {
-            return redirect()->back()->with('error', 'Company ID missing from form. Please refresh.');
-        }
+        
+        // SECURITY FIX: Enforce session company_id (prevent IDOR)
+        $post['company_id'] = $this->companyId();
+
         $model = new CustomerModel();
         if (!$model->where('id', $id)->where('company_id', $post['company_id'])->set($post)->update()) {
             return redirect()->back()->with('error', implode(', ', $model->errors()));
@@ -173,9 +217,10 @@ class MasterController extends BaseController
     {
         if ($r = $this->requireAdmin()) return $r;
         $post = $this->request->getPost();
-        if (empty($post['company_id'])) {
-            return redirect()->back()->with('error', 'Company ID missing from form. Please refresh.');
-        }
+        
+        // SECURITY FIX: Enforce session company_id (prevent IDOR)
+        $post['company_id'] = $this->companyId();
+
         $model = new TransporterModel();
         if (!$model->insert($post)) {
             return redirect()->back()->with('error', implode(', ', $model->errors()));
@@ -187,9 +232,10 @@ class MasterController extends BaseController
     {
         if ($r = $this->requireAdmin()) return $r;
         $post = $this->request->getPost();
-        if (empty($post['company_id'])) {
-            return redirect()->back()->with('error', 'Company ID missing from form. Please refresh.');
-        }
+        
+        // SECURITY FIX: Enforce session company_id (prevent IDOR)
+        $post['company_id'] = $this->companyId();
+
         $model = new TransporterModel();
         if (!$model->where('id', $id)->where('company_id', $post['company_id'])->set($post)->update()) {
             return redirect()->back()->with('error', implode(', ', $model->errors()));
@@ -221,9 +267,10 @@ class MasterController extends BaseController
     {
         if ($r = $this->requireAdmin()) return $r;
         $post = $this->request->getPost();
-        if (empty($post['company_id'])) {
-            return redirect()->back()->with('error', 'Company ID missing from form. Please refresh.');
-        }
+        
+        // SECURITY FIX: Enforce session company_id (prevent IDOR)
+        $post['company_id'] = $this->companyId();
+
         $model = new DriverModel();
         if (!$model->insert($post)) {
             return redirect()->back()->with('error', implode(', ', $model->errors()));
@@ -235,9 +282,10 @@ class MasterController extends BaseController
     {
         if ($r = $this->requireAdmin()) return $r;
         $post = $this->request->getPost();
-        if (empty($post['company_id'])) {
-            return redirect()->back()->with('error', 'Company ID missing from form. Please refresh.');
-        }
+        
+        // SECURITY FIX: Enforce session company_id (prevent IDOR)
+        $post['company_id'] = $this->companyId();
+
         $model = new DriverModel();
         if (!$model->where('id', $id)->where('company_id', $post['company_id'])->set($post)->update()) {
             return redirect()->back()->with('error', implode(', ', $model->errors()));
@@ -269,9 +317,10 @@ class MasterController extends BaseController
     {
         if ($r = $this->requireAdmin()) return $r;
         $post = $this->request->getPost();
-        if (empty($post['company_id'])) {
-            return redirect()->back()->with('error', 'Company ID missing from form. Please refresh.');
-        }
+        
+        // SECURITY FIX: Enforce session company_id (prevent IDOR)
+        $post['company_id'] = $this->companyId();
+
         $model = new AirlineModel();
         if (!$model->insert($post)) {
             return redirect()->back()->with('error', implode(', ', $model->errors()));
@@ -283,9 +332,10 @@ class MasterController extends BaseController
     {
         if ($r = $this->requireAdmin()) return $r;
         $post = $this->request->getPost();
-        if (empty($post['company_id'])) {
-            return redirect()->back()->with('error', 'Company ID missing from form. Please refresh.');
-        }
+        
+        // SECURITY FIX: Enforce session company_id (prevent IDOR)
+        $post['company_id'] = $this->companyId();
+
         $model = new AirlineModel();
         if (!$model->where('id', $id)->where('company_id', $post['company_id'])->set($post)->update()) {
             return redirect()->back()->with('error', implode(', ', $model->errors()));
@@ -326,9 +376,9 @@ class MasterController extends BaseController
             return redirect()->back()->with('error', 'Invalid lookup type!');
         }
         $post = $this->request->getPost();
-        if (empty($post['company_id'])) {
-            return redirect()->back()->with('error', 'Company ID missing from form. Please refresh.');
-        }
+        
+        // SECURITY FIX: Enforce session company_id (prevent IDOR)
+        $post['company_id'] = $this->companyId();
         $data = [
             'company_id' => $post['company_id'],
             'type'       => $type,

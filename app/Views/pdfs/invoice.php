@@ -79,40 +79,47 @@
         <td style="text-align:center; font-weight:bold;"><?= round($totalTaxable) ?></td>
     </tr>
 
+    <?php 
+    $gstRows = [];
+    if ($cgstRate > 0) $gstRows[] = ['label' => "C.GST - {$cgstRate}%", 'amount' => $cgst];
+    if ($sgstRate > 0) $gstRows[] = ['label' => "S.GST - {$sgstRate}%", 'amount' => $sgst];
+    if ($igstRate > 0) $gstRows[] = ['label' => "I.GST - {$igstRate}%", 'amount' => $igst];
+    $rowSpan = count($gstRows) + 1;
+    ?>
     <tr style="font-size:8px; font-weight:bold;">
-        <td colspan="10" rowspan="4"></td>
-        <td colspan="5" style="text-align:left;">C.GST - 9%</td>
-        <td style="text-align:center;"><?= $cgst ?></td>
+        <td colspan="10" rowspan="<?= $rowSpan ?>"></td>
+        <?php if (count($gstRows) > 0): ?>
+            <td colspan="5" style="text-align:left;"><?= $gstRows[0]['label'] ?></td>
+            <td style="text-align:center;"><?= $gstRows[0]['amount'] ?></td>
     </tr>
+            <?php for($i=1; $i<count($gstRows); $i++): ?>
     <tr style="font-size:8px; font-weight:bold;">
-        <td colspan="5" style="text-align:left;">S.GST - 9%</td>
-        <td style="text-align:center;"><?= $sgst ?></td>
+            <td colspan="5" style="text-align:left;"><?= $gstRows[$i]['label'] ?></td>
+            <td style="text-align:center;"><?= $gstRows[$i]['amount'] ?></td>
     </tr>
+            <?php endfor; ?>
     <tr style="font-size:8px; font-weight:bold;">
-        <td colspan="5" style="text-align:left;">I.GST - 18%</td>
-        <td style="text-align:center;"><?= $igst ?></td>
-    </tr>
-    <tr style="font-size:8px; font-weight:bold;">
+        <?php endif; ?>
         <td colspan="5" style="text-align:left;">NET PAYABLE AMOUNT</td>
         <td style="text-align:center;"><?= $netPayable ?></td>
     </tr>
     <tr>
-        <td colspan="16" style="font-size:10px; font-weight:bold;">
+        <td colspan="16" style="font-size:10px; font-weight:bold; padding: 5px;">
             Rs. (In Word) <?= strtoupper($amountInWords) ?> RUPEES ONLY ./-
         </td>
     </tr>
     <tr>
-        <td colspan="11" style="vertical-align:top; font-size:9px;">
+        <td colspan="10" style="vertical-align:top; font-size:9px; padding: 5px; line-height: 1.5;">
             <b>Service Category : Courier & Cargo</b><br><br>
             <b>Terms & Conditions :</b><br>
             <?= nl2br(esc($company['terms_conditions'] ?? 'No terms specified.')) ?>
         </td>
-        <td colspan="5" style="vertical-align:top; text-align:center; font-size:10px; font-weight:bold;">
-            For <?= esc($company['name'] ?? 'M.A LOGISTICS') ?><br><br>
+        <td colspan="6" style="vertical-align:top; text-align:center; font-size:10px; font-weight:bold; padding: 5px;">
+            For <?= esc($company['name'] ?? 'M.A LOGISTICS') ?><br><br><br>
             <?php if (!empty($company['signature_path']) && file_exists(FCPATH . $company['signature_path'])): ?>
-                <img src="<?= base_url($company['signature_path']) ?>" style="height: 60px; max-width: 150px; margin-top: 10px; margin-bottom: 5px;"><br>
+                <img src="<?= FCPATH . $company['signature_path'] ?>" style="height: 60px; max-width: 150px; margin-bottom: 5px;"><br>
             <?php else: ?>
-                <br><br><br><br>
+                <br><br><br>
             <?php endif; ?>
             Authorised signatory
         </td>

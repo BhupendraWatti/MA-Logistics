@@ -165,10 +165,13 @@ public function create()
     $shipments = $shipmentModel->where('booking_id', $id)->findAll();
     $sales = $salesModel->where('booking_id', $id)->first();
     
+    $companyData = (new \App\Models\CompanyModel())->find(session()->get('selected_company_id'));
+    
     $data = [
         'booking' => $booking,
         'shipments' => $shipments,
         'sales' => $sales,
+        'company' => $companyData,
         'user' => session()->get()
     ];
     
@@ -229,6 +232,13 @@ public function edit($id)
     try {
         $companyId = session()->get('selected_company_id');
         if (!$companyId) return redirect()->to('/company-selection');
+        
+        // SECURITY FIX: Prevent IDOR / Booking hijacking
+        $existing = (new BookingModel())->find($id);
+        if (!$existing || $existing['company_id'] != $companyId) {
+            return redirect()->back()->with('error', 'Booking not found or access denied!');
+        }
+        
         $bookingService->updateBooking($id, $this->request->getPost(), session()->get('user_id'), $companyId);
         $awb_no = $this->request->getPost('awb_no');
         return redirect()->to('/logistics')->with('success', 'Booking updated successfully! AWB: ' . $awb_no);
@@ -521,14 +531,19 @@ public function exportPdf($id)
     $recipientAddress = $shipments[0]['bill_to'] ?? $shipments[0]['consignee'] ?? '';
     $recipientAddress = $recipientAddress ?: 'Address not available';
 
-    $pdf = new \TCPDF('L', 'mm', 'A4');
-    $pdf->SetCreator('Malogistics');
-    $pdf->SetAuthor('Malogistics');
-    $pdf->SetPrintHeader(false);
-    $pdf->SetPrintFooter(false);
-    $pdf->SetMargins(8, 8, 8);
-    $pdf->AddPage();
-    $pdf->SetFont('helvetica', '', 8);
+    if (!defined('K_TCPDF_THROW_EXCEPTION_ERROR')) {
+        define('K_TCPDF_THROW_EXCEPTION_ERROR', true);
+    }
+
+    try {
+        $pdf = new \TCPDF('L', 'mm', 'A4');
+        $pdf->SetCreator('Malogistics');
+        $pdf->SetAuthor('Malogistics');
+        $pdf->SetPrintHeader(false);
+        $pdf->SetPrintFooter(false);
+        $pdf->SetMargins(8, 8, 8);
+        $pdf->AddPage();
+        $pdf->SetFont('helvetica', '', 8);
 
     $serial = 1;
     $totalBoxes = 0;
@@ -579,7 +594,7 @@ public function exportPdf($id)
     }
 
     // Load GST rates from company master (not hardcoded)
-    $companyData = (new CompanyModel())->select('name, address, email, mobile, gstin, pan, cgst_rate, sgst_rate, igst_rate, terms_conditions, signature_path')
+    $companyData = (new CompanyModel())->select('name, address, email, mobile, gstin, pan, sac_code, cgst_rate, sgst_rate, igst_rate, terms_conditions, signature_path')
                                        ->find($booking['company_id']);
                                        
     $cgstRate = (float) ($companyData['cgst_rate'] ?? 9);
@@ -616,14 +631,23 @@ public function exportPdf($id)
         'cgst' => $cgst,
         'sgst' => $sgst,
         'igst' => $igst,
+        'cgstRate' => $cgstRate,
+        'sgstRate' => $sgstRate,
+        'igstRate' => $igstRate,
         'netPayable' => $netPayable,
         'amountInWords' => $this->formatAmountInWords($netPayable)
     ];
 
     $html = view('pdfs/invoice', $viewData);
 
-    $pdf->writeHTML($html, true, false, true, false, '');
-    $pdf->Output('AWB-' . $booking['awb_no'] . '.pdf', 'D');
+        $pdf->writeHTML($html, true, false, true, false, '');
+        $pdf->Output('Invoice_'.$invoiceNo.'.pdf', 'I');
+    } catch (\Exception $e) {
+        if (strpos($e->getMessage(), 'alpha channel') !== false || strpos($e->getMessage(), 'Imagick or GD') !== false) {
+            return redirect()->back()->with('error', 'Your server does not support transparent PNG signatures. Please go to Company Settings and upload a JPG image or draw your signature manually.');
+        }
+        return redirect()->back()->with('error', 'PDF Generation Error: ' . $e->getMessage());
+    }
 }
 
 private function formatAmountInWords($amount)

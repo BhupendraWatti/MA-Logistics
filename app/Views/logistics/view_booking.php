@@ -192,10 +192,14 @@
 
                         // GST Calculation
                         $cgst = 0; $sgst = 0; $igst = 0;
+                        $cgstRate = (float)($company['cgst_rate'] ?? 0);
+                        $sgstRate = (float)($company['sgst_rate'] ?? 0);
+                        $igstRate = (float)($company['igst_rate'] ?? 0);
+
                         if (!empty($booking['gst_applied'])) {
-                            // Assuming local GST standard (9% CGST, 9% SGST)
-                            $cgst = $subtotal * 0.09;
-                            $sgst = $subtotal * 0.09;
+                            $cgst = $subtotal * ($cgstRate / 100);
+                            $sgst = $subtotal * ($sgstRate / 100);
+                            $igst = $subtotal * ($igstRate / 100);
                         }
                         
                         $grandTotal = $subtotal + $cgst + $sgst + $igst;
@@ -221,12 +225,22 @@
 
                         <?php if($cgst > 0): ?>
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted fw-semibold">CGST (9%)</span>
+                            <span class="text-muted fw-semibold">CGST (<?= $cgstRate ?>%)</span>
                             <span class="fw-bold text-dark">₹<?= number_format((float)$cgst, 2) ?></span>
                         </div>
+                        <?php endif; ?>
+                        
+                        <?php if($sgst > 0): ?>
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted fw-semibold">SGST (9%)</span>
+                            <span class="text-muted fw-semibold">SGST (<?= $sgstRate ?>%)</span>
                             <span class="fw-bold text-dark">₹<?= number_format((float)$sgst, 2) ?></span>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if($igst > 0): ?>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted fw-semibold">IGST (<?= $igstRate ?>%)</span>
+                            <span class="fw-bold text-dark">₹<?= number_format((float)$igst, 2) ?></span>
                         </div>
                         <?php endif; ?>
 
