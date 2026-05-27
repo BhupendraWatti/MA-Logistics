@@ -144,7 +144,8 @@
                 render: function(data, type, row) {
                     const btnClass = row.is_active == 1 ? 'btn-outline-danger' : 'btn-outline-success';
                     const btnText = row.is_active == 1 ? '<i class="fas fa-ban"></i> Deactivate' : '<i class="fas fa-check"></i> Activate';
-                    return `<button class="btn btn-sm ${btnClass}" onclick="toggleActive(${row.id}, ${row.is_active})">${btnText}</button>`;
+                    return `<button class="btn btn-sm ${btnClass} me-1" onclick="toggleActive(${row.id}, ${row.is_active})">${btnText}</button>` +
+                           `<button class="btn btn-sm btn-outline-danger" onclick="deleteUser(${row.id})"><i class="fas fa-trash"></i> Delete</button>`;
                 }
             },
             {
@@ -208,6 +209,30 @@
                     }
                 }).fail(function() {
                     ERPUtils.showError('Error', 'Server error occurred.');
+                });
+            }
+        });
+    }
+
+    function deleteUser(userId) {
+        if (userId == <?= session()->get('user_id') ?? 0 ?>) {
+            ERPUtils.showWarning('Action Denied', 'You cannot delete yourself.');
+            return;
+        }
+
+        ERPUtils.confirmAction('Delete User?', 'This action cannot be undone!', 'Yes, delete').then((result) => {
+            if (result.isConfirmed) {
+                $.post('<?= base_url('admin/deleteUser') ?>', {
+                    user_id: userId
+                }, function(response) {
+                    if (response.success) {
+                        ERPUtils.showSuccess('Deleted!', response.message);
+                        usersTable.ajax.reload(null, false);
+                    } else {
+                        ERPUtils.showError('Error', response.message);
+                    }
+                }).fail(function() {
+                    ERPUtils.showError('Error', 'Server error occurred while deleting user.');
                 });
             }
         });

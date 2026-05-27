@@ -10,6 +10,7 @@ use App\Models\TransporterModel;
 use App\Models\DriverModel;
 use App\Models\AirlineModel;
 use App\Models\LookupValueModel;
+use App\Models\SystemSettingsModel;
 
 class Logistics extends BaseController
 {
@@ -126,6 +127,7 @@ public function create()
         'material_category' => (new LookupValueModel())->getByType($companyId, 'material_category'),
         'payment_type'      => (new LookupValueModel())->getByType($companyId, 'payment_type'),
     ];
+    $data['volumetric_formula'] = (new SystemSettingsModel())->getSetting($companyId, 'volumetric_divider', 6000);
     $data['company'] = (new CompanyModel())->find($companyId);
     
     return view('logistics/booking_form', $data);
@@ -210,6 +212,7 @@ public function edit($id)
             'material_category' => (new LookupValueModel())->getByType($companyId, 'material_category'),
             'payment_type'      => (new LookupValueModel())->getByType($companyId, 'payment_type'),
         ],
+        'volumetric_formula' => (new SystemSettingsModel())->getSetting($companyId, 'volumetric_divider', 6000),
         'company' => (new CompanyModel())->find($companyId),
     ];
     

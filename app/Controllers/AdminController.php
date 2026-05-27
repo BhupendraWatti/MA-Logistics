@@ -147,6 +147,21 @@ class AdminController extends BaseController
     }
 
 
+    public function deleteUser()
+    {
+        if (session()->get('role') !== 'admin') {
+            return $this->response->setJSON(['success' => false, 'message' => 'Admin only!']);
+        }
+        
+        $userId = $this->request->getPost('user_id');
+        if ($userId == session()->get('user_id')) {
+            return $this->response->setJSON(['success' => false, 'message' => 'You cannot delete yourself!']);
+        }
+        
+        (new UserModel())->delete($userId);
+        return $this->response->setJSON(['success' => true, 'message' => 'User deleted successfully!']);
+    }
+
     // Password Hashing method
     public function changePassword()
     {

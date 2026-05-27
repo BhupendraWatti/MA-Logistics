@@ -161,3 +161,82 @@ const ERPUtils = {
         return $(selector).DataTable($.extend(true, {}, defaultOptions, extraOptions));
     }
 };
+
+// ==========================================
+// GLOBAL UNSAVED CHANGES TRACKING
+// ==========================================
+$(document).ready(function() {
+    let isDirty = false;
+    let allowLeave = false;
+    
+    // Track changes on inputs, selects, and textareas, but exclude search bars
+    $('input:not(.search-bar input), select:not(.search-bar select), textarea:not(.search-bar textarea)').on('change input', function() {
+        if (!isDirty && $(this).closest('.dataTables_filter').length === 0 && $(this).closest('.dataTables_length').length === 0) {
+            isDirty = true;
+            // Push state so we can trap back button
+            history.pushState(null, null, window.location.href);
+        }
+    });
+
+    // Intercept back button
+    window.addEventListener('popstate', function(event) {
+        if (isDirty && !allowLeave) {
+            history.pushState(null, null, window.location.href);
+            Swal.fire({
+                title: 'Unsaved Changes!',
+                text: "You have unsaved changes. Are you sure you want to go back?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, leave',
+                cancelButtonText: 'Stay'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    allowLeave = true;
+                    history.go(-2);
+                }
+            });
+        }
+    });
+
+    // Intercept internal link clicks
+    $('a').on('click', function(e) {
+        const targetUrl = $(this).attr('href');
+        // Check if real internal navigation
+        if (isDirty && !allowLeave && targetUrl && !targetUrl.startsWith('#') && !targetUrl.startsWith('javascript:')) {
+            // Ignore offcanvas triggers that might use href=# (just a safeguard)
+            if ($(this).attr('data-bs-toggle') === 'offcanvas') return;
+            
+            e.preventDefault();
+            Swal.fire({
+                title: 'Unsaved Changes!',
+                text: "You have unsaved changes. Are you sure you want to leave?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, leave',
+                cancelButtonText: 'Stay'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    allowLeave = true;
+                    window.location.href = targetUrl;
+                }
+            });
+        }
+    });
+
+    // Fallback for tab closing / page refresh
+    window.addEventListener("beforeunload", function(event) {
+        if (isDirty && !allowLeave) {
+            event.preventDefault();
+            event.returnValue = "You have unsaved changes. Are you sure you want to leave?";
+        }
+    });
+
+    // Clear dirty flag when forms are submitted
+    $('form').on('submit', function() {
+        allowLeave = true;
+    });
+});

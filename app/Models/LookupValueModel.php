@@ -9,7 +9,7 @@ class LookupValueModel extends Model
     protected $table      = 'lookup_values';
     protected $primaryKey = 'id';
     protected $useTimestamps = true;
-    protected $allowedFields = ['company_id', 'type', 'value', 'is_active'];
+    protected $allowedFields = ['company_id', 'type', 'value', 'pincode', 'city', 'district', 'state', 'is_active'];
 
     /**
      * All valid lookup types.

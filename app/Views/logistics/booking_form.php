@@ -68,50 +68,85 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">ORIGIN <span class="text-danger">*</span></label>
-                    <select name="origin" id="origin" class="form-select form-select-sm shadow-none fw-bold" required>
+                    <select name="origin" id="origin" class="form-select form-select-sm shadow-none fw-bold" onchange="handleOtherOption(this)" required>
                         <option value="<?= esc($booking['origin'] ?? '') ?>" selected><?= esc($booking['origin'] ?? '') ?></option>
                         <?php foreach($lookups['origin'] ?? [] as $l): ?>
                             <?php if (($booking['origin'] ?? '') != $l['value']): ?>
                                 <option value="<?= esc($l['value']) ?>"><?= esc($l['value']) ?></option>
                             <?php endif; ?>
                         <?php endforeach; ?>
+                        <option value="Other">Other</option>
                     </select>
+                    <input type="text" id="origin_other" class="form-control form-control-sm shadow-none mt-1 d-none" placeholder="Enter Origin">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">DESTINATION <span class="text-danger">*</span></label>
-                    <select name="destination" id="destination" class="form-select form-select-sm shadow-none fw-bold" required>
+                    <select name="destination" id="destination" class="form-select form-select-sm shadow-none fw-bold" onchange="handleOtherOption(this)" required>
                         <option value="<?= esc($booking['destination'] ?? '') ?>" selected><?= esc($booking['destination'] ?? '') ?></option>
                         <?php foreach($lookups['destination'] ?? [] as $l): ?>
                             <?php if (($booking['destination'] ?? '') != $l['value']): ?>
                                 <option value="<?= esc($l['value']) ?>"><?= esc($l['value']) ?></option>
                             <?php endif; ?>
                         <?php endforeach; ?>
+                        <option value="Other">Other</option>
                     </select>
+                    <input type="text" id="destination_other" class="form-control form-control-sm shadow-none mt-1 d-none" placeholder="Enter Destination">
                 </div>
                 
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">MODE OF TRANSPORT</label>
-                    <select name="mode_transport" class="form-select form-select-sm shadow-none">
+                    <select name="mode_transport" id="mode_transport" class="form-select form-select-sm shadow-none" onchange="handleOtherOption(this)">
                         <option value="">--Select--</option>
                         <?php foreach($lookups['mode'] ?? [] as $l): ?>
                             <option value="<?= esc($l['value']) ?>" <?= ($booking['mode_transport'] ?? '') == $l['value'] ? 'selected' : '' ?>><?= esc($l['value']) ?></option>
                         <?php endforeach; ?>
+                        <option value="Other">Other</option>
                     </select>
+                    <input type="text" id="mode_transport_other" class="form-control form-control-sm shadow-none mt-1 d-none" placeholder="Enter Mode">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">PAYMENT TYPE</label>
-                    <select name="payment_type" id="payment_type" class="form-select form-select-sm shadow-none">
+                    <select name="payment_type" id="payment_type" class="form-select form-select-sm shadow-none" onchange="handleOtherOption(this)">
                         <option value="">--Select--</option>
                         <?php foreach($lookups['payment_type'] ?? [] as $l): ?>
                             <option value="<?= esc($l['value']) ?>" <?= ($booking['payment_type'] ?? '') == $l['value'] ? 'selected' : '' ?>><?= esc($l['value']) ?></option>
                         <?php endforeach; ?>
+                        <option value="Other">Other</option>
                     </select>
+                    <input type="text" id="payment_type_other" class="form-control form-control-sm shadow-none mt-1 d-none" placeholder="Enter Payment Type">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label text-muted fs-7 fw-semibold">MATERIAL TYPE</label>
+                    <select name="material_type" id="material_type" class="form-select form-select-sm shadow-none" onchange="handleOtherOption(this)">
+                        <option value="">--Select--</option>
+                        <?php foreach($lookups['material_type'] ?? [] as $l): ?>
+                            <option value="<?= esc($l['value']) ?>" <?= ($booking['material_type'] ?? '') == $l['value'] ? 'selected' : '' ?>><?= esc($l['value']) ?></option>
+                        <?php endforeach; ?>
+                        <option value="Other">Other</option>
+                    </select>
+                    <input type="text" id="material_type_other" class="form-control form-control-sm shadow-none mt-1 d-none" placeholder="Enter Material Type">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-muted fs-7 fw-semibold">MATERIAL CATEGORY</label>
+                    <select name="material_category" id="material_category" class="form-select form-select-sm shadow-none" onchange="handleOtherOption(this)">
+                        <option value="">--Select--</option>
+                        <?php foreach($lookups['material_category'] ?? [] as $l): ?>
+                            <option value="<?= esc($l['value']) ?>" <?= ($booking['material_category'] ?? '') == $l['value'] ? 'selected' : '' ?>><?= esc($l['value']) ?></option>
+                        <?php endforeach; ?>
+                        <option value="Other">Other</option>
+                    </select>
+                    <input type="text" id="material_category_other" class="form-control form-control-sm shadow-none mt-1 d-none" placeholder="Enter Material Category">
                 </div>
                 <div class="col-md-4 d-flex align-items-end">
                     <div class="form-check mb-1">
                         <input class="form-check-input" type="checkbox" name="gst_applied" id="gst_applied" value="1" <?= (!isset($booking['id']) || !empty($booking['gst_applied'])) ? 'checked' : '' ?>>
                         <label class="form-check-label fw-bold text-dark" for="gst_applied">GST Applied</label>
                     </div>
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label text-muted fs-7 fw-semibold">MATERIAL DETAILS</label>
+                    <textarea name="material_details" class="form-control form-control-sm shadow-none" rows="2" placeholder="Enter material details..."><?= esc($booking['material_details'] ?? '') ?></textarea>
                 </div>
             </div>
 
@@ -166,6 +201,10 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     </select>
                 </div>
                 <div class="col-md-3">
+                    <label class="form-label text-muted fs-7 fw-semibold">DRIVER MOBILE</label>
+                    <input type="text" name="driver_mobile" id="driver_mobile" class="form-control form-control-sm shadow-none" value="<?= $booking['driver_mobile'] ?? '' ?>">
+                </div>
+                <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">VEHICLE NO</label>
                     <input type="text" name="vehicle_no" id="vehicle_no" class="form-control form-control-sm shadow-none" value="<?= $booking['vehicle_no'] ?? '' ?>">
                 </div>
@@ -184,7 +223,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     <label class="form-label text-muted fs-7 fw-semibold mb-1">Global Volumetric Formula</label>
                     <div class="input-group input-group-sm shadow-none">
                         <span class="input-group-text">÷</span>
-                        <input type="number" name="volumetric_formula" id="volumetric_formula" class="form-control fw-bold" value="<?= esc($booking['volumetric_formula'] ?? 6000) ?>" onchange="recalcAllItems()">
+                        <input type="number" name="volumetric_formula" id="volumetric_formula" class="form-control fw-bold" value="<?= esc($booking['volumetric_formula'] ?? $volumetric_formula ?? 6000) ?>" onchange="recalcAllItems()">
                     </div>
                     <small class="text-muted" style="font-size:0.65rem;">Modifying this recalculates all items below.</small>
                 </div>
@@ -408,81 +447,8 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
 .fs-7 { font-size: 0.85rem; }
 .fs-8 { font-size: 0.75rem; }
 </style>
+
 <script>
-    let isDirty = false;
-    let allowLeave = false;
-    
-    // Track changes
-    $('input, select, textarea').on('change input', function() { 
-        if (!isDirty) {
-            isDirty = true; 
-            // Trap the back button
-            history.pushState(null, null, window.location.href);
-        }
-    });
-
-    // Intercept Browser Back Button
-    window.addEventListener('popstate', function(event) {
-        if (isDirty && !allowLeave) {
-            // Push state back immediately to trap the user
-            history.pushState(null, null, window.location.href);
-            
-            Swal.fire({
-                title: 'Unsaved Changes!',
-                text: "You have unsaved changes. Are you sure you want to go back?",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, leave page',
-                cancelButtonText: 'Stay'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    allowLeave = true;
-                    // Go back twice (once to undo our trap, once to actually go back)
-                    history.go(-2);
-                }
-            });
-        }
-    });
-
-    // Intercept internal link clicks to use SweetAlert instead of native popup
-    $('a').on('click', function(e) {
-        const targetUrl = $(this).attr('href');
-        // Only intercept real internal navigation links
-        if (isDirty && !allowLeave && targetUrl && !targetUrl.startsWith('#') && !targetUrl.startsWith('javascript:')) {
-            e.preventDefault();
-            Swal.fire({
-                title: 'Unsaved Changes!',
-                text: "You have unsaved changes. Are you sure you want to leave?",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Yes, leave page',
-                cancelButtonText: 'Stay'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    allowLeave = true;
-                    window.location.href = targetUrl;
-                }
-            });
-        }
-    });
-
-    // Fallback for tab closing / page refresh (Native alert is mandatory here)
-    window.addEventListener("beforeunload", function(event) {
-        if (isDirty && !allowLeave) {
-            event.preventDefault();
-            event.returnValue = "You have unsaved changes. Are you sure you want to leave?";
-        }
-    });
-    
-    // Clear dirty flag when submitting forms
-    $('form').on('submit', function() {
-        allowLeave = true;
-    });
-
     let items = [];
     const _customers = <?= json_encode($customers ?? []) ?>;
     const _companyGst = { 
@@ -594,15 +560,13 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     
     function autoFillTransporter() {
         const opt = $('#transporter_name option:selected');
-        if (opt.length && opt.data('mobile')) $('#transporter_mobile').val(opt.data('mobile'));
+        if (opt.length) $('#transporter_mobile').val(opt.data('mobile') || '');
     }
 
     function autoFillDriver() {
-        const opt = $('#driver_name option:selected');
-        if (opt.length) {
-            if (opt.data('mobile')) $('#driver_mobile').val(opt.data('mobile'));
-            if (opt.data('vehicle')) $('#vehicle_no').val(opt.data('vehicle'));
-        }
+        const selected = $('#driver_name option:selected');
+        $('#vehicle_no').val(selected.data('vehicle') || '');
+        $('#driver_mobile').val(selected.data('mobile') || '');
     }
 
     function calcEntryVol() {
@@ -689,7 +653,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         const act_wt = parseFloat($('#entry_act_wt').val()) || 0;
         
         if(!contents || act_wt <= 0) {
-            alert("Contents Description and Actual Weight are required.");
+            ERPUtils.showWarning("Missing Data", "Contents Description and Actual Weight are required.");
             return;
         }
 
@@ -741,6 +705,14 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         var modalEl = document.getElementById('itemModal');
         var modal = bootstrap.Offcanvas.getInstance(modalEl);
         if(modal) modal.hide();
+
+        Swal.fire({
+            title: "Success",
+            text: editIndex >= 0 ? "Item updated successfully!" : "Item added to grid!",
+            icon: "success",
+            timer: 1500,
+            showConfirmButton: false
+        });
     }
 
     function deleteItem(index) {
@@ -841,11 +813,29 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
 
     $('#bookingForm').on('submit', function() {
         if(items.length === 0) {
-            alert("Please add at least one shipment item.");
+            ERPUtils.showWarning("Missing Data", "Please add at least one shipment item.");
             return false;
         }
         isDirty = false; // allow navigation without prompt
         $('#mainSubmitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
     });
+
+    function handleOtherOption(selectEl) {
+        const inputId = selectEl.id + '_other';
+        const inputEl = document.getElementById(inputId);
+        if (!inputEl) return;
+        
+        if (selectEl.value === 'Other') {
+            inputEl.classList.remove('d-none');
+            inputEl.setAttribute('name', selectEl.getAttribute('name'));
+            inputEl.setAttribute('required', 'required');
+            selectEl.removeAttribute('name');
+        } else {
+            inputEl.classList.add('d-none');
+            selectEl.setAttribute('name', inputEl.getAttribute('name') || selectEl.id);
+            inputEl.removeAttribute('name');
+            inputEl.removeAttribute('required');
+        }
+    }
 </script>
 <?= $this->endSection() ?>

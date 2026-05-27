@@ -68,17 +68,20 @@
 <?= $this->section('scripts') ?>
 <script>
     $('.delete-btn').click(function() {
-        if (confirm('Delete AWB ' + $(this).data('awb') + '? This cannot be undone!')) {
-            const id = $(this).data('id');
-            $.post('<?= base_url('logistics/delete/') ?>' + id, function(response) {
-                if (response.success) {
-                    alert(response.message);
-                    location.reload();
-                } else {
-                    alert('Error: ' + response.message);
+        const id = $(this).data('id');
+        const awb = $(this).data('awb');
+        ERPUtils.confirmAction('Delete AWB ' + awb + '?', 'This cannot be undone!', 'Yes, delete', 'error')
+            .then((result) => {
+                if (result.isConfirmed) {
+                    $.post('<?= base_url('logistics/delete/') ?>' + id, function(response) {
+                        if (response.success) {
+                            ERPUtils.showSuccess('Deleted', response.message).then(() => location.reload());
+                        } else {
+                            ERPUtils.showError('Error', response.message);
+                        }
+                    });
                 }
             });
-        }
     });
 </script>
 <?= $this->endSection() ?>

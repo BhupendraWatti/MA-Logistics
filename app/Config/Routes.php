@@ -18,6 +18,7 @@ $routes->post('admin/createUser', 'AdminController::createUser');
 $routes->post('admin/togglePermission', 'AdminController::togglePermission');
 $routes->post('admin/changePassword', 'AdminController::changePassword');
 $routes->post('admin/toggleStatus', 'AdminController::toggleStatus');
+$routes->post('admin/deleteUser', 'AdminController::deleteUser');
 $routes->post('admin/ajax-datatable', 'AdminController::ajaxDatatable');
 
 // LOGISTICS ROUTES

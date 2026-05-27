@@ -329,12 +329,25 @@ class MasterController extends BaseController
         if (empty($post['company_id'])) {
             return redirect()->back()->with('error', 'Company ID missing from form. Please refresh.');
         }
-        (new LookupValueModel())->insert([
+        $data = [
             'company_id' => $post['company_id'],
             'type'       => $type,
-            'value'      => $post['value'],
             'is_active'  => isset($post['is_active']) ? 1 : 0
-        ]);
+        ];
+
+        if ($type === 'origin' || $type === 'destination') {
+            $data['pincode'] = $post['pincode'] ?? null;
+            $data['city'] = $post['city'] ?? null;
+            $data['district'] = $post['district'] ?? null;
+            $data['state'] = $post['state'] ?? null;
+            
+            $data['value'] = trim(($post['city'] ?? '') . ', ' . ($post['state'] ?? ''), ', ');
+            if (empty($data['value'])) $data['value'] = 'Unknown Location';
+        } else {
+            $data['value'] = $post['value'];
+        }
+
+        (new LookupValueModel())->insert($data);
         return redirect()->to('/masters/lookups/' . $type)->with('success', 'Value added!');
     }
 

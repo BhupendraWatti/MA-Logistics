@@ -54,7 +54,7 @@
                     <?php foreach($companies ?? [] as $company): ?>
                         <div class="list-group-item d-flex justify-content-between align-items-center py-2">
                             <span><?= esc($company['name']) ?></span>
-                            <?= form_open('logistics/deleteCompany/' . $company['id'], ['class' => 'm-0', 'onsubmit' => 'return confirm("Are you sure? This will delete ALL bookings related to this company!");']) ?>
+                            <?= form_open('logistics/deleteCompany/' . $company['id'], ['class' => 'm-0', 'onsubmit' => 'event.preventDefault(); ERPUtils.confirmAction("Delete Company", "Are you sure? This will delete ALL bookings related to this company!", "Yes, delete", "error").then(res => { if(res.isConfirmed) this.submit(); });']) ?>
                                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Company">
                                     <i class="fas fa-trash"></i>
                                 </button>
