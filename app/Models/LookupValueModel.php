@@ -9,7 +9,7 @@ class LookupValueModel extends Model
     protected $table      = 'lookup_values';
     protected $primaryKey = 'id';
     protected $useTimestamps = true;
-    protected $allowedFields = ['company_id', 'type', 'value', 'sort_order', 'is_active'];
+    protected $allowedFields = ['company_id', 'type', 'value', 'is_active'];
 
     /**
      * All valid lookup types.
@@ -27,7 +27,7 @@ class LookupValueModel extends Model
     {
         return $this->where('company_id', $companyId)
                     ->where('type', $type)
-                    ->orderBy('sort_order')
+                    ->orderBy('value')
                     ->orderBy('value')
                     ->findAll();
     }

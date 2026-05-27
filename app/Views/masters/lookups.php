@@ -35,10 +35,6 @@
                                    placeholder="e.g. <?= $type === 'origin' ? 'Pune' : ($type === 'mode' ? 'Air' : 'Enter value') ?>"
                                    required>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Sort Order <small class="text-muted">(lower = appears first)</small></label>
-                            <input type="number" name="sort_order" class="form-control" value="0">
-                        </div>
                         <button class="btn btn-primary w-100">+ Add</button>
                     </form>
                 </div>
@@ -51,14 +47,13 @@
                 <div class="card-body p-0">
                     <table class="table table-hover mb-0">
                         <thead class="table-dark">
-                            <tr><th>#</th><th>Value</th><th>Sort Order</th><th>Action</th></tr>
+                            <tr><th>#</th><th>Value</th><th>Action</th></tr>
                         </thead>
                         <tbody>
                             <?php foreach ($values as $i => $v): ?>
                             <tr>
                                 <td><?= $i + 1 ?></td>
                                 <td><?= esc($v['value']) ?></td>
-                                <td><?= $v['sort_order'] ?></td>
                                 <td>
                                     <button class="btn btn-sm btn-danger"
                                             onclick="delRecord('<?= base_url('masters/lookups/delete/' . $v['id']) ?>')">
@@ -69,7 +64,7 @@
                             <?php endforeach; ?>
                             <?php if (empty($values)): ?>
                             <tr>
-                                <td colspan="4" class="text-center text-muted py-4">
+                                <td colspan="3" class="text-center text-muted py-4">
                                     No <?= strtolower($type_label) ?> values yet. Add one using the form.
                                 </td>
                             </tr>

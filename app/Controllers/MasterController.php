@@ -333,12 +333,14 @@ class MasterController extends BaseController
             'company_id' => $post['company_id'],
             'type'       => $type,
             'value'      => $post['value'],
-            'sort_order' => (int) ($post['sort_order'] ?? 0),
-            'is_active'  => 1,
+            'is_active'  => isset($post['is_active']) ? 1 : 0
         ]);
         return redirect()->to('/masters/lookups/' . $type)->with('success', 'Value added!');
     }
 
+    /**
+     * Remove a lookup value.
+     */
     public function deleteLookup(int $id)
     {
         if ($r = $this->requireAdmin()) return $r;

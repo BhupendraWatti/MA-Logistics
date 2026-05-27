@@ -1,6 +1,6 @@
 <?= $this->extend('layout') ?>
 <?= $this->section('content') ?>
-<div class="container mt-4">
+<div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>
              Manage <?= esc($company_name ?? '') ?> Bookings

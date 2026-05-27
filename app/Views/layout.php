@@ -63,20 +63,23 @@
                 <?php endif; ?>
                 
                 <?php if (session()->get('role') === 'admin'): ?>
-                <!-- Masters Dropdown -->
-                <div class="dropdown mt-2 px-3">
-                    <button class="btn btn-light dropdown-toggle w-100 text-start text-secondary border shadow-none fw-semibold" type="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-database me-2 text-primary"></i> Masters
+                <!-- Masters Collapse -->
+                <div class="mt-2 px-3">
+                    <button class="btn btn-light w-100 text-start text-secondary border shadow-none fw-semibold d-flex justify-content-between align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#mastersCollapse">
+                        <span><i class="fas fa-database me-2 text-primary"></i> Masters</span>
+                        <i class="fas fa-chevron-down fs-7"></i>
                     </button>
-                    <ul class="dropdown-menu shadow border-0 w-100 mt-1">
-                        <li><h6 class="dropdown-header text-uppercase fs-7">Primary Masters</h6></li>
-                        <li><a class="dropdown-item <?= ($seg1 == 'masters' && $seg2 == 'customers') ? 'active' : '' ?>" href="<?= base_url('masters/customers') ?>"><i class="fas fa-user-friends me-2 text-muted"></i> Customer Master</a></li>
-                        <li><a class="dropdown-item <?= ($seg1 == 'masters' && $seg2 == 'transporters') ? 'active' : '' ?>" href="<?= base_url('masters/transporters') ?>"><i class="fas fa-truck-moving me-2 text-muted"></i> Transporters</a></li>
-                        <li><a class="dropdown-item <?= ($seg1 == 'masters' && $seg2 == 'drivers') ? 'active' : '' ?>" href="<?= base_url('masters/drivers') ?>"><i class="fas fa-id-card me-2 text-muted"></i> Drivers</a></li>
-                        <li><a class="dropdown-item <?= ($seg1 == 'masters' && $seg2 == 'airlines') ? 'active' : '' ?>" href="<?= base_url('masters/airlines') ?>"><i class="fas fa-plane me-2 text-muted"></i> Airlines</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item <?= ($seg1 == 'masters' && $seg2 == 'lookups') ? 'active' : '' ?>" href="<?= base_url('masters/lookups/origin') ?>"><i class="fas fa-list me-2 text-muted"></i> Lookup Values</a></li>
-                    </ul>
+                    <div class="collapse <?= ($seg1 == 'masters' && $seg2 != 'company') ? 'show' : '' ?> mt-1" id="mastersCollapse">
+                        <div class="card card-body p-1 border shadow-sm">
+                            <h6 class="text-uppercase fs-7 text-muted ps-3 pt-2 mb-1">Primary Masters</h6>
+                            <a class="sidebar-nav-item py-2 px-3 rounded <?= ($seg1 == 'masters' && $seg2 == 'customers') ? 'bg-primary text-white' : '' ?>" href="<?= base_url('masters/customers') ?>"><i class="fas fa-user-friends me-2 <?= ($seg1 == 'masters' && $seg2 == 'customers') ? 'text-white' : 'text-muted' ?>"></i> Customer Master</a>
+                            <a class="sidebar-nav-item py-2 px-3 rounded <?= ($seg1 == 'masters' && $seg2 == 'transporters') ? 'bg-primary text-white' : '' ?>" href="<?= base_url('masters/transporters') ?>"><i class="fas fa-truck-moving me-2 <?= ($seg1 == 'masters' && $seg2 == 'transporters') ? 'text-white' : 'text-muted' ?>"></i> Transporters</a>
+                            <a class="sidebar-nav-item py-2 px-3 rounded <?= ($seg1 == 'masters' && $seg2 == 'drivers') ? 'bg-primary text-white' : '' ?>" href="<?= base_url('masters/drivers') ?>"><i class="fas fa-id-card me-2 <?= ($seg1 == 'masters' && $seg2 == 'drivers') ? 'text-white' : 'text-muted' ?>"></i> Drivers</a>
+                            <a class="sidebar-nav-item py-2 px-3 rounded <?= ($seg1 == 'masters' && $seg2 == 'airlines') ? 'bg-primary text-white' : '' ?>" href="<?= base_url('masters/airlines') ?>"><i class="fas fa-plane me-2 <?= ($seg1 == 'masters' && $seg2 == 'airlines') ? 'text-white' : 'text-muted' ?>"></i> Airlines</a>
+                            <hr class="my-1">
+                            <a class="sidebar-nav-item py-2 px-3 rounded <?= ($seg1 == 'masters' && $seg2 == 'lookups') ? 'bg-primary text-white' : '' ?>" href="<?= base_url('masters/lookups/origin') ?>"><i class="fas fa-list me-2 <?= ($seg1 == 'masters' && $seg2 == 'lookups') ? 'text-white' : 'text-muted' ?>"></i> Lookup Values</a>
+                        </div>
+                    </div>
                 </div>
 
                 <a href="<?= base_url('logistics/manage') ?>" class="sidebar-nav-item <?= ($seg2 == 'manage') ? 'active' : '' ?> mt-2">
@@ -87,16 +90,19 @@
                     <i class="fas fa-chart-bar"></i> Reports
                 </a>
                 
-                <!-- Settings Dropdown -->
-                <div class="dropdown mt-2 px-3">
-                    <button class="btn btn-light dropdown-toggle w-100 text-start text-secondary border shadow-none fw-semibold" type="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-cog me-2 text-secondary"></i> Settings
+                <!-- Settings Collapse -->
+                <div class="mt-2 px-3 mb-4">
+                    <button class="btn btn-light w-100 text-start text-secondary border shadow-none fw-semibold d-flex justify-content-between align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#settingsCollapse">
+                        <span><i class="fas fa-cog me-2 text-secondary"></i> Settings</span>
+                        <i class="fas fa-chevron-down fs-7"></i>
                     </button>
-                    <ul class="dropdown-menu shadow border-0 w-100 mt-1">
-                        <li><a class="dropdown-item" href="<?= base_url('masters/company') ?>"><i class="fas fa-building me-2 text-muted"></i> Company Settings</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="<?= base_url('admin') ?>"><i class="fas fa-users-cog me-2 text-muted"></i> User Management</a></li>
-                    </ul>
+                    <div class="collapse <?= ($seg1 == 'masters' && $seg2 == 'company' || $seg1 == 'admin') ? 'show' : '' ?> mt-1" id="settingsCollapse">
+                        <div class="card card-body p-1 border shadow-sm">
+                            <a class="sidebar-nav-item py-2 px-3 rounded <?= ($seg1 == 'masters' && $seg2 == 'company') ? 'bg-primary text-white' : '' ?>" href="<?= base_url('masters/company') ?>"><i class="fas fa-building me-2 <?= ($seg1 == 'masters' && $seg2 == 'company') ? 'text-white' : 'text-muted' ?>"></i> Company Settings</a>
+                            <hr class="my-1">
+                            <a class="sidebar-nav-item py-2 px-3 rounded <?= ($seg1 == 'admin') ? 'bg-primary text-white' : '' ?>" href="<?= base_url('admin') ?>"><i class="fas fa-users-cog me-2 <?= ($seg1 == 'admin') ? 'text-white' : 'text-muted' ?>"></i> User Management</a>
+                        </div>
+                    </div>
                 </div>
                 <?php endif; ?>
             </div>

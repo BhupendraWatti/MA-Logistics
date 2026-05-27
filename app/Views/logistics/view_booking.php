@@ -1,6 +1,6 @@
 <?= $this->extend('layout') ?>
 <?= $this->section('content') ?>
-<div class="container mt-4">
+<div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>AWB Details: <?= esc($booking['awb_no']) ?></h2>
         <div>

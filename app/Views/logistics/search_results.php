@@ -1,6 +1,6 @@
 <?= $this->extend('layout') ?>
 <?= $this->section('content') ?>
-<div class="container mt-4">
+<div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Search Results</h2>
         <a href="<?= base_url('logistics/search') ?>" class="btn btn-secondary">
