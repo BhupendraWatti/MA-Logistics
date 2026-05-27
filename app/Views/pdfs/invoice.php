@@ -109,19 +109,19 @@
         </td>
     </tr>
     <tr>
-        <td colspan="10" style="vertical-align:top; font-size:9px; padding: 5px; line-height: 1.5;">
+        <td colspan="10" style="vertical-align:top; font-size:9px; padding: 10px; line-height: 1.6;">
             <b>Service Category : Courier & Cargo</b><br><br>
             <b>Terms & Conditions :</b><br>
             <?= nl2br(esc($company['terms_conditions'] ?? 'No terms specified.')) ?>
         </td>
-        <td colspan="6" style="vertical-align:top; text-align:center; font-size:10px; font-weight:bold; padding: 5px;">
-            For <?= esc($company['name'] ?? 'M.A LOGISTICS') ?><br><br><br>
+        <td colspan="6" style="vertical-align:bottom; text-align:right; font-size:10px; font-weight:bold; padding: 10px;">
+            For <?= esc($company['name'] ?? 'M.A LOGISTICS') ?><br><br><br><br>
             <?php if (!empty($company['signature_path']) && file_exists(FCPATH . $company['signature_path'])): ?>
-                <img src="<?= FCPATH . $company['signature_path'] ?>" style="height: 60px; max-width: 150px; margin-bottom: 5px;"><br>
+                <img src="<?= FCPATH . $company['signature_path'] ?>" style="height: 60px; max-width: 150px; margin-bottom: 10px;"><br>
             <?php else: ?>
                 <br><br><br>
             <?php endif; ?>
-            Authorised signatory
+            Authorised signatory&nbsp;&nbsp;&nbsp;
         </td>
     </tr>
 </table>

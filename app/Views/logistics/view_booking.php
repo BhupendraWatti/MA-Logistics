@@ -24,12 +24,14 @@
             <a href="<?= base_url('logistics/exportPdf/' . $booking['id']) ?>" class="btn btn-outline-dark bg-white shadow-sm fw-bold">
                 <i class="fas fa-file-pdf text-danger"></i> Export PDF
             </a>
+            <!-- 
             <button class="btn btn-outline-dark bg-white shadow-sm fw-bold">
                 <i class="fas fa-print"></i> Print AWB
             </button>
             <button class="btn btn-primary shadow-sm fw-bold">
                 <i class="fas fa-satellite-dish"></i> Track Shipment
             </button>
+            -->
         </div>
     </div>
 

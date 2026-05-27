@@ -68,19 +68,19 @@ class MasterController extends BaseController
 
         // 1. Handle Base64 Signature Canvas first
         $signatureBase64 = $this->request->getPost('signature_base64');
+        $uploadPath = FCPATH . 'uploads/signatures';
+        if (!is_dir($uploadPath)) {
+            mkdir($uploadPath, 0777, true);
+        }
+
+        // 1. Handle Canvas Signature (Base64)
         if (!empty($signatureBase64)) {
-            if (strpos($signatureBase64, 'image/png') !== false) {
-                return redirect()->back()->with('error', 'Please do a HARD REFRESH (Ctrl+Shift+R or Ctrl+F5) of your browser to apply the latest signature fixes, then draw again.');
-            }
             $parts = explode(',', $signatureBase64);
             if (count($parts) == 2) {
+                // If it's a JPEG data URL it'll save correctly. If it's PNG, we save as PNG.
+                $ext = (strpos($parts[0], 'image/jpeg') !== false) ? 'jpg' : 'png';
                 $image_base64 = base64_decode($parts[1]);
-                $fileName = 'sig_' . $companyId . '_' . time() . '_canvas.jpg';
-                $uploadPath = FCPATH . 'uploads/signatures';
-                
-                if (!is_dir($uploadPath)) {
-                    mkdir($uploadPath, 0777, true);
-                }
+                $fileName = 'sig_' . $companyId . '_' . time() . '_canvas.' . $ext;
                 
                 file_put_contents($uploadPath . '/' . $fileName, $image_base64);
                 $data['signature_path'] = 'uploads/signatures/' . $fileName;
@@ -94,7 +94,7 @@ class MasterController extends BaseController
                 return redirect()->back()->with('error', 'Signature must be a PNG, JPG, or GIF image.');
             }
             $fileName = 'sig_' . $companyId . '_' . time() . '.' . $sig->getExtension();
-            $sig->move(FCPATH . 'uploads/signatures/', $fileName);
+            $sig->move($uploadPath, $fileName);
             $data['signature_path'] = 'uploads/signatures/' . $fileName;
         }
 

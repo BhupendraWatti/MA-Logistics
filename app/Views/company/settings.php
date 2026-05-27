@@ -117,7 +117,7 @@
         var canvas = document.getElementById('signatureCanvas');
         if (canvas) {
             var signaturePad = new SignaturePad(canvas, {
-                backgroundColor: 'rgba(255, 255, 255, 0)',
+                backgroundColor: 'rgb(255, 255, 255)', // Solid white prevents TCPDF alpha channel errors
                 penColor: 'rgb(0, 0, 0)'
             });
 
@@ -128,7 +128,7 @@
 
             document.querySelector('form').addEventListener('submit', function(e) {
                 if (!signaturePad.isEmpty()) {
-                    document.getElementById('signatureBase64').value = signaturePad.toDataURL('image/png');
+                    document.getElementById('signatureBase64').value = signaturePad.toDataURL('image/jpeg');
                 }
             });
         }

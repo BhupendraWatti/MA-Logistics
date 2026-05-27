@@ -531,9 +531,7 @@ public function exportPdf($id)
     $recipientAddress = $shipments[0]['bill_to'] ?? $shipments[0]['consignee'] ?? '';
     $recipientAddress = $recipientAddress ?: 'Address not available';
 
-    if (!defined('K_TCPDF_THROW_EXCEPTION_ERROR')) {
-        define('K_TCPDF_THROW_EXCEPTION_ERROR', true);
-    }
+
 
     try {
         $pdf = new \TCPDF('L', 'mm', 'A4');
@@ -641,7 +639,15 @@ public function exportPdf($id)
     $html = view('pdfs/invoice', $viewData);
 
         $pdf->writeHTML($html, true, false, true, false, '');
-        $pdf->Output('Invoice_'.$invoiceNo.'.pdf', 'I');
+        
+        // BUG FIX: Prevent CI4 from corrupting PDF headers/output
+        if (ob_get_length()) {
+            ob_end_clean();
+        }
+        $this->response->setContentType('application/pdf'); // Force header just in case
+        $pdfFileName = 'AWB_' . ($booking['awb_no'] ?: $invoiceNo) . '.pdf';
+        $pdf->Output($pdfFileName, 'D');
+        exit;
     } catch (\Exception $e) {
         if (strpos($e->getMessage(), 'alpha channel') !== false || strpos($e->getMessage(), 'Imagick or GD') !== false) {
             return redirect()->back()->with('error', 'Your server does not support transparent PNG signatures. Please go to Company Settings and upload a JPG image or draw your signature manually.');

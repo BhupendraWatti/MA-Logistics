@@ -83,12 +83,14 @@
                 </div>
 
                 <a href="<?= base_url('logistics/manage') ?>" class="sidebar-nav-item <?= ($seg2 == 'manage') ? 'active' : '' ?> mt-2">
-                    <i class="fas fa-map-marker-alt"></i> Tracking
+                    <i class="fas fa-list-ul"></i> All Bookings
                 </a>
                 
+                <!-- Hiding Reports for Demo
                 <a href="<?= base_url('logistics/export') ?>" class="sidebar-nav-item <?= ($seg2 == 'export') ? 'active' : '' ?>">
                     <i class="fas fa-chart-bar"></i> Reports
                 </a>
+                -->
                 
                 <!-- Settings Collapse -->
                 <div class="mt-2 px-3 mb-4">

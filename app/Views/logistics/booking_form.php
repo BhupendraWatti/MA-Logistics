@@ -553,9 +553,12 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         const name = $('#global_shipper').val();
         const c = _customers.find(x => x.name === name);
         if (c) {
-            if (c.bill_to) $('#global_bill_to').val(c.bill_to);
-            if (c.consignee) $('#global_consignee').val(c.consignee);
+            $('#global_bill_to').val(c.bill_to || '');
+            $('#global_consignee').val(c.consignee || '');
             if (c.payment_type) $('#payment_type').val(c.payment_type);
+        } else {
+            $('#global_bill_to').val('');
+            $('#global_consignee').val('');
         }
     }
     
