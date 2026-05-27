@@ -1,0 +1,36 @@
+# Environment
+.env
+
+# Dependencies
+/vendor/
+
+# Writable files
+/writable/*
+!/writable/index.html
+
+    
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Composer PHAR
+composer.phar
+
+# PHPUnit cache
+.phpunit.result.cache
+
+# Node modules (if used)
+node_modules/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Local test/debug files
+test_db.php
+drop_sort_order.php
