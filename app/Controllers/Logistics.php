@@ -70,17 +70,34 @@ public function index()
     $bookingModel = new BookingModel();
     $data['stats'] = $bookingModel->getCompanyStats($companyId);
     
-    // Optimized: Fetch recent bookings with customer name and total weight directly
-    $db = \Config\Database::connect();
-    $data['recent_bookings'] = $db->table('bookings b')
-        ->select("b.id, b.awb_no, b.origin, b.destination, b.status, b.total_pieces, 
-                  (SELECT customer_name FROM shipment_items WHERE booking_id = b.id LIMIT 1) as customer_name,
-                  (SELECT SUM(final_chargeable_weight) FROM shipment_items WHERE booking_id = b.id) as total_weight")
-        ->where('b.company_id', $companyId)
-        ->orderBy('b.id', 'DESC')
-        ->limit(10)
-        ->get()
-        ->getResultArray();
+    // Fetch recent bookings and append customer name + weight from shipment_items
+    $recent_bookings = $bookingModel->getCompanyBookings($companyId, 10);
+    
+    foreach ($recent_bookings as &$b) {
+        $db = \Config\Database::connect();
+        
+        // Get first non-empty customer_name for this booking (latest saved row)
+        $shipRow = $db->table('shipment_items')
+                      ->select('customer_name')
+                      ->where('booking_id', $b['id'])
+                      ->where('customer_name !=', '')
+                      ->where('customer_name IS NOT NULL', null, false)
+                      ->orderBy('id', 'DESC')
+                      ->limit(1)
+                      ->get()->getRowArray();
+
+        $b['customer_name'] = !empty($shipRow['customer_name']) ? $shipRow['customer_name'] : 'Unknown';
+        
+        // Sum chargeable weight
+        $wgtRow = $db->table('shipment_items')
+                     ->selectSum('final_chargeable_weight', 'total_weight')
+                     ->where('booking_id', $b['id'])
+                     ->get()->getRowArray();
+
+        $b['total_weight'] = $wgtRow['total_weight'] ?? 0;
+    }
+    
+    $data['recent_bookings'] = $recent_bookings;
 
     return view('logistics/dashboard', $data);
 }

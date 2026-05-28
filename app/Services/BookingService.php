@@ -148,11 +148,15 @@ class BookingService
                 ];
 
                 if (!empty($item['id']) && in_array($item['id'], $existingIds)) {
-                    $this->shipmentModel->update($item['id'], $shipmentData);
+                    if (!$this->shipmentModel->update($item['id'], $shipmentData)) {
+                        throw new \Exception('Failed to update shipment item: ' . implode(', ', $this->shipmentModel->errors()));
+                    }
                     $submittedIds[] = $item['id'];
                     $recordId = $item['id'];
                 } else {
-                    $this->shipmentModel->insert($shipmentData);
+                    if (!$this->shipmentModel->insert($shipmentData)) {
+                        throw new \Exception('Failed to insert shipment item: ' . implode(', ', $this->shipmentModel->errors()));
+                    }
                     $recordId = $this->shipmentModel->getInsertID();
                 }
 
@@ -249,7 +253,9 @@ class BookingService
                     'service_charges' => $this->validateNumeric($item['service_charges'] ?? 0)
                 ];
                 
-                $this->shipmentModel->insert($shipmentData);
+                if (!$this->shipmentModel->insert($shipmentData)) {
+                    throw new \Exception('Failed to insert shipment item: ' . implode(', ', $this->shipmentModel->errors()));
+                }
                 $recordId = $this->shipmentModel->getInsertID();
 
                 if ($shipmentData['final_chargeable_weight'] != $shipmentData['calculated_chargeable_weight']) {

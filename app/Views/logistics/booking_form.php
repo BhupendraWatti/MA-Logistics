@@ -505,8 +505,28 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         $('#manifestTable_wrapper .row:last').hide();
         
         if(initialShipments.length > 0) {
-            // Load global parties from first item
-            $('#global_shipper').val(initialShipments[0].customer_name || '');
+            // Load global parties from first item - match exactly the stored customer_name as the option value
+            const storedCustName = initialShipments[0].customer_name || '';
+            // The select option values are the plain customer name (not name+code)
+            // Try exact match first, then partial match
+            let matched = false;
+            $('#global_shipper option').each(function() {
+                if ($(this).val() === storedCustName) {
+                    $('#global_shipper').val(storedCustName);
+                    matched = true;
+                    return false; // break
+                }
+            });
+            if (!matched && storedCustName) {
+                // Try to find option whose value starts with the stored name
+                $('#global_shipper option').each(function() {
+                    if ($(this).val().startsWith(storedCustName)) {
+                        $('#global_shipper').val($(this).val());
+                        return false;
+                    }
+                });
+            }
+            
             $('#global_bill_to').val(initialShipments[0].bill_to || '');
             $('#global_consignee').val(initialShipments[0].consignee || '');
             
@@ -526,7 +546,6 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     h: parseFloat(s.height) || 0,
                     vol_wt: parseFloat(s.volumetric_weight) || 0,
                     chg_wt: parseFloat(s.final_chargeable_weight) || 0,
-                    // New charges
                     eway_no: s.eway_no || '',
                     eway_date: s.eway_date || '',
                     rate: s.rate || '',
@@ -550,15 +569,28 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     }
 
     function autoFillShipperGlobal() {
-        const name = $('#global_shipper').val();
-        const c = _customers.find(x => x.name === name);
-        if (c) {
-            $('#global_bill_to').val(c.bill_to || '');
-            $('#global_consignee').val(c.consignee || '');
-            if (c.payment_type) $('#payment_type').val(c.payment_type);
-        } else {
-            $('#global_bill_to').val('');
-            $('#global_consignee').val('');
+        let name = $('#global_shipper').val();
+        if(name) {
+            const c = _customers.find(x => x.name === name);
+            if(c) {
+                $('#global_bill_to').val(c.bill_to || '');
+                $('#global_consignee').val(c.consignee || '');
+                if (c.payment_type) $('#payment_type').val(c.payment_type);
+            } else {
+                $('#global_bill_to').val('');
+                $('#global_consignee').val('');
+            }
+            
+            // CRITICAL: Always update entry_customer so new items added after this pick up the correct name
+            $('#entry_customer').val(name);
+            
+            // Also update ALL existing items in the grid to use the new customer name
+            if (items.length > 0) {
+                items.forEach(s => {
+                    s.customer = name;
+                });
+                renderGrid();
+            }
         }
     }
     
@@ -589,25 +621,28 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     function openItemModal(index) {
         $('#entry_edit_index').val(index);
         
+        // Always use the currently selected global shipper
+        const globalShipper = $('#global_shipper').val() || '';
+        const globalBillTo  = $('#global_bill_to').val() || '';
+        const globalConsignee = $('#global_consignee').val() || '';
+        
         if (index === -1) {
             // New Item
             $('#itemModalLabel').text('Add Shipment Item');
             
-            // Context Retention from previous item or globals
-            if (items.length > 0) {
+            // Use global shipper if set, else fall back to last item
+            if (globalShipper) {
+                $('#entry_customer').val(globalShipper);
+                $('#entry_bill_to').val(globalBillTo);
+                $('#entry_consignee').val(globalConsignee);
+            } else if (items.length > 0) {
                 const prev = items[items.length - 1];
                 $('#entry_customer').val(prev.customer);
                 $('#entry_bill_to').val(prev.bill_to);
                 $('#entry_consignee').val(prev.consignee);
-                $('#entry_docket').val(prev.docket);
-                $('#entry_invoice').val(prev.invoice_no);
-            } else {
-                $('#entry_customer').val($('#global_shipper').val());
-                $('#entry_bill_to').val($('#global_bill_to').val());
-                $('#entry_consignee').val($('#global_consignee').val());
-                $('#entry_docket').val('');
-                $('#entry_invoice').val('');
             }
+            $('#entry_docket').val('');
+            $('#entry_invoice').val('');
             
             $('#entry_contents').val('');
             $('#entry_pcs').val('1');
@@ -820,6 +855,16 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             ERPUtils.showWarning("Missing Data", "Please add at least one shipment item.");
             return false;
         }
+        
+        // Always sync global shipper to all items before submitting
+        const globalShipper = $('#global_shipper').val() || '';
+        if (globalShipper) {
+            items.forEach(s => { s.customer = globalShipper; });
+        }
+        
+        // Re-render to ensure hidden inputs are fresh/current
+        renderGrid();
+        
         isDirty = false; // allow navigation without prompt
         $('#mainSubmitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
     });

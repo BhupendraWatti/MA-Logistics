@@ -23,9 +23,9 @@ class ShipmentItemModel extends Model
         'bill_to' => 'required|min_length[2]',
         'consignee' => 'required|min_length[2]',
         'actual_weight' => 'required|greater_than[0]',
-        'length' => 'permit_empty|numeric|greater_than[0]',
-        'width' => 'permit_empty|numeric|greater_than[0]',
-        'height' => 'permit_empty|numeric|greater_than[0]',
+        'length' => 'permit_empty|numeric|greater_than_equal_to[0]',
+        'width' => 'permit_empty|numeric|greater_than_equal_to[0]',
+        'height' => 'permit_empty|numeric|greater_than_equal_to[0]',
     ];
 
     protected $chargeableWeightRules = [
