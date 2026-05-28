@@ -53,22 +53,34 @@ private function enforcePermissions($action)
 
 public function index()
 {
+    $companyId = session()->get('selected_company_id');
+    
+    // Redirect to company selection if no company is selected
+    if (!$companyId) {
+        return redirect()->to('/company-selection');
+    }
+
     $data = [
         'user' => session()->get(),
         'permissions' => session()->get('permissions') ?? [],
         'company_name' => session()->get('selected_company_name'),
-        'company_id' => session()->get('selected_company_id')
+        'company_id' => $companyId
     ];
 
-    $companyId = session()->get('selected_company_id');
-    if ($companyId) {
-        $bookingModel = new BookingModel();
-        $data['stats'] = $bookingModel->getCompanyStats($companyId);
-        $data['recent_bookings'] = $bookingModel->getCompanyBookings($companyId, 10); // Show 10 bookings
-        $data['all_bookings'] = $bookingModel->where('company_id', $companyId)
-                                           ->orderBy('booking_date', 'DESC')
-                                           ->findAll(50); // All recent 50
-    }
+    $bookingModel = new BookingModel();
+    $data['stats'] = $bookingModel->getCompanyStats($companyId);
+    
+    // Optimized: Fetch recent bookings with customer name and total weight directly
+    $db = \Config\Database::connect();
+    $data['recent_bookings'] = $db->table('bookings b')
+        ->select("b.id, b.awb_no, b.origin, b.destination, b.status, b.total_pieces, 
+                  (SELECT customer_name FROM shipment_items WHERE booking_id = b.id LIMIT 1) as customer_name,
+                  (SELECT SUM(final_chargeable_weight) FROM shipment_items WHERE booking_id = b.id) as total_weight")
+        ->where('b.company_id', $companyId)
+        ->orderBy('b.id', 'DESC')
+        ->limit(10)
+        ->get()
+        ->getResultArray();
 
     return view('logistics/dashboard', $data);
 }

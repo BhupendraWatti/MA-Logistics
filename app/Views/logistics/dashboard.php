@@ -37,26 +37,18 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (isset($all_bookings) && !empty($all_bookings)): ?>
-                        <?php $i = 1; foreach(array_slice($all_bookings, 0, 10) as $booking): ?>
+                        <?php if (isset($recent_bookings) && !empty($recent_bookings)): ?>
+                        <?php $i = 1; foreach($recent_bookings as $booking): ?>
                         <tr>
                             <td class="ps-4 text-muted"><?= $i++ ?></td>
                             <td><a href="<?= base_url('logistics/view/' . $booking['id']) ?>" class="fw-medium text-decoration-none"><?= esc($booking['awb_no']) ?></a></td>
                             <td><span class="fw-medium text-dark"><?= esc($booking['origin']) ?></span> <span class="text-muted mx-1">&rarr;</span> <span class="fw-medium text-dark"><?= esc($booking['destination']) ?></span></td>
                             <td>
-                                <?php
-                                    $custModel = new \App\Models\CustomerModel();
-                                    $cust = $custModel->find($booking['customer_id'] ?? 0);
-                                    echo esc($cust['name'] ?? 'Unknown');
-                                ?>
+                                <?= esc($booking['customer_name'] ?? 'Unknown') ?>
                             </td>
                             <td><span class="text-dark fw-medium"><?= $booking['total_pieces'] ?></span></td>
                             <td>
-                                <?php
-                                    $shipModel = new \App\Models\ShipmentItemModel();
-                                    $totalWgt = $shipModel->selectSum('final_chargeable_weight')->where('booking_id', $booking['id'])->first()['final_chargeable_weight'] ?? 0;
-                                    echo number_format((float)$totalWgt, 1) . ' kg';
-                                ?>
+                                <?= number_format((float)($booking['total_weight'] ?? 0), 1) ?> kg
                             </td>
                             <td class="pe-4">
                                 <?php 

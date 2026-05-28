@@ -5,6 +5,16 @@
  * for a consistent, production-ready operational UI.
  */
 
+// Global DataTables configuration to disable ugly alerts
+if (typeof $.fn !== 'undefined' && typeof $.fn.dataTable !== 'undefined') {
+    $.fn.dataTable.ext.errMode = 'none';
+    $(document).on('error.dt', function (e, settings, techNote, message) {
+        console.error('DataTables Error:', message);
+        ERPUtils.showError('Session or Data Error', 'Failed to load data. Your session may have expired. Please refresh the page.');
+        $('.dataTables_processing').hide(); // Fixes "font style getting light" issue by removing the stuck processing overlay
+    });
+}
+
 const ERPUtils = {
     
     // ==========================================

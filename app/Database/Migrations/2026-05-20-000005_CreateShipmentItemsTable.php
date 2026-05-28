@@ -80,7 +80,12 @@ class CreateShipmentItemsTable extends Migration
                 'constraint' => '10,2',
                 'default'    => 0.00,
             ],
-            'chargeable_weight' => [
+            'calculated_chargeable_weight' => [
+                'type'       => 'DECIMAL',
+                'constraint' => '10,2',
+                'default'    => 0.00,
+            ],
+            'final_chargeable_weight' => [
                 'type'       => 'DECIMAL',
                 'constraint' => '10,2',
                 'default'    => 0.00,

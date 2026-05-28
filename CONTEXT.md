@@ -71,3 +71,34 @@ This document serves as the continuing architectural context for the MA Logistic
 * **Changes Made**:
   * **Diagnosis**: Attempting to log out threw an `ErrorException: Undefined variable $success`.
   * **Fix**: The flashdata variables (`$success`, `$error`, `$info`) used by the SweetAlert logic were incorrectly scoped inside the `if (session()->get('user_id'))` block. When logging out, the session was destroyed, bypassing the block and leaving the variables undefined for the guest login layout. Extracted these variables to the top of the `<body>` so they execute safely regardless of authentication state.
+
+---
+
+## 5. Recent Feature Additions & System Expansions
+
+### Database Architecture Updates
+* **Files Affected**: Migrations, `app/Models/SystemSettingsModel.php`, `app/Models/CustomerModel.php`
+* **Changes Made**:
+  * Created `system_settings` table to manage global ERP configurations.
+  * Created `location_master` table to handle location-based data.
+  * Expanded `customer_master` extensively by adding missing fields such as GST State and comprehensive billing details.
+  * Added location-specific fields to the generic lookup values.
+  * Cleaned up redundant or unused migration files related to shipment item modifications and sales charges.
+
+### Frontend Modularization & JavaScript Utilities
+* **Files Affected**: `public/js/erp-utils.js`, `app/Views/masters/_customer_form_fields.php`
+* **Changes Made**:
+  * Extracted common client-side logic into a dedicated `erp-utils.js` file for global reusability.
+  * Modularized the Customer form UI by pulling the massive form structure out of `customers.php` and `customer_form.php` into a reusable partial: `_customer_form_fields.php`.
+
+### Invoicing & Company Settings Enhancements
+* **Files Affected**: `app/Controllers/CompanyController.php`, `app/Controllers/MasterController.php`, `app/Views/masters/company_settings.php`, `app/Views/pdfs/invoice.php`
+* **Changes Made**:
+  * Completely revamped the Company Settings UI and backend controllers to support extended corporate data management.
+  * Upgraded the PDF invoice generator (`invoice.php`) to accommodate precise layout requirements and new company/customer fields.
+  * Implemented support for uploading and storing digital signatures (`public/uploads/signatures/`) for invoice authorization.
+
+### Logistics Views Refinement
+* **Files Affected**: `app/Views/logistics/booking_form.php`, `app/Views/logistics/view_booking.php`
+* **Changes Made**:
+  * Applied major functional and visual updates to both the booking entry form and the booking viewer to incorporate the newly expanded customer data and system settings.

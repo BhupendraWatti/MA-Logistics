@@ -40,16 +40,31 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <a class="sidebar-brand" href="<?= base_url('logistics') ?>">
-                    <i class="fas fa-box text-primary"></i> 
-                    <div>
-                        <div class="text-primary" style="line-height: 1;">Logistics ERP</div>
-                        <div style="font-size: 0.75rem; color: #64748b; font-weight: normal; margin-top:4px;">Operational Hub</div>
-                    </div>
+                <a class="sidebar-brand d-flex justify-content-center align-items-center py-2 w-100" href="<?= base_url('logistics') ?>">
+                    <img src="<?= base_url('images/logo.png') ?>" alt="MA Logistic" class="img-fluid" style="max-height: 50px; width: auto;">
                 </a>
             </div>
             
             <div class="sidebar-nav">
+                <?php if (!session()->get('selected_company_id')): ?>
+                <!-- Locked Sidebar State -->
+                <div class="d-flex flex-column h-100">
+                    <div class="sidebar-nav text-muted px-3 mt-4" style="pointer-events: none; opacity: 0.6;">
+                        <h6 class="text-uppercase fw-bold text-muted mb-4" style="font-size:0.75rem; letter-spacing:1px;">Modules</h6>
+                        <div class="mb-4"><i class="fas fa-th-large me-3"></i> Dashboard</div>
+                        <div class="mb-4"><i class="fas fa-truck me-3"></i> Shipment Entry</div>
+                        <div class="mb-4"><i class="fas fa-database me-3"></i> Masters</div>
+                        <div class="mb-4"><i class="fas fa-list-ul me-3"></i> All Bookings</div>
+                        <div class="mb-4"><i class="fas fa-cog me-3"></i> Settings</div>
+                    </div>
+                    
+                    <div class="mt-auto mb-5 text-center px-4" style="color: #64748b;">
+                        <i class="fas fa-lock fa-2x mb-3 text-secondary opacity-50"></i>
+                        <p style="font-size: 0.85rem; line-height: 1.4;" class="mb-0">Select a workspace to<br>unlock modules</p>
+                    </div>
+                </div>
+                <?php else: ?>
+                <!-- Active Sidebar State -->
                 <?php $uri = service('uri'); $seg1 = $uri->getSegment(1); $seg2 = $uri->getSegment(2); ?>
                 
                 <a href="<?= base_url('logistics') ?>" class="sidebar-nav-item <?= ($seg1 == 'logistics' && $seg2 == '') ? 'active' : '' ?>">
@@ -107,6 +122,7 @@
                     </div>
                 </div>
                 <?php endif; ?>
+                <?php endif; ?>
             </div>
             
             <div class="sidebar-footer">
@@ -134,7 +150,7 @@
                 <div class="header-actions d-flex align-items-center">
                     <?php if(session()->get('selected_company_name')): ?>
                     <div class="dropdown me-3">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle bg-white shadow-none fw-semibold" type="button" data-bs-toggle="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle shadow-none fw-semibold" type="button" data-bs-toggle="dropdown">
                             <i class="fas fa-building text-primary me-1"></i> <?= esc(session()->get('selected_company_name')) ?>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-1">

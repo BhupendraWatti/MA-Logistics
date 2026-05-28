@@ -77,7 +77,11 @@ class Filters extends BaseFilters
         'before' => [
             'auth' => ['except' => ['login', 'auth/*', 'register']],   // Auth Added Here
             // 'honeypot',
-            'csrf',
+            'csrf' => ['except' => [
+                'logistics/ajax-datatable', 
+                'masters/ajax-datatable/*', 
+                'admin/ajax-datatable'
+            ]],
             // 'invalidchars',
         ],
         'after' => [
