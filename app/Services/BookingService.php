@@ -20,6 +20,7 @@ class BookingService
         $this->shipmentModel = new ShipmentItemModel();
         $this->salesModel = new SalesChargeModel();
         $this->db = \Config\Database::connect();
+        $this->db->transException(true); // Automatically rollback transactions on Exception
     }
 
     public function createBooking(array $postData, int $userId, int $companyId)

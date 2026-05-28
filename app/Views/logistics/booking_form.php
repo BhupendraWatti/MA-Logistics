@@ -755,9 +755,28 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     }
 
     function deleteItem(index) {
-        items.splice(index, 1);
-        isDirty = true;
-        renderGrid();
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This will remove the shipment item from the grid.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                items.splice(index, 1);
+                isDirty = true;
+                renderGrid();
+                Swal.fire({
+                    title: 'Deleted!',
+                    text: 'Item has been removed from the grid.',
+                    icon: 'success',
+                    timer: 1000,
+                    showConfirmButton: false
+                });
+            }
+        });
     }
 
     function renderGrid() {
