@@ -781,6 +781,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
 
     function renderGrid() {
         $('#hiddenInputsContainer').empty();
+        $('#hiddenInputsContainer').html('<input type="hidden" name="items_json" id="items_json">');
         
         let sumPcs = 0, sumAct = 0, sumVol = 0, sumChg = 0;
 
@@ -790,38 +791,9 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
 
         items.forEach((item, idx) => {
             sumPcs += item.pcs; sumAct += item.act_wt; sumVol += item.vol_wt; sumChg += item.chg_wt;
-            
-            // Generate Hidden Inputs for Form Submission
-            const hiddens = `
-                <input type="hidden" name="items[${idx}][id]" value="${item.id}">
-                <input type="hidden" name="items[${idx}][customer_name]" value="${item.customer}">
-                <input type="hidden" name="items[${idx}][bill_to]" value="${item.bill_to}">
-                <input type="hidden" name="items[${idx}][consignee]" value="${item.consignee}">
-                <input type="hidden" name="items[${idx}][docket_no]" value="${item.docket}">
-                <input type="hidden" name="items[${idx}][invoice_no]" value="${item.invoice_no}">
-                <input type="hidden" name="items[${idx}][part_no]" value="${item.contents}">
-                <input type="hidden" name="items[${idx}][pieces]" value="${item.pcs}">
-                <input type="hidden" name="items[${idx}][actual_weight]" value="${item.act_wt}">
-                <input type="hidden" name="items[${idx}][length]" value="${item.l}">
-                <input type="hidden" name="items[${idx}][width]" value="${item.w}">
-                <input type="hidden" name="items[${idx}][height]" value="${item.h}">
-                <input type="hidden" name="items[${idx}][volumetric_weight]" value="${item.vol_wt}">
-                <input type="hidden" name="items[${idx}][calculated_chargeable_weight]" value="${item.chg_wt}">
-                <input type="hidden" name="items[${idx}][chargeable_weight]" value="${item.chg_wt}">
-                
-                <input type="hidden" name="items[${idx}][eway_no]" value="${item.eway_no}">
-                <input type="hidden" name="items[${idx}][eway_date]" value="${item.eway_date}">
-                <input type="hidden" name="items[${idx}][rate]" value="${item.rate}">
-                <input type="hidden" name="items[${idx}][delivery_charges]" value="${item.delivery_charges}">
-                <input type="hidden" name="items[${idx}][docket_charges]" value="${item.docket_charges}">
-                <input type="hidden" name="items[${idx}][pickup_charges]" value="${item.pickup_charges}">
-                <input type="hidden" name="items[${idx}][fuel_surcharge]" value="${item.fuel_surcharge}">
-                <input type="hidden" name="items[${idx}][fov_charges]" value="${item.fov_charges}">
-                <input type="hidden" name="items[${idx}][handling_charges]" value="${item.handling_charges}">
-                <input type="hidden" name="items[${idx}][service_charges]" value="${item.service_charges}">
-            `;
-            $('#hiddenInputsContainer').append(hiddens);
         });
+
+        $('#items_json').val(JSON.stringify(items));
 
         // Update Footers
         $('#sumPcs').text(sumPcs);

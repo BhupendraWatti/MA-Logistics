@@ -219,6 +219,45 @@ class BookingService
 
     private function processShipments($bookingId, array $items)
     {
+        // --- NEW JSON MIGRATION BLOCK START ---
+        $postData = service('request')->getPost();
+        if (!empty($postData['items_json'])) {
+            $decoded = json_decode($postData['items_json'], true);
+            $items = []; // Overwrite the old array format
+            if (is_array($decoded)) {
+                foreach ($decoded as $jsItem) {
+                    $items[] = [
+                        'id' => $jsItem['id'] ?? '',
+                        'customer_name' => $jsItem['customer'] ?? '',
+                        'bill_to' => $jsItem['bill_to'] ?? '',
+                        'consignee' => $jsItem['consignee'] ?? '',
+                        'docket_no' => $jsItem['docket'] ?? '',
+                        'invoice_no' => $jsItem['invoice_no'] ?? '',
+                        'part_no' => $jsItem['contents'] ?? '',
+                        'pieces' => $jsItem['pcs'] ?? 1,
+                        'actual_weight' => $jsItem['act_wt'] ?? 0,
+                        'length' => $jsItem['l'] ?? 0,
+                        'width' => $jsItem['w'] ?? 0,
+                        'height' => $jsItem['h'] ?? 0,
+                        'volumetric_weight' => $jsItem['vol_wt'] ?? 0,
+                        'calculated_chargeable_weight' => $jsItem['chg_wt'] ?? 0,
+                        'chargeable_weight' => $jsItem['chg_wt'] ?? 0,
+                        'eway_no' => $jsItem['eway_no'] ?? '',
+                        'eway_date' => $jsItem['eway_date'] ?? null,
+                        'rate' => $jsItem['rate'] ?? 0,
+                        'delivery_charges' => $jsItem['delivery_charges'] ?? 0,
+                        'docket_charges' => $jsItem['docket_charges'] ?? 0,
+                        'pickup_charges' => $jsItem['pickup_charges'] ?? 0,
+                        'fuel_surcharge' => $jsItem['fuel_surcharge'] ?? 0,
+                        'fov_charges' => $jsItem['fov_charges'] ?? 0,
+                        'handling_charges' => $jsItem['handling_charges'] ?? 0,
+                        'service_charges' => $jsItem['service_charges'] ?? 0
+                    ];
+                }
+            }
+        }
+        // --- NEW JSON MIGRATION BLOCK END ---
+
         if (!is_array($items)) {
             throw new Exception("Items must be an array");
         }
