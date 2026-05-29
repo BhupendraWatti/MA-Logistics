@@ -109,3 +109,7 @@ $routes->get('logistics/export', 'Logistics::export');
 // ExportExcel
 $routes->get('logistics/exportExcel', 'Logistics::exportExcel');
 $routes->match(['get', 'post'], 'logistics/exportExcel', 'Logistics::exportExcel');
+// Tracking & POD
+$routes->get('tracking/history/(:num)', 'TrackingController::getHistory/$1');
+$routes->post('tracking/save', 'TrackingController::saveUpdate');
+$routes->post('tracking/delete/(:num)', 'TrackingController::deleteUpdate/$1');

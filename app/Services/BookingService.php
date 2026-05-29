@@ -79,6 +79,19 @@ class BookingService
     {
         $this->validateBasicData($postData);
 
+        // ===== DEBUG LOG (REMOVE AFTER FIX) =====
+        $debugInfo = [
+            'has_items_json'   => isset($postData['items_json']),
+            'items_json_empty' => empty($postData['items_json']),
+            'items_json_len'   => strlen($postData['items_json'] ?? ''),
+            'items_json_valid' => json_last_error() === JSON_ERROR_NONE,
+            'items_count_raw'  => is_array(json_decode($postData['items_json'] ?? '[]', true)) ? count(json_decode($postData['items_json'] ?? '[]', true)) : 0,
+            'has_items_array'  => isset($postData['items']),
+            'items_json_first200' => substr($postData['items_json'] ?? '', 0, 200),
+        ];
+        log_message('debug', '[BookingService::updateBooking] DEBUG => ' . json_encode($debugInfo));
+        // ===== END DEBUG =====
+
         $this->db->transStart();
 
         $bookingData = [
@@ -114,7 +127,46 @@ class BookingService
         $existingShipments = $this->shipmentModel->where('booking_id', $id)->findAll();
         $existingIds = array_column($existingShipments, 'id');
 
-        $items = $postData['items'] ?? [];
+        // --- NEW JSON MIGRATION BLOCK START ---
+        if (!empty($postData['items_json'])) {
+            $decoded = json_decode($postData['items_json'], true);
+            $items = [];
+            if (is_array($decoded)) {
+                foreach ($decoded as $jsItem) {
+                    $items[] = [
+                        'id' => $jsItem['id'] ?? '',
+                        'customer_name' => $jsItem['customer'] ?? '',
+                        'bill_to' => $jsItem['bill_to'] ?? '',
+                        'consignee' => $jsItem['consignee'] ?? '',
+                        'docket_no' => $jsItem['docket'] ?? '',
+                        'invoice_no' => $jsItem['invoice_no'] ?? '',
+                        'part_no' => $jsItem['contents'] ?? '',
+                        'pieces' => $jsItem['pcs'] ?? 1,
+                        'actual_weight' => $jsItem['act_wt'] ?? 0,
+                        'length' => $jsItem['l'] ?? 0,
+                        'width' => $jsItem['w'] ?? 0,
+                        'height' => $jsItem['h'] ?? 0,
+                        'volumetric_weight' => $jsItem['vol_wt'] ?? 0,
+                        'calculated_chargeable_weight' => $jsItem['chg_wt'] ?? 0,
+                        'chargeable_weight' => $jsItem['chg_wt'] ?? 0,
+                        'eway_bill_no' => $jsItem['eway_no'] ?? '',
+                        'eway_bill_date' => $jsItem['eway_date'] ?? null,
+                        'rate' => $jsItem['rate'] ?? 0,
+                        'delivery_charges' => $jsItem['delivery_charges'] ?? 0,
+                        'docket_charges' => $jsItem['docket_charges'] ?? 0,
+                        'pickup_charges' => $jsItem['pickup_charges'] ?? 0,
+                        'fuel_surcharge' => $jsItem['fuel_surcharge'] ?? 0,
+                        'fov_charges' => $jsItem['fov_charges'] ?? 0,
+                        'handling_charges' => $jsItem['handling_charges'] ?? 0,
+                        'service_charges' => $jsItem['service_charges'] ?? 0
+                    ];
+                }
+            }
+        } else {
+            $items = $postData['items'] ?? [];
+        }
+        // --- NEW JSON MIGRATION BLOCK END ---
+        
         $submittedIds = [];
 
         foreach ($items as $item) {
@@ -148,17 +200,19 @@ class BookingService
                     'service_charges' => $this->validateNumeric($item['service_charges'] ?? 0)
                 ];
 
-                if (!empty($item['id']) && in_array($item['id'], $existingIds)) {
-                    if (!$this->shipmentModel->update($item['id'], $shipmentData)) {
+                if (!empty($item['id']) && in_array((int)$item['id'], $existingIds)) {
+                    $itemId = (int)$item['id'];
+                    if (!$this->shipmentModel->update($itemId, $shipmentData)) {
                         throw new \Exception('Failed to update shipment item: ' . implode(', ', $this->shipmentModel->errors()));
                     }
-                    $submittedIds[] = $item['id'];
-                    $recordId = $item['id'];
+                    $submittedIds[] = $itemId;   // int, matches $existingIds type
+                    $recordId = $itemId;
                 } else {
                     if (!$this->shipmentModel->insert($shipmentData)) {
                         throw new \Exception('Failed to insert shipment item: ' . implode(', ', $this->shipmentModel->errors()));
                     }
                     $recordId = $this->shipmentModel->getInsertID();
+                    $submittedIds[] = $recordId; // also track newly inserted IDs
                 }
 
                 if ($shipmentData['final_chargeable_weight'] != $shipmentData['calculated_chargeable_weight']) {
@@ -167,9 +221,10 @@ class BookingService
             }
         }
 
+        // array_diff now compares int vs int — safe
         $idsToDelete = array_diff($existingIds, $submittedIds);
         if (!empty($idsToDelete)) {
-            $this->shipmentModel->whereIn('id', $idsToDelete)->delete();
+            $this->shipmentModel->whereIn('id', array_values($idsToDelete))->delete();
         }
 
         $salesData = [

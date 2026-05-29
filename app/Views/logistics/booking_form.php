@@ -253,7 +253,8 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 </table>
             </div>
             
-            <div id="hiddenInputsContainer"></div> <!-- Form inputs will be generated here -->
+            <input type="hidden" name="items_json" id="items_json">
+            <div id="hiddenInputsContainer"></div>
             
             <div class="text-end mt-4">
                 <button type="button" class="btn btn-primary" onclick="new bootstrap.Tab(document.getElementById('tab3-tab')).show()">Proceed to Charges <i class="fas fa-arrow-right ms-1"></i></button>
@@ -781,7 +782,6 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
 
     function renderGrid() {
         $('#hiddenInputsContainer').empty();
-        $('#hiddenInputsContainer').html('<input type="hidden" name="items_json" id="items_json">');
         
         let sumPcs = 0, sumAct = 0, sumVol = 0, sumChg = 0;
 

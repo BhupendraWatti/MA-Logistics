@@ -43,6 +43,9 @@
     </div>
 </div>
 
+<?= $this->include('logistics/pod_tracking_drawer') ?>
+
+
 <?= $this->endSection() ?>
 <?= $this->section('scripts') ?>
 <!-- JavaScript -->
@@ -99,6 +102,9 @@ $(document).ready(function() {
             render: function(data, type, row) {
                 let actions = `
                     <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-info" title="Tracking / POD" onclick="openTrackingDrawer('${row.id}', '${row.awb_no}', '${(row.customer_name || '').replace(/'/g, "\\'")}')">
+                            <i class="fa-solid fa-location-dot"></i>
+                        </button>
                         <a href="${BASE_URL}logistics/view/${row.id}" class="btn btn-sm btn-outline-primary" title="View"><i class="fas fa-eye"></i></a>
                 `;
                 

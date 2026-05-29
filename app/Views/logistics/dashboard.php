@@ -34,6 +34,7 @@
                             <th>Pieces</th>
                             <th>Weight</th>
                             <th class="pe-4">Status</th>
+                            <th class="text-end pe-4">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -54,11 +55,16 @@
                                 <?php 
                                     $bg = 'bg-secondary';
                                     if ($booking['status'] == 'Delivered') { $bg = 'bg-success'; }
-                                    elseif ($booking['status'] == 'In-Transit') { $bg = 'bg-warning'; }
+                                    elseif ($booking['status'] == 'In-Transit') { $bg = 'bg-warning text-dark'; }
                                 ?>
                                 <span class="badge <?= $bg ?> text-white" style="font-size:0.75rem; letter-spacing:0.5px;">
                                     <?= esc($booking['status']) ?>
                                 </span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <button type="button" class="btn btn-sm btn-outline-primary rounded-circle" title="Update Tracking / POD" onclick="openTrackingDrawer('<?= $booking['id'] ?>', '<?= esc($booking['awb_no']) ?>', '<?= esc(addslashes($booking['customer_name'] ?? '')) ?>')">
+                                    <i class="fa-solid fa-location-dot"></i>
+                                </button>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -73,5 +79,7 @@
         </div>
     </div>
 </div>
+
+<?= $this->include('logistics/pod_tracking_drawer') ?>
 
 <?= $this->endSection() ?>

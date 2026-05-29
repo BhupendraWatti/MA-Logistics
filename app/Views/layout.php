@@ -65,7 +65,12 @@
                 </div>
                 <?php else: ?>
                 <!-- Active Sidebar State -->
-                <?php $uri = service('uri'); $seg1 = $uri->getSegment(1); $seg2 = $uri->getSegment(2); ?>
+                <?php 
+                    $uri = service('uri'); 
+                    $totalSegs = $uri->getTotalSegments();
+                    $seg1 = $totalSegs >= 1 ? $uri->getSegment(1) : ''; 
+                    $seg2 = $totalSegs >= 2 ? $uri->getSegment(2) : ''; 
+                ?>
                 
                 <a href="<?= base_url('logistics') ?>" class="sidebar-nav-item <?= ($seg1 == 'logistics' && $seg2 == '') ? 'active' : '' ?>">
                     <i class="fas fa-th-large"></i> Dashboard

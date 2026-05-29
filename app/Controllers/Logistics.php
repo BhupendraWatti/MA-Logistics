@@ -467,6 +467,7 @@ public function companySelection()
         b.id,
         b.awb_no,
         b.booking_date,
+        b.created_at,
         b.origin,
         b.destination,
         b.status,
@@ -513,7 +514,8 @@ public function companySelection()
     foreach ($data as &$row) {
         $row['total_weight'] = number_format((float)$row['total_weight'], 1);
         $row['total_amount'] = number_format((float)$row['total_amount'], 0);
-        $row['booking_date'] = date('d-M-Y H:i', strtotime($row['booking_date']));
+        $time = !empty($row['created_at']) ? date('H:i', strtotime($row['created_at'])) : '00:00';
+        $row['booking_date'] = date('d-M-Y', strtotime($row['booking_date'])) . ' ' . $time;
         $row['can_edit'] = $canEdit;
         $row['can_delete'] = $canDelete;
     }
