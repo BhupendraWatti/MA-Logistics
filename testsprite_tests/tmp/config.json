@@ -1,0 +1,18 @@
+{
+  "status": "commited",
+  "type": "backend",
+  "scope": "codebase",
+  "localEndpoint": "https://granthinfotech.online",
+  "backendAuthType": "public",
+  "executionArgs": {
+    "projectName": "MAlogistic",
+    "projectPath": "D:\\Company Work\\Company projects\\MAlogistic",
+    "testIds": [],
+    "additionalInstruction": "Test against the staging server https://granthinfotech.online/ using python requests.\n\n1. NO BeautifulSoup (bs4): Do NOT import or use bs4/BeautifulSoup in any test case. Extract all HTML values (like csrf_token_name) strictly using python's built-in `re` module (e.g. `re.search(r'name=\\\"csrf_token_name\\\"\\s+value=\\\"([^\\\"]+)\\\"', html_text)`).\n2. Session & Login: Every test case must GET '/' to get the CSRF token, POST to '/auth/attemptLogin' (with csrf_token_name, username=admin, password=admin), and POST to '/logistics/setCompany' (with csrf_token_name and company_id=1). All subsequent requests must pass the `ci_session` cookie.\n3. Booking ID & AWB Retrieval: To get a booking ID and AWB number (for TC006, TC007, TC009), POST to '/logistics/ajax-datatable' with `{'draw': '1', 'start': '0', 'length': '1'}`. Extract `'id'` and `'awb_no'` from the first item in `'data'`. Do NOT scrape HTML of `/logistics/manage`.\n4. Correct tracking save payload (TC007, TC008, TC009): When saving a tracking record (POST `/tracking/save`), you MUST use these exact keys: `'csrf_token_name'`, `'booking_id'`, `'awb_no'`, `'current_location'`, `'status'`, `'event_date'`, and `'event_time'`. Do NOT use `'location'`, `'event_datetime'`, or `'event_date_time'`. If uploading a file, the parameter name is `'proof_image'`.\n5. TC008 Invalid Data Assertion: In TC008, when sending invalid payloads, expect a 500 status code or a 200 response with status 'error'. The test should accept a 500 status code as a successful rejection.\n6. TC009 Record ID: In TC009, after saving the tracking record, the save response does NOT return the ID. You must fetch the history via GET `/tracking/history/{booking_id}` and find the maximum integer ID in the list to identify the newly added record to delete.\n7. TC010 Masters Datatable: For TC010, the segment in the URL `/masters/ajax-datatable/{type}` must be plural: `'customers'`. The payload must be sent as standard form data (`data=...`), NOT JSON (`json=...`). Do NOT pass Content-Type: application/json.",
+    "serverMode": "production",
+    "envs": {
+      "API_KEY": "sk-user-XIR6KFH9pSzZdrATnajGkeN1Yk-V18RoRN9kAJHIqGWI5oGtPqnt0YhlWG5DmJIilipVJylICw1-l8ueL6nPt36JuDOeQEkU41RGa0GJYAJ8nwlQVHX4dWktfaIZy6G2KZY"
+    }
+  },
+  "serverPort": 63506
+}

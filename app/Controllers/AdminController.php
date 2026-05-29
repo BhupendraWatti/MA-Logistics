@@ -54,6 +54,7 @@ class AdminController extends BaseController
 
         $data = $builder->get()->getResultArray();
 
+        session_write_close(); // Prevent database session write shutdown errors overriding 200 OK status
         return $this->response->setJSON([
             'draw' => $draw,
             'recordsTotal' => $totalRecords,
@@ -88,6 +89,7 @@ class AdminController extends BaseController
             }
         }
 
+        session_write_close();
         return $this->response->setJSON(['success' => true]);
     }
 

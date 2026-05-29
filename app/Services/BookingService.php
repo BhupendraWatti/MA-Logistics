@@ -79,18 +79,6 @@ class BookingService
     {
         $this->validateBasicData($postData);
 
-        // ===== DEBUG LOG (REMOVE AFTER FIX) =====
-        $debugInfo = [
-            'has_items_json'   => isset($postData['items_json']),
-            'items_json_empty' => empty($postData['items_json']),
-            'items_json_len'   => strlen($postData['items_json'] ?? ''),
-            'items_json_valid' => json_last_error() === JSON_ERROR_NONE,
-            'items_count_raw'  => is_array(json_decode($postData['items_json'] ?? '[]', true)) ? count(json_decode($postData['items_json'] ?? '[]', true)) : 0,
-            'has_items_array'  => isset($postData['items']),
-            'items_json_first200' => substr($postData['items_json'] ?? '', 0, 200),
-        ];
-        log_message('debug', '[BookingService::updateBooking] DEBUG => ' . json_encode($debugInfo));
-        // ===== END DEBUG =====
 
         $this->db->transStart();
 
@@ -130,37 +118,41 @@ class BookingService
         // --- NEW JSON MIGRATION BLOCK START ---
         if (!empty($postData['items_json'])) {
             $decoded = json_decode($postData['items_json'], true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception('Invalid JSON format in shipment items data: ' . json_last_error_msg());
+            }
+            if (!is_array($decoded)) {
+                throw new \Exception('Shipment items must be a valid list.');
+            }
             $items = [];
-            if (is_array($decoded)) {
-                foreach ($decoded as $jsItem) {
-                    $items[] = [
-                        'id' => $jsItem['id'] ?? '',
-                        'customer_name' => $jsItem['customer'] ?? '',
-                        'bill_to' => $jsItem['bill_to'] ?? '',
-                        'consignee' => $jsItem['consignee'] ?? '',
-                        'docket_no' => $jsItem['docket'] ?? '',
-                        'invoice_no' => $jsItem['invoice_no'] ?? '',
-                        'part_no' => $jsItem['contents'] ?? '',
-                        'pieces' => $jsItem['pcs'] ?? 1,
-                        'actual_weight' => $jsItem['act_wt'] ?? 0,
-                        'length' => $jsItem['l'] ?? 0,
-                        'width' => $jsItem['w'] ?? 0,
-                        'height' => $jsItem['h'] ?? 0,
-                        'volumetric_weight' => $jsItem['vol_wt'] ?? 0,
-                        'calculated_chargeable_weight' => $jsItem['chg_wt'] ?? 0,
-                        'chargeable_weight' => $jsItem['chg_wt'] ?? 0,
-                        'eway_bill_no' => $jsItem['eway_no'] ?? '',
-                        'eway_bill_date' => $jsItem['eway_date'] ?? null,
-                        'rate' => $jsItem['rate'] ?? 0,
-                        'delivery_charges' => $jsItem['delivery_charges'] ?? 0,
-                        'docket_charges' => $jsItem['docket_charges'] ?? 0,
-                        'pickup_charges' => $jsItem['pickup_charges'] ?? 0,
-                        'fuel_surcharge' => $jsItem['fuel_surcharge'] ?? 0,
-                        'fov_charges' => $jsItem['fov_charges'] ?? 0,
-                        'handling_charges' => $jsItem['handling_charges'] ?? 0,
-                        'service_charges' => $jsItem['service_charges'] ?? 0
-                    ];
-                }
+            foreach ($decoded as $jsItem) {
+                $items[] = [
+                    'id' => $jsItem['id'] ?? '',
+                    'customer_name' => $jsItem['customer'] ?? '',
+                    'bill_to' => $jsItem['bill_to'] ?? '',
+                    'consignee' => $jsItem['consignee'] ?? '',
+                    'docket_no' => $jsItem['docket'] ?? '',
+                    'invoice_no' => $jsItem['invoice_no'] ?? '',
+                    'part_no' => $jsItem['contents'] ?? '',
+                    'pieces' => $jsItem['pcs'] ?? 1,
+                    'actual_weight' => $jsItem['act_wt'] ?? 0,
+                    'length' => $jsItem['l'] ?? 0,
+                    'width' => $jsItem['w'] ?? 0,
+                    'height' => $jsItem['h'] ?? 0,
+                    'volumetric_weight' => $jsItem['vol_wt'] ?? 0,
+                    'calculated_chargeable_weight' => $jsItem['chg_wt'] ?? 0,
+                    'chargeable_weight' => $jsItem['chg_wt'] ?? 0,
+                    'eway_bill_no' => $jsItem['eway_no'] ?? '',
+                    'eway_bill_date' => !empty($jsItem['eway_date']) ? $jsItem['eway_date'] : null,
+                    'rate' => $jsItem['rate'] ?? 0,
+                    'delivery_charges' => $jsItem['delivery_charges'] ?? 0,
+                    'docket_charges' => $jsItem['docket_charges'] ?? 0,
+                    'pickup_charges' => $jsItem['pickup_charges'] ?? 0,
+                    'fuel_surcharge' => $jsItem['fuel_surcharge'] ?? 0,
+                    'fov_charges' => $jsItem['fov_charges'] ?? 0,
+                    'handling_charges' => $jsItem['handling_charges'] ?? 0,
+                    'service_charges' => $jsItem['service_charges'] ?? 0
+                ];
             }
         } else {
             $items = $postData['items'] ?? [];
@@ -170,7 +162,9 @@ class BookingService
         $submittedIds = [];
 
         foreach ($items as $item) {
-            if (!empty($item['customer_name'])) {
+            if (empty($item['customer_name'])) {
+                throw new \Exception('Customer Name is required for all shipment items.');
+            }
                 $shipmentData = [
                     'booking_id' => $id,
                     'customer_name' => $item['customer_name'],
@@ -218,7 +212,6 @@ class BookingService
                 if ($shipmentData['final_chargeable_weight'] != $shipmentData['calculated_chargeable_weight']) {
                     $this->logAudit('shipment_items', $recordId, 'chargeable_weight_override', $shipmentData['calculated_chargeable_weight'], $shipmentData['final_chargeable_weight']);
                 }
-            }
         }
 
         // array_diff now compares int vs int — safe
@@ -278,37 +271,41 @@ class BookingService
         $postData = service('request')->getPost();
         if (!empty($postData['items_json'])) {
             $decoded = json_decode($postData['items_json'], true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new \Exception('Invalid JSON format in shipment items data: ' . json_last_error_msg());
+            }
+            if (!is_array($decoded)) {
+                throw new \Exception('Shipment items must be a valid list.');
+            }
             $items = []; // Overwrite the old array format
-            if (is_array($decoded)) {
-                foreach ($decoded as $jsItem) {
-                    $items[] = [
-                        'id' => $jsItem['id'] ?? '',
-                        'customer_name' => $jsItem['customer'] ?? '',
-                        'bill_to' => $jsItem['bill_to'] ?? '',
-                        'consignee' => $jsItem['consignee'] ?? '',
-                        'docket_no' => $jsItem['docket'] ?? '',
-                        'invoice_no' => $jsItem['invoice_no'] ?? '',
-                        'part_no' => $jsItem['contents'] ?? '',
-                        'pieces' => $jsItem['pcs'] ?? 1,
-                        'actual_weight' => $jsItem['act_wt'] ?? 0,
-                        'length' => $jsItem['l'] ?? 0,
-                        'width' => $jsItem['w'] ?? 0,
-                        'height' => $jsItem['h'] ?? 0,
-                        'volumetric_weight' => $jsItem['vol_wt'] ?? 0,
-                        'calculated_chargeable_weight' => $jsItem['chg_wt'] ?? 0,
-                        'chargeable_weight' => $jsItem['chg_wt'] ?? 0,
-                        'eway_no' => $jsItem['eway_no'] ?? '',
-                        'eway_date' => $jsItem['eway_date'] ?? null,
-                        'rate' => $jsItem['rate'] ?? 0,
-                        'delivery_charges' => $jsItem['delivery_charges'] ?? 0,
-                        'docket_charges' => $jsItem['docket_charges'] ?? 0,
-                        'pickup_charges' => $jsItem['pickup_charges'] ?? 0,
-                        'fuel_surcharge' => $jsItem['fuel_surcharge'] ?? 0,
-                        'fov_charges' => $jsItem['fov_charges'] ?? 0,
-                        'handling_charges' => $jsItem['handling_charges'] ?? 0,
-                        'service_charges' => $jsItem['service_charges'] ?? 0
-                    ];
-                }
+            foreach ($decoded as $jsItem) {
+                $items[] = [
+                    'id' => $jsItem['id'] ?? '',
+                    'customer_name' => $jsItem['customer'] ?? '',
+                    'bill_to' => $jsItem['bill_to'] ?? '',
+                    'consignee' => $jsItem['consignee'] ?? '',
+                    'docket_no' => $jsItem['docket'] ?? '',
+                    'invoice_no' => $jsItem['invoice_no'] ?? '',
+                    'part_no' => $jsItem['contents'] ?? '',
+                    'pieces' => $jsItem['pcs'] ?? 1,
+                    'actual_weight' => $jsItem['act_wt'] ?? 0,
+                    'length' => $jsItem['l'] ?? 0,
+                    'width' => $jsItem['w'] ?? 0,
+                    'height' => $jsItem['h'] ?? 0,
+                    'volumetric_weight' => $jsItem['vol_wt'] ?? 0,
+                    'calculated_chargeable_weight' => $jsItem['chg_wt'] ?? 0,
+                    'chargeable_weight' => $jsItem['chg_wt'] ?? 0,
+                    'eway_bill_no' => $jsItem['eway_no'] ?? '',
+                    'eway_bill_date' => !empty($jsItem['eway_date']) ? $jsItem['eway_date'] : null,
+                    'rate' => $jsItem['rate'] ?? 0,
+                    'delivery_charges' => $jsItem['delivery_charges'] ?? 0,
+                    'docket_charges' => $jsItem['docket_charges'] ?? 0,
+                    'pickup_charges' => $jsItem['pickup_charges'] ?? 0,
+                    'fuel_surcharge' => $jsItem['fuel_surcharge'] ?? 0,
+                    'fov_charges' => $jsItem['fov_charges'] ?? 0,
+                    'handling_charges' => $jsItem['handling_charges'] ?? 0,
+                    'service_charges' => $jsItem['service_charges'] ?? 0
+                ];
             }
         }
         // --- NEW JSON MIGRATION BLOCK END ---
@@ -318,7 +315,9 @@ class BookingService
         }
 
         foreach ($items as $item) {
-            if (!empty($item['customer_name'])) {
+            if (empty($item['customer_name'])) {
+                throw new \Exception('Customer Name is required for all shipment items.');
+            }
                 $shipmentData = [
                     'booking_id' => $bookingId,
                     'customer_name' => $item['customer_name'],
@@ -356,7 +355,6 @@ class BookingService
                 if ($shipmentData['final_chargeable_weight'] != $shipmentData['calculated_chargeable_weight']) {
                     $this->logAudit('shipment_items', $recordId, 'chargeable_weight_override', $shipmentData['calculated_chargeable_weight'], $shipmentData['final_chargeable_weight']);
                 }
-            }
         }
     }
 

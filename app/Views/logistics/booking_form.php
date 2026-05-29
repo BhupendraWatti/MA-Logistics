@@ -547,8 +547,8 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     h: parseFloat(s.height) || 0,
                     vol_wt: parseFloat(s.volumetric_weight) || 0,
                     chg_wt: parseFloat(s.final_chargeable_weight) || 0,
-                    eway_no: s.eway_no || '',
-                    eway_date: s.eway_date || '',
+                    eway_no: s.eway_bill_no || s.eway_no || '',
+                    eway_date: s.eway_bill_date || s.eway_date || '',
                     rate: s.rate || '',
                     delivery_charges: s.delivery_charges || '',
                     docket_charges: s.docket_charges || '',
@@ -689,9 +689,14 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     }
 
     function saveItemToGrid() {
+        const customer = $('#entry_customer').val();
         const contents = $('#entry_contents').val();
         const act_wt = parseFloat($('#entry_act_wt').val()) || 0;
         
+        if(!customer || customer.trim().length < 2) {
+            ERPUtils.showWarning("Missing Data", "Shipper/Customer Name is required (minimum 2 characters).");
+            return;
+        }
         if(!contents || act_wt <= 0) {
             ERPUtils.showWarning("Missing Data", "Contents Description and Actual Weight are required.");
             return;

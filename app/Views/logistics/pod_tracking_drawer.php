@@ -196,6 +196,12 @@ $(document).ready(function() {
                     });
                     // Reload history
                     loadTrackingHistory($('#track_booking_id').val());
+                    
+                    // Reload the main bookings datatable if it exists on the current page
+                    if (typeof dataTable !== 'undefined' && dataTable !== null && typeof dataTable.ajax !== 'undefined') {
+                        dataTable.ajax.reload(null, false);
+                    }
+                    
                     // Reset form fields but keep AWB/Booking ID
                     $('#resetTrackingBtn').click();
                 } else {
@@ -236,8 +242,15 @@ function loadTrackingHistory(bookingId) {
     $.ajax({
         url: '<?= base_url("tracking/history/") ?>' + bookingId,
         type: 'GET',
+        cache: false, // Prevent aggressive browser/LiteSpeed caching
+        data: {
+            _: new Date().getTime() // Cache-busting parameter
+        },
         success: function(response) {
             if(response.status === 'success' && response.data) {
+                // Save to window globally to bypass HTML quoting crash with single quotes in remarks
+                window.trackingHistoryData = response.data;
+                
                 let rows = [];
                 response.data.forEach((item, index) => {
                     // Status Badge Logic
@@ -257,7 +270,7 @@ function loadTrackingHistory(bookingId) {
                     }
                     
                     let actionBtns = `
-                        <button type="button" class="btn btn-sm btn-light text-primary border me-1" onclick='editTracking(${JSON.stringify(item)})' title="Edit">
+                        <button type="button" class="btn btn-sm btn-light text-primary border me-1" onclick="editTrackingByIndex(${index})" title="Edit">
                             <i class="fa-solid fa-pen"></i>
                         </button>
                         <button type="button" class="btn btn-sm btn-light text-danger border" onclick="deleteTracking(${item.id}, ${bookingId})" title="Delete">
@@ -279,6 +292,12 @@ function loadTrackingHistory(bookingId) {
             }
         }
     });
+}
+
+function editTrackingByIndex(index) {
+    if (window.trackingHistoryData && window.trackingHistoryData[index]) {
+        editTracking(window.trackingHistoryData[index]);
+    }
 }
 
 function editTracking(item) {
@@ -325,6 +344,11 @@ function deleteTracking(id, bookingId) {
                     if(response.status === 'success') {
                         Swal.fire('Deleted!', 'Record removed.', 'success');
                         loadTrackingHistory(bookingId);
+                        
+                        // Reload the main bookings datatable if it exists on the current page
+                        if (typeof dataTable !== 'undefined' && dataTable !== null && typeof dataTable.ajax !== 'undefined') {
+                            dataTable.ajax.reload(null, false);
+                        }
                     } else {
                         Swal.fire('Error', response.message, 'error');
                     }

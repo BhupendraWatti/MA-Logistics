@@ -285,7 +285,11 @@ public function edit($id)
     $booking = $bookingModel->find($id);
     
     if (!$booking || $booking['company_id'] != session()->get('selected_company_id')) {
-        return $this->response->setJSON(['success' => false, 'message' => 'Booking not found or access denied']);
+        session_write_close();
+        return $this->response->setJSON([
+            'success' => false, 
+            'message' => 'Booking not found or access denied. ID: ' . $id . ', Found: ' . ($booking ? 'YES' : 'NO') . ', Booking Co: ' . ($booking ? $booking['company_id'] : 'N/A') . ', Session Co: ' . (session()->get('selected_company_id') ?? 'NULL')
+        ]);
     }
     
     // Cascade delete shipments and sales
@@ -294,6 +298,7 @@ public function edit($id)
     
     $bookingModel->delete($id);
     
+    session_write_close();
     return $this->response->setJSON([
         'success' => true, 
         'message' => 'Booking ' . $booking['awb_no'] . ' deleted successfully'
@@ -520,6 +525,7 @@ public function companySelection()
         $row['can_delete'] = $canDelete;
     }
 
+    session_write_close(); // Prevent database session write shutdown errors overriding 200 OK status
     return $this->response->setJSON([
         'draw' => $draw,
         'recordsTotal' => $totalRecords,

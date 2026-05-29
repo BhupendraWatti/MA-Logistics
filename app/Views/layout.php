@@ -145,16 +145,10 @@
         <!-- Main Content -->
         <div class="main-content">
             <!-- Top Header -->
-            <div class="top-header">
-                <div class="search-bar">
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
-                        <input type="text" class="form-control bg-light border-start-0 shadow-none" placeholder="Search AWB, Customer... ( / )">
-                    </div>
-                </div>
+            <div class="top-header d-flex justify-content-end">
                 <div class="header-actions d-flex align-items-center">
                     <?php if(session()->get('selected_company_name')): ?>
-                    <div class="dropdown me-3">
+                    <div class="dropdown">
                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle shadow-none fw-semibold" type="button" data-bs-toggle="dropdown">
                             <i class="fas fa-building text-primary me-1"></i> <?= esc(session()->get('selected_company_name')) ?>
                         </button>
@@ -164,15 +158,6 @@
                         </ul>
                     </div>
                     <?php endif; ?>
-                    <button class="btn btn-link text-secondary position-relative me-3 shadow-none">
-                        <i class="far fa-bell fs-5"></i>
-                    </button>
-                    <button class="btn btn-link text-secondary me-3 shadow-none">
-                        <i class="far fa-question-circle fs-5"></i>
-                    </button>
-                    <button class="btn btn-sm" style="background-color: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;">
-                        <i class="fas fa-exclamation-triangle"></i> Validation Alerts (3)
-                    </button>
                 </div>
             </div>
 

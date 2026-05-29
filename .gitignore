@@ -34,3 +34,4 @@ node_modules/
 # Local test/debug files
 test_db.php
 drop_sort_order.php
+testsprite_tests\tmp\config.json
