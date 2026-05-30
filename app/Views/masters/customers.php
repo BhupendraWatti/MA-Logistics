@@ -34,7 +34,7 @@
         <h5 class="offcanvas-title fw-bold text-primary"><i class="fas fa-building me-2"></i> Add New Customer</h5>
         <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas"></button>
     </div>
-    <form action="/masters/customers/create" method="POST" class="d-flex flex-column h-100 mb-0">
+    <form action="<?= base_url('masters/customers/create') ?>" method="POST" class="d-flex flex-column h-100 mb-0">
         <input type="hidden" name="company_id" value="<?= session()->get('selected_company_id') ?>">
         <?= csrf_field() ?>
         <div class="offcanvas-body bg-light p-0">

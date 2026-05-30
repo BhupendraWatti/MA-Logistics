@@ -5,7 +5,7 @@
 
 
 
-    <form action="/masters/company/update" method="POST" enctype="multipart/form-data">
+    <form action="<?= base_url('masters/company/update') ?>" method="POST" enctype="multipart/form-data">
         <?= csrf_field() ?>
         <div class="row g-4">
             
@@ -52,9 +52,9 @@
                                 <?php if (!empty($company['signature_path'])): ?>
                                     <div class="mt-2 bg-light p-2 rounded d-inline-block position-relative w-100">
                                         <small class="text-muted d-block mb-1">Current signature:</small>
-                                        <img src="/<?= esc($company['signature_path']) ?>" style="max-height:60px; mix-blend-mode: multiply;">
+                                        <img src="<?= base_url(esc($company['signature_path'])) ?>" style="max-height:60px; mix-blend-mode: multiply;">
                                         <div class="mt-2">
-                                            <a href="/masters/company/deleteSignature" class="btn btn-sm btn-danger shadow-sm" onclick="return confirm('Are you sure you want to delete the current signature?');">
+                                            <a href="<?= base_url('masters/company/deleteSignature') ?>" class="btn btn-sm btn-danger shadow-sm" onclick="return confirm('Are you sure you want to delete the current signature?');">
                                                 <i class="fas fa-trash"></i> Delete Signature
                                             </a>
                                         </div>

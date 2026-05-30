@@ -29,6 +29,31 @@ class BookingService
 
         $this->db->transStart();
 
+        // Handle Base64 Signature Canvas
+        $signaturePath = null;
+        $signatureBase64 = service('request')->getPost('signature_base64');
+        if (!empty($signatureBase64)) {
+            $parts = explode(',', $signatureBase64);
+            if (count($parts) == 2) {
+                $image_base64 = base64_decode($parts[1]);
+                $fileName = 'signature_booking_' . time() . '_' . rand(1000, 9999) . '.jpg';
+                $uploadPath = FCPATH . 'uploads/signatures';
+                if (!is_dir($uploadPath)) {
+                    mkdir($uploadPath, 0777, true);
+                }
+                file_put_contents($uploadPath . '/' . $fileName, $image_base64);
+                $signaturePath = 'uploads/signatures/' . $fileName;
+            }
+        }
+
+        // Handle File Upload
+        $signatureFile = service('request')->getFile('signature_image');
+        if ($signatureFile && $signatureFile->isValid() && !$signatureFile->hasMoved()) {
+            $newName = 'signature_booking_' . time() . '_' . rand(1000, 9999) . '.' . $signatureFile->getExtension();
+            $signatureFile->move(FCPATH . 'uploads/signatures', $newName);
+            $signaturePath = 'uploads/signatures/' . $newName;
+        }
+
         $bookingData = [
             'awb_no' => $postData['awb_no'] ?? '',
             'company_id' => $companyId,
@@ -54,7 +79,14 @@ class BookingService
             'narration' => $postData['narration'] ?? '',
             'flight_number' => $postData['flight_number'] ?? '',
             'airlines' => $postData['airlines'] ?? '',
-            'created_by' => $userId
+            'created_by' => $userId,
+            'gstin' => $postData['gstin'] ?? '',
+            'pan' => $postData['pan'] ?? '',
+            'sac_code' => $postData['sac_code'] ?? '',
+            'cgst_rate' => $this->validateNumeric($postData['cgst_rate'] ?? 9.00),
+            'sgst_rate' => $this->validateNumeric($postData['sgst_rate'] ?? 9.00),
+            'igst_rate' => $this->validateNumeric($postData['igst_rate'] ?? 9.00),
+            'signature_path' => $signaturePath
         ];
 
         if (!$this->bookingModel->insert($bookingData)) {
@@ -82,6 +114,31 @@ class BookingService
 
         $this->db->transStart();
 
+        // Handle Base64 Signature Canvas
+        $signaturePath = null;
+        $signatureBase64 = service('request')->getPost('signature_base64');
+        if (!empty($signatureBase64)) {
+            $parts = explode(',', $signatureBase64);
+            if (count($parts) == 2) {
+                $image_base64 = base64_decode($parts[1]);
+                $fileName = 'signature_booking_' . time() . '_' . rand(1000, 9999) . '.jpg';
+                $uploadPath = FCPATH . 'uploads/signatures';
+                if (!is_dir($uploadPath)) {
+                    mkdir($uploadPath, 0777, true);
+                }
+                file_put_contents($uploadPath . '/' . $fileName, $image_base64);
+                $signaturePath = 'uploads/signatures/' . $fileName;
+            }
+        }
+
+        // Handle File Upload
+        $signatureFile = service('request')->getFile('signature_image');
+        if ($signatureFile && $signatureFile->isValid() && !$signatureFile->hasMoved()) {
+            $newName = 'signature_booking_' . time() . '_' . rand(1000, 9999) . '.' . $signatureFile->getExtension();
+            $signatureFile->move(FCPATH . 'uploads/signatures', $newName);
+            $signaturePath = 'uploads/signatures/' . $newName;
+        }
+
         $bookingData = [
             'awb_no' => $postData['awb_no'] ?? '',
             'company_id' => $companyId,
@@ -107,8 +164,18 @@ class BookingService
             'narration' => $postData['narration'] ?? '',
             'flight_number' => $postData['flight_number'] ?? '',
             'airlines' => $postData['airlines'] ?? '',
-            'created_by' => $userId
+            'created_by' => $userId,
+            'gstin' => $postData['gstin'] ?? '',
+            'pan' => $postData['pan'] ?? '',
+            'sac_code' => $postData['sac_code'] ?? '',
+            'cgst_rate' => $this->validateNumeric($postData['cgst_rate'] ?? 9.00),
+            'sgst_rate' => $this->validateNumeric($postData['sgst_rate'] ?? 9.00),
+            'igst_rate' => $this->validateNumeric($postData['igst_rate'] ?? 9.00)
         ];
+
+        if ($signaturePath) {
+            $bookingData['signature_path'] = $signaturePath;
+        }
 
         $this->bookingModel->update($id, $bookingData);
 
@@ -133,7 +200,8 @@ class BookingService
                     'consignee' => $jsItem['consignee'] ?? '',
                     'docket_no' => $jsItem['docket'] ?? '',
                     'invoice_no' => $jsItem['invoice_no'] ?? '',
-                    'part_no' => $jsItem['contents'] ?? '',
+                    'part_no' => !empty($jsItem['part_no']) ? $jsItem['part_no'] : ($jsItem['contents'] ?? ''),
+                    'invoice_date' => !empty($jsItem['invoice_date']) ? $jsItem['invoice_date'] : null,
                     'pieces' => $jsItem['pcs'] ?? 1,
                     'actual_weight' => $jsItem['act_wt'] ?? 0,
                     'length' => $jsItem['l'] ?? 0,
@@ -286,7 +354,8 @@ class BookingService
                     'consignee' => $jsItem['consignee'] ?? '',
                     'docket_no' => $jsItem['docket'] ?? '',
                     'invoice_no' => $jsItem['invoice_no'] ?? '',
-                    'part_no' => $jsItem['contents'] ?? '',
+                    'part_no' => !empty($jsItem['part_no']) ? $jsItem['part_no'] : ($jsItem['contents'] ?? ''),
+                    'invoice_date' => !empty($jsItem['invoice_date']) ? $jsItem['invoice_date'] : null,
                     'pieces' => $jsItem['pcs'] ?? 1,
                     'actual_weight' => $jsItem['act_wt'] ?? 0,
                     'length' => $jsItem['l'] ?? 0,

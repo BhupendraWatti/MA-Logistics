@@ -179,18 +179,46 @@ $(document).ready(function() {
     let isDirty = false;
     let allowLeave = false;
     
-    // Track changes on inputs, selects, and textareas, but exclude search bars
-    $('input:not(.search-bar input), select:not(.search-bar select), textarea:not(.search-bar textarea)').on('change input', function() {
-        if (!isDirty && $(this).closest('.dataTables_filter').length === 0 && $(this).closest('.dataTables_length').length === 0) {
-            isDirty = true;
-            // Push state so we can trap back button
-            history.pushState(null, null, window.location.href);
-        }
-    });
+    // Check both local isDirty and global window.isDirty (for page-specific script modifications)
+    function checkDirty() {
+        return isDirty || !!window.isDirty;
+    }
+    
+    function resetDirty() {
+        isDirty = false;
+        window.isDirty = false;
+    }
+
+    // Delay change binding to ignore browser autofill and initial JS triggers on page load
+    setTimeout(function() {
+        $('input:not(.search-bar input), select:not(.search-bar select), textarea:not(.search-bar textarea)').on('change input', function(e) {
+            // Ignore programmatic jQuery triggers
+            if (e.isTrigger) return;
+            
+            // Ignore non-form action inputs like permission switches, select-all, or row checkboxes
+            if ($(this).hasClass('toggle-permission') || $(this).hasClass('booking-check') || $(this).attr('id') === 'selectAll') {
+                return;
+            }
+            
+            // Ignore inputs inside GET (search/filter) forms or forms with explicit track exclusions
+            const $form = $(this).closest('form');
+            if ($form.length > 0) {
+                if ($form.hasClass('no-track') || $form.attr('data-no-track') === 'true' || $form.attr('method')?.toLowerCase() === 'get') {
+                    return;
+                }
+            }
+
+            if (!checkDirty() && $(this).closest('.dataTables_filter').length === 0 && $(this).closest('.dataTables_length').length === 0) {
+                isDirty = true;
+                // Push state so we can trap back button
+                history.pushState(null, null, window.location.href);
+            }
+        });
+    }, 1500);
 
     // Intercept back button
     window.addEventListener('popstate', function(event) {
-        if (isDirty && !allowLeave) {
+        if (checkDirty() && !allowLeave) {
             history.pushState(null, null, window.location.href);
             Swal.fire({
                 title: 'Unsaved Changes!',
@@ -204,6 +232,7 @@ $(document).ready(function() {
             }).then((result) => {
                 if (result.isConfirmed) {
                     allowLeave = true;
+                    resetDirty();
                     history.go(-2);
                 }
             });
@@ -214,7 +243,7 @@ $(document).ready(function() {
     $('a').on('click', function(e) {
         const targetUrl = $(this).attr('href');
         // Check if real internal navigation
-        if (isDirty && !allowLeave && targetUrl && !targetUrl.startsWith('#') && !targetUrl.startsWith('javascript:')) {
+        if (checkDirty() && !allowLeave && targetUrl && !targetUrl.startsWith('#') && !targetUrl.startsWith('javascript:')) {
             // Ignore offcanvas triggers that might use href=# (just a safeguard)
             if ($(this).attr('data-bs-toggle') === 'offcanvas') return;
             
@@ -231,6 +260,7 @@ $(document).ready(function() {
             }).then((result) => {
                 if (result.isConfirmed) {
                     allowLeave = true;
+                    resetDirty();
                     window.location.href = targetUrl;
                 }
             });
@@ -239,7 +269,7 @@ $(document).ready(function() {
 
     // Fallback for tab closing / page refresh
     window.addEventListener("beforeunload", function(event) {
-        if (isDirty && !allowLeave) {
+        if (checkDirty() && !allowLeave) {
             event.preventDefault();
             event.returnValue = "You have unsaved changes. Are you sure you want to leave?";
         }
@@ -248,5 +278,22 @@ $(document).ready(function() {
     // Clear dirty flag when forms are submitted
     $('form').on('submit', function() {
         allowLeave = true;
+        resetDirty();
     });
 });
+
+// Global jQuery AJAX Setup to inject CSRF tokens into all requests
+if (typeof $ !== 'undefined') {
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            // Only inject for POST/PUT/DELETE requests
+            if (settings.type === 'POST' || settings.type === 'PUT' || settings.type === 'DELETE') {
+                let csrfHeader = document.querySelector('meta[name="csrf-header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
+                let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                if (csrfToken) {
+                    xhr.setRequestHeader(csrfHeader, csrfToken);
+                }
+            }
+        }
+    });
+}

@@ -157,6 +157,58 @@
                     </table>
                 </div>
             </div>
+
+            <!-- Custom Tax & GST / Signature Details for this Booking -->
+            <div class="card shadow-sm border-0 rounded-3 mt-4 mb-4">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h6 class="fw-bold text-primary mb-0"><i class="fas fa-file-signature me-1"></i> Custom Tax, GST &amp; Signature Settings for this Booking</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6 border-end">
+                            <h6 class="text-muted fs-8 fw-bold text-uppercase mb-3"><i class="fas fa-percent"></i> Tax &amp; GST Configuration</h6>
+                            <table class="table table-sm table-borderless fs-7 mb-0">
+                                <tr>
+                                    <td class="text-muted fw-medium py-1" style="width: 35%;">GSTIN:</td>
+                                    <td class="fw-bold text-dark py-1"><?= esc(($booking['gstin'] ?? '') ?: ($company['gstin'] ?? '') ?: 'N/A') ?></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium py-1">PAN:</td>
+                                    <td class="fw-bold text-dark py-1"><?= esc(($booking['pan'] ?? '') ?: ($company['pan'] ?? '') ?: 'N/A') ?></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium py-1">SAC Code:</td>
+                                    <td class="fw-bold text-dark py-1"><?= esc(($booking['sac_code'] ?? '') ?: ($company['sac_code'] ?? '') ?: 'N/A') ?></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted fw-medium py-1">GST Rates:</td>
+                                    <td class="fw-bold text-dark py-1">
+                                        CGST: <span class="badge bg-light text-dark fw-bold border py-1 px-2 me-1"><?= number_format((float)($booking['cgst_rate'] ?? $company['cgst_rate'] ?? 9.00), 2) ?>%</span>
+                                        SGST: <span class="badge bg-light text-dark fw-bold border py-1 px-2 me-1"><?= number_format((float)($booking['sgst_rate'] ?? $company['sgst_rate'] ?? 9.00), 2) ?>%</span>
+                                        IGST: <span class="badge bg-light text-dark fw-bold border py-1 px-2"><?= number_format((float)($booking['igst_rate'] ?? $company['igst_rate'] ?? 9.00), 2) ?>%</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted fs-8 fw-bold text-uppercase mb-3"><i class="fas fa-signature"></i> Signature Preview</h6>
+                            <?php 
+                            $sigPath = ($booking['signature_path'] ?? '') ?: ($company['signature_path'] ?? '');
+                            if (!empty($sigPath)): 
+                            ?>
+                                <div class="bg-light p-3 rounded text-center border d-inline-block" style="min-width: 200px;">
+                                    <img src="<?= base_url($sigPath) ?>" style="max-height: 70px; max-width: 100%; mix-blend-mode: multiply;">
+                                    <div class="mt-2 text-muted fs-9 fw-semibold">
+                                        <?= !empty($booking['signature_path']) ? '<i class="fas fa-check-circle text-success me-1"></i> Custom Booking Signature' : '<i class="fas fa-info-circle text-primary me-1"></i> Company Default Signature' ?>
+                                    </div>
+                                </div>
+                            <?php else: ?>
+                                <div class="text-muted fs-7 py-3">No digital signature uploaded or drawn.</div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Right Column: Financial Summary -->
@@ -194,9 +246,9 @@
 
                         // GST Calculation
                         $cgst = 0; $sgst = 0; $igst = 0;
-                        $cgstRate = (float)($company['cgst_rate'] ?? 0);
-                        $sgstRate = (float)($company['sgst_rate'] ?? 0);
-                        $igstRate = (float)($company['igst_rate'] ?? 0);
+                        $cgstRate = isset($booking['cgst_rate']) ? (float)$booking['cgst_rate'] : (float)($company['cgst_rate'] ?? 0);
+                        $sgstRate = isset($booking['sgst_rate']) ? (float)$booking['sgst_rate'] : (float)($company['sgst_rate'] ?? 0);
+                        $igstRate = isset($booking['igst_rate']) ? (float)$booking['igst_rate'] : (float)($company['igst_rate'] ?? 0);
 
                         if (!empty($booking['gst_applied'])) {
                             $cgst = $subtotal * ($cgstRate / 100);

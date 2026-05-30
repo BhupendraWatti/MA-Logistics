@@ -631,14 +631,20 @@ public function exportPdf($id)
     // Load GST rates from company master (not hardcoded)
     $companyData = (new CompanyModel())->select('name, address, email, mobile, gstin, pan, sac_code, cgst_rate, sgst_rate, igst_rate, terms_conditions, signature_path')
                                        ->find($booking['company_id']);
-                                       
-    $cgstRate = (float) ($companyData['cgst_rate'] ?? 9);
-    $sgstRate = (float) ($companyData['sgst_rate'] ?? 9);
-    $igstRate = (float) ($companyData['igst_rate'] ?? 0);
+
+    // Dynamic settings from booking with fallbacks to company settings
+    $gstin = !empty($booking['gstin']) ? $booking['gstin'] : ($companyData['gstin'] ?? '');
+    $pan = !empty($booking['pan']) ? $booking['pan'] : ($companyData['pan'] ?? '');
+    $sacCode = !empty($booking['sac_code']) ? $booking['sac_code'] : ($companyData['sac_code'] ?? '');
     
+    $cgstRate = isset($booking['cgst_rate']) ? (float)$booking['cgst_rate'] : (float)($companyData['cgst_rate'] ?? 9);
+    $sgstRate = isset($booking['sgst_rate']) ? (float)$booking['sgst_rate'] : (float)($companyData['sgst_rate'] ?? 9);
+    $igstRate = isset($booking['igst_rate']) ? (float)$booking['igst_rate'] : (float)($companyData['igst_rate'] ?? 9);
+    
+    $signaturePath = !empty($booking['signature_path']) ? $booking['signature_path'] : ($companyData['signature_path'] ?? '');
+                                       
     // BUG FIX: Only apply GST if the booking has gst_applied checked
     if (isset($booking['gst_applied']) && $booking['gst_applied'] == 1) {
-        // If state logic is complex, for now we apply what's configured in Company Master
         $cgst = round($totalTaxable * $cgstRate / 100);
         $sgst = round($totalTaxable * $sgstRate / 100);
         $igst = round($totalTaxable * $igstRate / 100);
@@ -670,7 +676,13 @@ public function exportPdf($id)
         'sgstRate' => $sgstRate,
         'igstRate' => $igstRate,
         'netPayable' => $netPayable,
-        'amountInWords' => $this->formatAmountInWords($netPayable)
+        'amountInWords' => $this->formatAmountInWords($netPayable),
+        // Dynamic overrides per booking
+        'booking' => $booking,
+        'bookingGstin' => $gstin,
+        'bookingPan' => $pan,
+        'bookingSacCode' => $sacCode,
+        'bookingSignaturePath' => $signaturePath
     ];
 
     $html = view('pdfs/invoice', $viewData);
@@ -966,6 +978,27 @@ public function exportExcel()
     echo $output;
     exit;
 }
+
+
+    public function deleteSignature($bookingId)
+    {
+        $this->checkPermission('can_edit');
+        
+        $bookingModel = new BookingModel();
+        $booking = $bookingModel->find($bookingId);
+        
+        if (!$booking || $booking['company_id'] != session()->get('selected_company_id')) {
+            return redirect()->back()->with('error', 'Booking not found or access denied!');
+        }
+        
+        if (!empty($booking['signature_path']) && file_exists(FCPATH . $booking['signature_path'])) {
+            unlink(FCPATH . $booking['signature_path']);
+        }
+        
+        $bookingModel->update($bookingId, ['signature_path' => null]);
+        
+        return redirect()->to('/logistics/edit/' . $bookingId)->with('success', 'Booking signature deleted successfully!');
+    }
 
 
 // =========== Export Excel End ============

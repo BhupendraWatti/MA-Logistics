@@ -1,5 +1,8 @@
 <?= $this->extend('layout') ?>
 <?php 
+$booking = $booking ?? [];
+$company = $company ?? [];
+$sales = $sales ?? [];
 $permissions = session()->get('permissions') ?? [];
 if (!$permissions['can_create'] && !isset($isEdit)) {
     echo '<div class="alert alert-danger text-center"><h3>Access Denied</h3><p>Create permission required!</p><a href="' . base_url('logistics') . '" class="btn btn-primary">Go to Dashboard</a></div>';
@@ -16,7 +19,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 <span class="badge bg-dark">Booking ID: <?= $bookingId ?></span>
             </div>
         </div>
-    <?= form_open('logistics/update/' . $bookingId, ['id' => 'bookingForm']) ?>
+    <?= form_open_multipart('logistics/update/' . $bookingId, ['id' => 'bookingForm']) ?>
     <?php else: ?>
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="mb-0 text-dark fw-bold">New Consignment</h4>
@@ -315,6 +318,105 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     </div>
                 </div>
             </div>
+
+            <!-- Tax & Digital Signature overrides per Booking -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm h-100" style="background-color: #fcfcfc; border: 1px solid #eaeaea !important;">
+                        <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                            <h6 class="fw-bold text-primary mb-0"><i class="fas fa-percent me-1"></i> Tax &amp; GST Configuration (Customizable)</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted fs-7 fw-semibold">GSTIN</label>
+                                    <input type="text" name="gstin" id="gstin" class="form-control form-control-sm shadow-none text-uppercase fw-bold" value="<?= esc($booking['gstin'] ?? $company['gstin'] ?? '') ?>">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted fs-7 fw-semibold">PAN</label>
+                                    <input type="text" name="pan" id="pan" class="form-control form-control-sm shadow-none text-uppercase fw-bold" value="<?= esc($booking['pan'] ?? $company['pan'] ?? '') ?>">
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label text-muted fs-7 fw-semibold">SAC Code</label>
+                                    <input type="text" name="sac_code" id="sac_code" class="form-control form-control-sm shadow-none" value="<?= esc($booking['sac_code'] ?? $company['sac_code'] ?? '') ?>">
+                                </div>
+                                <div class="col-12 mt-3 border-top pt-3">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label class="form-label text-muted fs-7 fw-semibold mb-0">Booking Tax Rates (%)</label>
+                                        <span class="badge bg-primary fs-8" id="totalGstBadge">Total GST: 18.00%</span>
+                                    </div>
+                                    <div class="row g-2">
+                                        <div class="col-4">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-light text-muted fs-8">CGST</span>
+                                                <input type="number" step="0.01" min="0" max="50" name="cgst_rate" id="cgst_rate" class="form-control shadow-none tabular-nums fw-bold rate-input" value="<?= isset($booking['id']) ? esc($booking['cgst_rate']) : '9.00' ?>">
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-light text-muted fs-8">SGST</span>
+                                                <input type="number" step="0.01" min="0" max="50" name="sgst_rate" id="sgst_rate" class="form-control shadow-none tabular-nums fw-bold rate-input" value="<?= isset($booking['id']) ? esc($booking['sgst_rate']) : '9.00' ?>">
+                                            </div>
+                                        </div>
+                                        <div class="col-4">
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text bg-light text-muted fs-8">IGST</span>
+                                                <input type="number" step="0.01" min="0" max="50" name="igst_rate" id="igst_rate" class="form-control shadow-none tabular-nums fw-bold rate-input" value="<?= isset($booking['id']) ? esc($booking['igst_rate']) : '9.00' ?>">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm h-100" style="background-color: #fcfcfc; border: 1px solid #eaeaea !important;">
+                        <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                            <h6 class="fw-bold text-primary mb-0"><i class="fas fa-file-invoice me-1"></i> Digital Signature</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <label class="form-label text-muted fs-7 fw-semibold">Upload Signature Image <small class="text-muted">(PNG/JPG/JPEG)</small></label>
+                                    <input type="file" name="signature_image" class="form-control form-control-sm shadow-none" accept="image/png,image/jpeg,image/jpg">
+                                    <?php if (!empty($booking['signature_path'])): ?>
+                                        <div class="mt-2 bg-light p-2 rounded d-inline-block position-relative w-100">
+                                            <small class="text-muted d-block mb-1">Current Signature for this Booking:</small>
+                                            <img src="<?= base_url(esc($booking['signature_path'])) ?>" style="max-height:60px; mix-blend-mode: multiply;">
+                                            <div class="mt-2">
+                                                <a href="<?= base_url('logistics/deleteSignature/' . $booking['id']) ?>" class="btn btn-sm btn-danger shadow-sm py-1 px-2 fw-bold" onclick="return confirm('Are you sure you want to delete this booking\'s signature?');">
+                                                    <i class="fas fa-trash"></i> Delete Signature
+                                                </a>
+                                            </div>
+                                        </div>
+                                    <?php elseif (!empty($company['signature_path'])): ?>
+                                        <div class="mt-2 bg-light p-2 rounded d-inline-block position-relative w-100 opacity-75">
+                                            <small class="text-muted d-block mb-1">Using Company Default Signature:</small>
+                                            <img src="<?= base_url(esc($company['signature_path'])) ?>" style="max-height:60px; mix-blend-mode: multiply;">
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="col-md-12 mt-3">
+                                    <label class="form-label text-muted fs-7 fw-semibold">Or Draw Your Signature</label>
+                                    <div class="border rounded bg-light p-2 text-center">
+                                        <div class="bg-white border rounded mb-2 overflow-hidden" style="height: 120px;">
+                                            <canvas id="signatureCanvas" style="width: 100%; height: 120px; touch-action: none; cursor: crosshair; display: block;"></canvas>
+                                        </div>
+                                        <div class="text-end">
+                                            <button type="button" id="clearCanvas" class="btn btn-xs btn-outline-warning text-dark fw-bold shadow-sm py-1 px-2 fs-8">
+                                                <i class="fas fa-eraser"></i> Clear Drawing
+                                            </button>
+                                        </div>
+                                        <input type="hidden" name="signature_base64" id="signatureBase64">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
         </div>
     </div>
@@ -390,6 +492,14 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 <label class="fs-8 text-muted fw-semibold">Invoice No</label>
                 <input type="text" id="entry_invoice" class="form-control form-control-sm">
             </div>
+            <div class="col-md-3">
+                <label class="fs-8 text-muted fw-semibold">Part NO.</label>
+                <input type="text" id="entry_part_no" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-3">
+                <label class="fs-8 text-muted fw-semibold">Invoice Date</label>
+                <input type="date" id="entry_invoice_date" class="form-control form-control-sm">
+            </div>
         </div>
 
         <h6 class="fw-bold border-bottom pb-2 mb-3 text-primary">Dimensions & Weight</h6>
@@ -445,6 +555,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 <style>
 .fs-7 { font-size: 0.85rem; }
 .fs-8 { font-size: 0.75rem; }
@@ -539,6 +650,8 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     consignee: s.consignee || '',
                     docket: s.docket_no || '',
                     invoice_no: s.invoice_no || '',
+                    part_no: s.part_no || '',
+                    invoice_date: s.invoice_date || '',
                     contents: s.part_no || 'Goods',
                     pcs: parseInt(s.pieces) || 1,
                     act_wt: parseFloat(s.actual_weight) || 0,
@@ -631,6 +744,16 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             // New Item
             $('#itemModalLabel').text('Add Shipment Item');
             
+            let prevDocket = '';
+            let prevPartNo = '';
+            let prevInvoiceDate = '';
+            if (items.length > 0) {
+                const prev = items[items.length - 1];
+                prevDocket = prev.docket || '';
+                prevPartNo = prev.part_no || '';
+                prevInvoiceDate = prev.invoice_date || '';
+            }
+            
             // Use global shipper if set, else fall back to last item
             if (globalShipper) {
                 $('#entry_customer').val(globalShipper);
@@ -642,8 +765,11 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 $('#entry_bill_to').val(prev.bill_to);
                 $('#entry_consignee').val(prev.consignee);
             }
-            $('#entry_docket').val('');
+            
+            $('#entry_docket').val(prevDocket);
             $('#entry_invoice').val('');
+            $('#entry_part_no').val(prevPartNo);
+            $('#entry_invoice_date').val(prevInvoiceDate);
             
             $('#entry_contents').val('');
             $('#entry_pcs').val('1');
@@ -663,6 +789,8 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             $('#entry_consignee').val(item.consignee);
             $('#entry_docket').val(item.docket);
             $('#entry_invoice').val(item.invoice_no);
+            $('#entry_part_no').val(item.part_no || '');
+            $('#entry_invoice_date').val(item.invoice_date || '');
             
             $('#entry_contents').val(item.contents);
             $('#entry_pcs').val(item.pcs);
@@ -718,6 +846,8 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             consignee: $('#entry_consignee').val(),
             docket: $('#entry_docket').val(),
             invoice_no: $('#entry_invoice').val(),
+            part_no: $('#entry_part_no').val(),
+            invoice_date: $('#entry_invoice_date').val(),
             contents: contents,
             pcs: parseInt($('#entry_pcs').val()) || 1,
             act_wt: act_wt,
@@ -834,22 +964,67 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         });
 
         const isGstApplied = $('#gst_applied').is(':checked');
-        let cgst = isGstApplied ? Math.round(taxable * (_companyGst.cgst / 100)) : 0;
-        let sgst = isGstApplied ? Math.round(taxable * (_companyGst.sgst / 100)) : 0;
-        let igst = isGstApplied ? Math.round(taxable * (_companyGst.igst / 100)) : 0;
+        
+        // Custom GST rates from the booking form input fields
+        const cgstRate = parseFloat($('#cgst_rate').val()) || 0;
+        const sgstRate = parseFloat($('#sgst_rate').val()) || 0;
+        const igstRate = parseFloat($('#igst_rate').val()) || 0;
+        
+        // Show live total percentage calculations applied to the booking
+        const totalGstPercent = cgstRate + sgstRate + igstRate;
+        $('#totalGstBadge').text('Total GST: ' + totalGstPercent.toFixed(2) + '%');
+
+        let cgst = isGstApplied ? Math.round(taxable * (cgstRate / 100)) : 0;
+        let sgst = isGstApplied ? Math.round(taxable * (sgstRate / 100)) : 0;
+        let igst = isGstApplied ? Math.round(taxable * (igstRate / 100)) : 0;
         let netPayable = taxable + cgst + sgst + igst;
 
         $('#totalTaxableAmount').text('₹' + taxable.toFixed(2));
         $('#netPayableAmount').text('₹' + netPayable.toFixed(2));
     }
 
-    $(document).on('input', '#salesRate, .calc-surcharge', calcTotals);
+    $(document).on('input', '#salesRate, .calc-surcharge, .rate-input', calcTotals);
     $(document).on('change', '#gst_applied', calcTotals);
+
+    let signaturePad;
+    document.addEventListener("DOMContentLoaded", function() {
+        var canvas = document.getElementById('signatureCanvas');
+        if (canvas && typeof SignaturePad !== 'undefined') {
+            signaturePad = new SignaturePad(canvas, {
+                backgroundColor: 'rgb(255, 255, 255)', // Solid white prevents TCPDF alpha channel errors
+                penColor: 'rgb(0, 0, 0)'
+            });
+
+            function resizeCanvas() {
+                var ratio =  Math.max(window.devicePixelRatio || 1, 1);
+                canvas.width = canvas.offsetWidth * ratio;
+                canvas.height = canvas.offsetHeight * ratio;
+                canvas.getContext("2d").scale(ratio, ratio);
+                signaturePad.clear();
+            }
+
+            window.addEventListener("resize", resizeCanvas);
+            resizeCanvas();
+
+            document.getElementById('clearCanvas').addEventListener('click', function () {
+                signaturePad.clear();
+                document.getElementById('signatureBase64').value = "";
+            });
+        }
+        
+        // Initial GST calculations update
+        calcTotals();
+    });
 
     $('#bookingForm').on('submit', function() {
         if(items.length === 0) {
             ERPUtils.showWarning("Missing Data", "Please add at least one shipment item.");
             return false;
+        }
+        
+        // Save drawn signature base64 if present
+        if (signaturePad && !signaturePad.isEmpty()) {
+            document.getElementById('signatureBase64').value = signaturePad.toDataURL('image/jpeg');
         }
         
         // Always sync global shipper to all items before submitting

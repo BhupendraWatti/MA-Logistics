@@ -8,7 +8,7 @@
         </a>
     </div>
 
-    <form action="/masters/customers/update/<?= $customer['id'] ?>" method="POST">
+    <form action="<?= base_url('masters/customers/update/' . $customer['id']) ?>" method="POST">
         <?= csrf_field() ?>
         <input type="hidden" name="company_id" value="<?= session()->get('selected_company_id') ?>">
         

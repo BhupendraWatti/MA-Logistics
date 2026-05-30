@@ -34,6 +34,7 @@ $routes->get('logistics/view/(:num)', 'Logistics::view/$1');
 $routes->get('logistics/edit/(:num)', 'Logistics::edit/$1');
 $routes->post('logistics/update/(:num)', 'Logistics::update/$1');
 $routes->post('logistics/delete/(:num)', 'Logistics::delete/$1');
+$routes->get('logistics/deleteSignature/(:num)', 'Logistics::deleteSignature/$1');
 $routes->get('logistics/consolidation', 'Logistics::consolidation');
 
 $routes->get('logistics/clearCompany', 'Logistics::clearCompany');

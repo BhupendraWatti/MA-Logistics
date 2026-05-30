@@ -6,11 +6,16 @@
             <span style="font-size:10px;">Mobile: <?= esc($company['mobile'] ?? '') ?> | Email ID: <?= esc($company['email'] ?? '') ?></span>
         </td>
     </tr>
+    <?php 
+    $showGstRow = ($cgstRate > 0 || $sgstRate > 0 || $igstRate > 0);
+    if ($showGstRow): 
+    ?>
     <tr>
-        <td colspan="5" style="font-size:10px; font-weight:bold;">GSTIN : <?= esc($company['gstin'] ?? '') ?></td>
-        <td colspan="5" style="font-size:10px; font-weight:bold; text-align:center;">SAC CODE : <?= esc($company['sac_code'] ?? '') ?></td>
-        <td colspan="6" style="font-size:10px; font-weight:bold; text-align:center;">PAN : <?= esc($company['pan'] ?? '') ?></td>
+        <td colspan="5" style="font-size:10px; font-weight:bold;">GSTIN : <?= esc($bookingGstin ?? $company['gstin'] ?? '') ?></td>
+        <td colspan="5" style="font-size:10px; font-weight:bold; text-align:center;">SAC CODE : <?= esc($bookingSacCode ?? $company['sac_code'] ?? '') ?></td>
+        <td colspan="6" style="font-size:10px; font-weight:bold; text-align:center;">PAN : <?= esc($bookingPan ?? $company['pan'] ?? '') ?></td>
     </tr>
+    <?php endif; ?>
     <tr>
         <td colspan="16" style="text-align:center; font-size:14px; font-weight:bold; letter-spacing:2px;">INVOICE</td>
     </tr>
@@ -109,19 +114,31 @@
         </td>
     </tr>
     <tr>
-        <td colspan="10" style="vertical-align:top; font-size:9px; padding: 10px; line-height: 1.6;">
+        <td colspan="10" style="vertical-align:top; font-size:9px; padding: 10px; line-height: 1.6; text-align: left;">
             <b>Service Category : Courier & Cargo</b><br><br>
             <b>Terms & Conditions :</b><br>
-            <?= nl2br(esc($company['terms_conditions'] ?? 'No terms specified.')) ?>
+            <?php 
+            $tcText = $company['terms_conditions'] ?? 'No terms specified.';
+            $tcLines = explode("\n", str_replace("\r", "", $tcText));
+            foreach ($tcLines as $line) {
+                $trimmed = trim($line);
+                if ($trimmed !== '') {
+                    echo esc($trimmed) . '<br>';
+                }
+            }
+            ?>
         </td>
-        <td colspan="6" style="vertical-align:bottom; text-align:right; font-size:10px; font-weight:bold; padding: 10px;">
-            For <?= esc($company['name'] ?? 'M.A LOGISTICS') ?><br><br><br><br>
-            <?php if (!empty($company['signature_path']) && file_exists(FCPATH . $company['signature_path'])): ?>
-                <img src="<?= FCPATH . $company['signature_path'] ?>" style="height: 60px; max-width: 150px; margin-bottom: 10px;"><br>
+        <td colspan="6" style="vertical-align:bottom; text-align:center; font-size:10px; font-weight:bold; padding: 10px;">
+            For <?= esc($company['name'] ?? 'M.A LOGISTICS') ?><br><br>
+            <?php 
+            $sigPath = !empty($bookingSignaturePath) ? $bookingSignaturePath : ($company['signature_path'] ?? '');
+            if (!empty($sigPath) && file_exists(FCPATH . $sigPath)): 
+            ?>
+                <img src="<?= FCPATH . $sigPath ?>" style="height: 55px; max-width: 140px; margin-bottom: 5px;"><br>
             <?php else: ?>
                 <br><br><br>
             <?php endif; ?>
-            Authorised signatory&nbsp;&nbsp;&nbsp;
+            Authorised signatory
         </td>
     </tr>
 </table>

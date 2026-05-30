@@ -3,7 +3,7 @@
 <div class="container-fluid px-4 py-5">
     
     <div class="text-center mb-5">
-        <h2 class="fw-bold text-dark mb-2" style="font-size: 2rem;">Workspace Access</h2>
+        <h2 class="fw-bold text-dark mb-2" style="font-size: 2rem;">Company </h2>
         <p class="text-secondary" style="font-size: 1.1rem;">Select operational company to continue session</p>
     </div>
 
@@ -81,7 +81,7 @@
       </div>
       <div class="modal-footer border-top-0 bg-light">
         <button type="button" class="btn btn-light shadow-none border" data-bs-dismiss="modal">Cancel</button>
-        <button type="submit" class="btn btn-primary shadow-none"><i class="fas fa-plus me-1"></i> Create Workspace</button>
+        <button type="submit" class="btn btn-primary shadow-none"><i class="fas fa-plus me-1"></i> Create Company</button>
       </div>
       <?= form_close() ?>
     </div>

@@ -30,7 +30,7 @@
         <h5 id="mTitle" class="offcanvas-title fw-bold text-primary"><i class="fas fa-truck me-2"></i> Add Transporter</h5>
         <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas"></button>
     </div>
-    <form id="mForm" action="/masters/transporters/create" method="POST" class="d-flex flex-column h-100 mb-0">
+    <form id="mForm" action="<?= base_url('masters/transporters/create') ?>" method="POST" class="d-flex flex-column h-100 mb-0">
         <input type="hidden" name="company_id" value="<?= session()->get('selected_company_id') ?>">
         <?= csrf_field() ?>
         <div class="offcanvas-body position-relative p-0">
