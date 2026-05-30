@@ -57,70 +57,12 @@ class MasterController extends BaseController
             'address'          => $this->request->getPost('address'),
             'email'            => $this->request->getPost('email'),
             'mobile'           => $this->request->getPost('mobile'),
-            'gstin'            => $this->request->getPost('gstin'),
-            'pan'              => $this->request->getPost('pan'),
-            'sac_code'         => $this->request->getPost('sac_code'),
-            'cgst_rate'        => (float) $this->request->getPost('cgst_rate'),
-            'sgst_rate'        => (float) $this->request->getPost('sgst_rate'),
-            'igst_rate'        => (float) $this->request->getPost('igst_rate'),
             'terms_conditions' => $this->request->getPost('terms_conditions'),
         ];
-
-        // 1. Handle Base64 Signature Canvas first
-        $signatureBase64 = $this->request->getPost('signature_base64');
-        $uploadPath = FCPATH . 'uploads/signatures';
-        if (!is_dir($uploadPath)) {
-            mkdir($uploadPath, 0777, true);
-        }
-
-        // 1. Handle Canvas Signature (Base64)
-        if (!empty($signatureBase64)) {
-            $parts = explode(',', $signatureBase64);
-            if (count($parts) == 2) {
-                // If it's a JPEG data URL it'll save correctly. If it's PNG, we save as PNG.
-                $ext = (strpos($parts[0], 'image/jpeg') !== false) ? 'jpg' : 'png';
-                $image_base64 = base64_decode($parts[1]);
-                $fileName = 'sig_' . $companyId . '_' . time() . '_canvas.' . $ext;
-                
-                file_put_contents($uploadPath . '/' . $fileName, $image_base64);
-                $data['signature_path'] = 'uploads/signatures/' . $fileName;
-            }
-        }
-
-        // 2. Handle File Upload (overrides canvas if both are somehow submitted)
-        $sig = $this->request->getFile('signature');
-        if ($sig && $sig->isValid() && !$sig->hasMoved()) {
-            if (!in_array($sig->getMimeType(), ['image/png', 'image/jpeg', 'image/jpg', 'image/gif'])) {
-                return redirect()->back()->with('error', 'Signature must be a PNG, JPG, or GIF image.');
-            }
-            $fileName = 'sig_' . $companyId . '_' . time() . '.' . $sig->getExtension();
-            $sig->move($uploadPath, $fileName);
-            $data['signature_path'] = 'uploads/signatures/' . $fileName;
-        }
 
         (new CompanyModel())->update($companyId, $data);
         session()->set('selected_company_name', $data['name']);
         return redirect()->back()->with('success', 'Company settings saved!');
-    }
-
-    public function deleteSignature()
-    {
-        if ($r = $this->requireAdmin()) return $r;
-        $companyId = $this->companyId();
-        if (!$companyId) return redirect()->to('/company-selection');
-
-        $companyModel = new CompanyModel();
-        $company = $companyModel->find($companyId);
-
-        if (!empty($company['signature_path']) && file_exists(FCPATH . $company['signature_path'])) {
-            unlink(FCPATH . $company['signature_path']);
-        } elseif (!empty($company['signature_path']) && file_exists(WRITEPATH . $company['signature_path'])) {
-            unlink(WRITEPATH . $company['signature_path']);
-        }
-
-        $companyModel->update($companyId, ['signature_path' => null]);
-        
-        return redirect()->back()->with('success', 'Signature deleted successfully!');
     }
 
     // ============================================================

@@ -48,7 +48,6 @@ $routes->post('logistics/deleteCompany/(:num)', 'Logistics::deleteCompany/$1');
 // ====== MASTER MODULE ======
 $routes->get('masters/company',                       'MasterController::editCompany');
 $routes->post('masters/company/update',               'MasterController::updateCompany');
-$routes->get('masters/company/deleteSignature',       'MasterController::deleteSignature');
 
 $routes->get('masters/customers',                     'MasterController::customers');
 $routes->post('masters/customers/create',             'MasterController::createCustomer');
