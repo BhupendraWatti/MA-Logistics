@@ -2,6 +2,16 @@
 <?= $this->section('content') ?>
 
 <div class="container-fluid mt-4">
+    <style>
+        .table-responsive table th, .table-responsive table td {
+            white-space: nowrap;
+        }
+        .table-responsive table td.consignee-cell {
+            white-space: normal !important;
+            word-break: break-word;
+            min-width: 150px;
+        }
+    </style>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h4 class="mb-1 text-dark fw-bold">Dashboard</h4>
@@ -29,8 +39,10 @@
                         <tr>
                             <th class="ps-4">#</th>
                             <th>AWB Number</th>
+                            <th>Docket No</th>
                             <th>Origin &rarr; Dest</th>
                             <th>Customer</th>
+                            <th>Consignee</th>
                             <th>Pieces</th>
                             <th>Weight</th>
                             <th class="pe-4">Status</th>
@@ -43,9 +55,26 @@
                         <tr>
                             <td class="ps-4 text-muted"><?= $i++ ?></td>
                             <td><a href="<?= base_url('logistics/view/' . $booking['id']) ?>" class="fw-medium text-decoration-none"><?= esc($booking['awb_no']) ?></a></td>
+                            <td>
+                                <?php
+                                    $docketStr = $booking['docket_no'] ?? '-';
+                                    $docketsArray = array_filter(array_map('trim', explode(',', $docketStr)));
+                                    if (count($docketsArray) > 1) {
+                                        $docketDisplay = esc($docketsArray[0]) . '...';
+                                        $docketTitle = esc($docketStr);
+                                    } else {
+                                        $docketDisplay = esc($docketStr);
+                                        $docketTitle = '';
+                                    }
+                                ?>
+                                <span class="text-muted fw-semibold" style="font-size: 0.85rem;" title="<?= $docketTitle ?>"><?= $docketDisplay ?></span>
+                            </td>
                             <td><span class="fw-medium text-dark"><?= esc($booking['origin']) ?></span> <span class="text-muted mx-1">&rarr;</span> <span class="fw-medium text-dark"><?= esc($booking['destination']) ?></span></td>
                             <td>
                                 <?= esc($booking['customer_name'] ?? 'Unknown') ?>
+                            </td>
+                            <td class="consignee-cell">
+                                <span class="text-muted" style="font-size: 0.85rem;"><?= esc($booking['consignee'] ?? '-') ?></span>
                             </td>
                             <td><span class="text-dark fw-medium"><?= $booking['total_pieces'] ?></span></td>
                             <td>
@@ -70,7 +99,7 @@
                         <?php endforeach; ?>
                         <?php else: ?>
                         <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">No recent bookings found.</td>
+                            <td colspan="10" class="text-center py-5 text-muted">No recent bookings found.</td>
                         </tr>
                         <?php endif; ?>
                     </tbody>

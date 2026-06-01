@@ -1,6 +1,16 @@
 <?= $this->extend('layout') ?>
 <?= $this->section('content') ?>
 <div class="container-fluid mt-4">
+    <style>
+        #bookingsTable th, #bookingsTable td {
+            white-space: nowrap;
+        }
+        #bookingsTable td.consignee-cell {
+            white-space: normal !important;
+            word-break: break-word;
+            min-width: 150px;
+        }
+    </style>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>
              Manage <?= esc($company_name ?? '') ?> Bookings
@@ -24,21 +34,26 @@
                     <i class="fas fa-file-excel me-1"></i> Export Selected
                 </button>
             </div>
-            <table id="bookingsTable" class="table table-hover table-bordered w-100">
-                <thead class="table-light">
-                    <tr>
-                        <th width="3%"><input type="checkbox" id="selectAll" onclick="toggleAll()"></th>
-                        <th>AWB No.</th>
-                        <th>Date</th>
-                        <th>Origin → Dest</th>
-                        <th>Status</th>
-                        <th>Pieces</th>
-                        <th>Total Wt</th>
-                        <th>Amount</th>
-                        <th style="width: 140px;">Actions</th>
-                    </tr>
-                </thead>
-            </table>
+            <div class="table-responsive">
+                <table id="bookingsTable" class="table table-hover table-bordered w-100">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="3%"><input type="checkbox" id="selectAll" onclick="toggleAll()"></th>
+                            <th>AWB No.</th>
+                            <th>Docket No</th>
+                            <th>Date</th>
+                            <th>Origin → Dest</th>
+                            <th>Customer</th>
+                            <th>Consignee</th>
+                            <th>Status</th>
+                            <th>Pieces</th>
+                            <th>Total Wt</th>
+                            <th>Amount</th>
+                            <th style="width: 140px;">Actions</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -68,11 +83,34 @@ $(document).ready(function() {
                 return `<strong>${data}</strong>`;
             }
         },
-        { data: 'booking_date' },
         { 
+            data: 'docket_no',
+            render: function(data) {
+                if (data && data.indexOf(',') !== -1) {
+                    let parts = data.split(',');
+                    return `<span class="text-muted fw-semibold" style="font-size:0.85rem;" title="${data}">${parts[0].trim()}...</span>`;
+                }
+                return `<span class="text-muted fw-semibold" style="font-size:0.85rem;">${data || '-'}</span>`;
+            }
+        },
+        { data: 'booking_date' },
+        {
             data: null,
             render: function(data, type, row) {
-                return `${row.origin} → ${row.destination}`;
+                return `<span class="fw-medium text-dark">${row.origin || '-'}</span> <span class="text-muted mx-1">&rarr;</span> <span class="fw-medium text-dark">${row.destination || '-'}</span>`;
+            }
+        },
+        {
+            data: 'customer_name',
+            render: function(data) {
+                return `<span class="fw-semibold text-dark" style="font-size:0.85rem;">${data}</span>`;
+            }
+        },
+        {
+            data: 'consignee',
+            className: 'consignee-cell',
+            render: function(data) {
+                return `<span class="text-muted" style="font-size:0.85rem;">${data}</span>`;
             }
         },
         { 

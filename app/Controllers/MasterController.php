@@ -490,4 +490,71 @@ class MasterController extends BaseController
         $c = (new CompanyModel())->select('cgst_rate, sgst_rate, igst_rate')->find($this->companyId());
         return $this->response->setJSON($c ?: ['cgst_rate' => 0, 'sgst_rate' => 0, 'igst_rate' => 0]);
     }
+
+    public function generateDocket()
+    {
+        $userId = session()->get('user_id');
+        $companyId = $this->companyId();
+        if (!$userId || !$companyId) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized or no active company selected.']);
+        }
+
+        $excludeDockets = $this->request->getPost('exclude_dockets');
+        if (!is_array($excludeDockets)) {
+            $excludeDockets = [];
+        }
+        $excludeDockets = array_map('trim', $excludeDockets);
+
+        try {
+            $db = \Config\Database::connect();
+            
+            // Get the maximum sequential suffix in the company for generated dockets from BOTH docket_master and shipment_items
+            $rowMaster = $db->table('docket_master')
+                            ->select("MAX(CAST(SUBSTRING(docket_no, 5) AS UNSIGNED)) AS max_num", false)
+                            ->where('company_id', $companyId)
+                            ->where('docket_no LIKE', 'DCK-%')
+                            ->get()->getRowArray();
+            $maxMaster = (int) ($rowMaster['max_num'] ?? 0);
+
+            $rowItems = $db->table('shipment_items')
+                           ->select("MAX(CAST(SUBSTRING(shipment_items.docket_no, 5) AS UNSIGNED)) AS max_num", false)
+                           ->join('bookings', 'bookings.id = shipment_items.booking_id')
+                           ->where('bookings.company_id', $companyId)
+                           ->where('shipment_items.docket_no LIKE', 'DCK-%')
+                           ->get()->getRowArray();
+            $maxItems = (int) ($rowItems['max_num'] ?? 0);
+
+            $nextNumber = max($maxMaster, $maxItems) + 1;
+            $docketNo = 'DCK-' . $nextNumber;
+
+            // Handle manual override safety net (insure unique docket is selected across both tables and local exclusion list)
+            $checkExists = function($no) use ($db, $companyId, $excludeDockets) {
+                $existsInMaster = $db->table('docket_master')
+                                     ->where('company_id', $companyId)
+                                     ->where('docket_no', $no)
+                                     ->get()->getRowArray();
+                if ($existsInMaster) return true;
+
+                $existsInItems = $db->table('shipment_items')
+                                    ->join('bookings', 'bookings.id = shipment_items.booking_id')
+                                    ->where('bookings.company_id', $companyId)
+                                    ->where('shipment_items.docket_no', $no)
+                                    ->get()->getRowArray();
+                if ($existsInItems) return true;
+
+                return in_array($no, $excludeDockets);
+            };
+
+            while ($checkExists($docketNo)) {
+                $nextNumber++;
+                $docketNo = 'DCK-' . $nextNumber;
+            }
+
+            session_write_close();
+            return $this->response->setJSON(['status' => 'success', 'docket_no' => $docketNo]);
+        } catch (\Throwable $e) {
+            log_message('error', '[Generate Docket Error] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Failed to generate docket: ' . $e->getMessage()]);
+        }
+    }
 }

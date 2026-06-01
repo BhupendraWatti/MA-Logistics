@@ -99,15 +99,51 @@ class TrackingController extends BaseController
             }
         } catch (\Throwable $e) {
             log_message('error', '[Tracking saveUpdate error] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
-            return $this->response->setJSON(['status' => 'error', 'message' => $e->getMessage()]);
+            
+            $msg = $e->getMessage();
+            $isSystemError = ($e instanceof \CodeIgniter\Database\Exceptions\DatabaseException) ||
+                             ($e instanceof \mysqli_sql_exception) ||
+                             (strpos($msg, 'SQL') !== false) ||
+                             (strpos($msg, 'database') !== false) ||
+                             (strpos($msg, 'query') !== false) ||
+                             (strpos($msg, 'Connection') !== false);
+                             
+            $userMessage = $isSystemError ? 'A secure database or system error occurred. Technical logs have been updated safely.' : $msg;
+            return $this->response->setJSON(['status' => 'error', 'message' => $userMessage]);
         }
     }
 
     public function deleteUpdate($id)
     {
+        // Find the record first to get the booking_id
+        $trackingRecord = $this->trackingModel->find($id);
+        if (!$trackingRecord) {
+            session_write_close();
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Record not found']);
+        }
+
+        $bookingId = $trackingRecord['booking_id'] ?? null;
+
         // Pass 'true' as the second parameter to force a hard delete from the database
         // instead of a soft delete (which only updates the deleted_at column).
         if ($this->trackingModel->delete($id, true)) {
+            if ($bookingId) {
+                // Find the latest active tracking event remaining for this booking
+                $latestEvent = $this->trackingModel->where('booking_id', $bookingId)
+                                                   ->orderBy('event_date', 'DESC')
+                                                   ->orderBy('event_time', 'DESC')
+                                                   ->orderBy('id', 'DESC') // Serial ID serial check
+                                                   ->first();
+                
+                if ($latestEvent && !empty($latestEvent['status'])) {
+                    // Update main booking status to match the latest remaining tracking event
+                    $this->bookingModel->update($bookingId, ['status' => $latestEvent['status']]);
+                } else {
+                    // If no tracking history events are left, revert status back to 'Billed'
+                    $this->bookingModel->update($bookingId, ['status' => 'Billed']);
+                }
+            }
+
             session_write_close();
             return $this->response->setJSON(['status' => 'success', 'message' => 'Record deleted successfully']);
         }

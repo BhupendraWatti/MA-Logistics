@@ -76,17 +76,17 @@ public function index()
     foreach ($recent_bookings as &$b) {
         $db = \Config\Database::connect();
         
-        // Get first non-empty customer_name for this booking (latest saved row)
-        $shipRow = $db->table('shipment_items')
-                      ->select('customer_name')
-                      ->where('booking_id', $b['id'])
-                      ->where('customer_name !=', '')
-                      ->where('customer_name IS NOT NULL', null, false)
-                      ->orderBy('id', 'DESC')
-                      ->limit(1)
-                      ->get()->getRowArray();
+        // Fetch aggregated shipment details for docket, customer, and consignee
+        $shipDetails = $db->table('shipment_items')
+                          ->select('GROUP_CONCAT(DISTINCT docket_no SEPARATOR ", ") AS dockets,
+                                    GROUP_CONCAT(DISTINCT customer_name SEPARATOR ", ") AS customers,
+                                    GROUP_CONCAT(DISTINCT consignee SEPARATOR ", ") AS consignees')
+                          ->where('booking_id', $b['id'])
+                          ->get()->getRowArray();
 
-        $b['customer_name'] = !empty($shipRow['customer_name']) ? $shipRow['customer_name'] : 'Unknown';
+        $b['docket_no'] = !empty($shipDetails['dockets']) ? $shipDetails['dockets'] : '-';
+        $b['customer_name'] = !empty($shipDetails['customers']) ? $shipDetails['customers'] : 'Unknown';
+        $b['consignee'] = !empty($shipDetails['consignees']) ? $shipDetails['consignees'] : '-';
         
         // Sum chargeable weight
         $wgtRow = $db->table('shipment_items')
@@ -175,7 +175,19 @@ public function create()
         $awb_no = $this->request->getPost('awb_no');
         return redirect()->to('/logistics')->with('success', 'Booking created successfully! AWB: ' . $awb_no);
     } catch (\Throwable $e) {
-        return redirect()->back()->with('error', 'SYSTEM ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
+        log_message('error', '[Logistics Store Error] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+        
+        $msg = $e->getMessage();
+        $isSystemError = ($e instanceof \CodeIgniter\Database\Exceptions\DatabaseException) ||
+                         ($e instanceof \mysqli_sql_exception) ||
+                         (strpos($msg, 'SQL') !== false) ||
+                         (strpos($msg, 'database') !== false) ||
+                         (strpos($msg, 'query') !== false) ||
+                         (strpos($msg, 'Access denied') !== false) ||
+                         (strpos($msg, 'Connection') !== false);
+                         
+        $userMessage = $isSystemError ? 'A secure database or system error occurred. Technical logs have been updated safely.' : $msg;
+        return redirect()->back()->with('error', $userMessage);
     }
   }
 
@@ -272,7 +284,19 @@ public function edit($id)
         $awb_no = $this->request->getPost('awb_no');
         return redirect()->to('/logistics')->with('success', 'Booking updated successfully! AWB: ' . $awb_no);
     } catch (\Throwable $e) {
-        return redirect()->back()->with('error', 'SYSTEM ERROR: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
+        log_message('error', '[Logistics Update Error] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+        
+        $msg = $e->getMessage();
+        $isSystemError = ($e instanceof \CodeIgniter\Database\Exceptions\DatabaseException) ||
+                         ($e instanceof \mysqli_sql_exception) ||
+                         (strpos($msg, 'SQL') !== false) ||
+                         (strpos($msg, 'database') !== false) ||
+                         (strpos($msg, 'query') !== false) ||
+                         (strpos($msg, 'Access denied') !== false) ||
+                         (strpos($msg, 'Connection') !== false);
+                         
+        $userMessage = $isSystemError ? 'A secure database or system error occurred. Technical logs have been updated safely.' : $msg;
+        return redirect()->back()->with('error', $userMessage);
     }
   }
 
@@ -523,6 +547,18 @@ public function companySelection()
         $row['booking_date'] = date('d-M-Y', strtotime($row['booking_date'])) . ' ' . $time;
         $row['can_edit'] = $canEdit;
         $row['can_delete'] = $canDelete;
+
+        // Fetch aggregated shipment details for docket, customer, and consignee
+        $shipDetails = $db->table('shipment_items')
+                          ->select('GROUP_CONCAT(DISTINCT docket_no SEPARATOR ", ") AS dockets,
+                                    GROUP_CONCAT(DISTINCT customer_name SEPARATOR ", ") AS customers,
+                                    GROUP_CONCAT(DISTINCT consignee SEPARATOR ", ") AS consignees')
+                          ->where('booking_id', $row['id'])
+                          ->get()->getRowArray();
+
+        $row['docket_no'] = !empty($shipDetails['dockets']) ? $shipDetails['dockets'] : '-';
+        $row['customer_name'] = !empty($shipDetails['customers']) ? $shipDetails['customers'] : 'Unknown';
+        $row['consignee'] = !empty($shipDetails['consignees']) ? $shipDetails['consignees'] : '-';
     }
 
     session_write_close(); // Prevent database session write shutdown errors overriding 200 OK status
@@ -698,10 +734,21 @@ public function exportPdf($id)
         $pdf->Output($pdfFileName, 'D');
         exit;
     } catch (\Exception $e) {
+        log_message('error', '[PDF Export Error] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
         if (strpos($e->getMessage(), 'alpha channel') !== false || strpos($e->getMessage(), 'Imagick or GD') !== false) {
             return redirect()->back()->with('error', 'Your server does not support transparent PNG signatures. Please go to Company Settings and upload a JPG image or draw your signature manually.');
         }
-        return redirect()->back()->with('error', 'PDF Generation Error: ' . $e->getMessage());
+        
+        $msg = $e->getMessage();
+        $isSystemError = ($e instanceof \CodeIgniter\Database\Exceptions\DatabaseException) ||
+                         ($e instanceof \mysqli_sql_exception) ||
+                         (strpos($msg, 'SQL') !== false) ||
+                         (strpos($msg, 'database') !== false) ||
+                         (strpos($msg, 'query') !== false) ||
+                         (strpos($msg, 'Connection') !== false);
+                         
+        $userMessage = $isSystemError ? 'A secure database or system error occurred. Technical logs have been updated safely.' : 'PDF Generation failed: ' . $msg;
+        return redirect()->back()->with('error', $userMessage);
     }
 }
 

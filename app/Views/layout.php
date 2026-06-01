@@ -50,7 +50,7 @@
                 <!-- Locked Sidebar State -->
                 <div class="d-flex flex-column h-100">
                     <div class="sidebar-nav text-muted px-3 mt-4" style="pointer-events: none; opacity: 0.6;">
-                        <h6 class="text-uppercase fw-bold text-muted mb-4" style="font-size:0.75rem; letter-spacing:1px;">Modules</h6>
+                        <h6 class="text-uppercase fw-bold text-muted mb-4" style="font-size:0.75rem; letter-spacing:1px;">Options</h6>
                         <div class="mb-4"><i class="fas fa-th-large me-3"></i> Dashboard</div>
                         <div class="mb-4"><i class="fas fa-truck me-3"></i> Shipment Entry</div>
                         <div class="mb-4"><i class="fas fa-database me-3"></i> Masters</div>
@@ -60,7 +60,7 @@
                     
                     <div class="mt-auto mb-5 text-center px-4" style="color: #64748b;">
                         <i class="fas fa-lock fa-2x mb-3 text-secondary opacity-50"></i>
-                        <p style="font-size: 0.85rem; line-height: 1.4;" class="mb-0">Select a workspace to<br>unlock modules</p>
+                        <p style="font-size: 0.85rem; line-height: 1.4;" class="mb-0">Select a Company to<br>unlock Options</p>
                     </div>
                 </div>
                 <?php else: ?>
@@ -205,13 +205,13 @@
 
         // Flash Messages via SweetAlert
         <?php if ($success): ?>
-            ERPUtils.showSuccess('Success!', '<?= esc(addslashes($success)) ?>');
+            ERPUtils.showSuccess('Success!', <?= json_encode($success) ?>);
         <?php endif; ?>
         <?php if ($error): ?>
-            ERPUtils.showError('Error!', '<?= esc(addslashes($error)) ?>');
+            ERPUtils.showError('Error!', <?= json_encode($error) ?>);
         <?php endif; ?>
         <?php if ($info): ?>
-            Swal.fire({icon: 'info', title: 'Information', text: '<?= esc(addslashes($info)) ?>', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000});
+            Swal.fire({icon: 'info', title: 'Information', html: <?= json_encode($info) ?>, toast: true, position: 'top-end', showConfirmButton: false, timer: 3000});
         <?php endif; ?>
     </script>
     

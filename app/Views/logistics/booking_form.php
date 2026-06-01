@@ -486,7 +486,18 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             </div>
             <div class="col-md-3">
                 <label class="fs-8 text-muted fw-semibold">Docket No / Ref</label>
-                <input type="text" id="entry_docket" class="form-control form-control-sm">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text bg-light border-end-0 py-0" style="padding-left: 0.5rem; padding-right: 0.5rem;">
+                        <div class="form-check form-switch mb-0 d-flex align-items-center" style="min-height: auto;">
+                            <input class="form-check-input me-1" type="checkbox" id="check_generate_docket" style="width: 2em; height: 1em; cursor: pointer; margin-top: 0;">
+                            <label class="form-check-label fs-9 text-primary fw-bold mb-0" for="check_generate_docket" style="cursor: pointer; font-size: 0.7rem;">Auto</label>
+                        </div>
+                    </div>
+                    <input type="text" id="entry_docket" class="form-control form-control-sm shadow-none" placeholder="Enter Docket No manually">
+                    <button type="button" id="btn_generate_docket" class="btn btn-outline-secondary fw-bold" title="Generate next sequential docket" disabled>
+                        <i class="fas fa-magic me-1"></i> Gen
+                    </button>
+                </div>
             </div>
             <div class="col-md-3">
                 <label class="fs-8 text-muted fw-semibold">Invoice No</label>
@@ -674,6 +685,53 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             });
             renderGrid();
         }
+        
+        // Auto-Gen Switch Listener
+        $('#check_generate_docket').on('change', updateDocketAutoState);
+
+        // AJAX Docket Generation Event Listener
+        $('#btn_generate_docket').on('click', function() {
+            const editIndex = parseInt($('#entry_edit_index').val());
+            const originalDocket = editIndex >= 0 ? (items[editIndex].docket || '') : '';
+
+            if (originalDocket !== '') {
+                ERPUtils.showWarning("Duplicate Generation Blocked", "A docket number is already set for this item. Duplicate generation is prevented.");
+                return;
+            }
+
+            // Collect active docket numbers in other unsaved grid items
+            let activeDockets = [];
+            items.forEach(function(item, idx) {
+                if (idx !== editIndex && item.docket) {
+                    activeDockets.push(item.docket.trim());
+                }
+            });
+
+            // Disable button prior to request to preserve global ajaxSetup CSRF injection
+            $('#btn_generate_docket').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+            $.ajax({
+                url: BASE_URL + 'masters/dockets/generate',
+                type: 'POST',
+                data: { exclude_dockets: activeDockets },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#entry_docket').val(response.docket_no);
+                        ERPUtils.showSuccess("Success", "Docket number generated: " + response.docket_no);
+                    } else {
+                        ERPUtils.showError("Error", response.message || "Failed to generate docket.");
+                    }
+                },
+                error: function(xhr, status, error) {
+                    ERPUtils.showError("Error", "Server error during docket generation.");
+                },
+                complete: function() {
+                    $('#btn_generate_docket').prop('disabled', false).html('<i class="fas fa-magic me-1"></i> Gen');
+                }
+            });
+        });
+
         calcTotals();
     });
 
@@ -732,6 +790,17 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         }
     }
 
+    function updateDocketAutoState() {
+        const isAuto = $('#check_generate_docket').is(':checked');
+        if (isAuto) {
+            $('#entry_docket').prop('readonly', true).attr('placeholder', 'Click Gen to Auto-Generate');
+            $('#btn_generate_docket').prop('disabled', false).removeClass('btn-outline-secondary').addClass('btn-outline-primary');
+        } else {
+            $('#entry_docket').prop('readonly', false).attr('placeholder', 'Enter Docket No manually');
+            $('#btn_generate_docket').prop('disabled', true).removeClass('btn-outline-primary').addClass('btn-outline-secondary');
+        }
+    }
+
     function openItemModal(index) {
         $('#entry_edit_index').val(index);
         
@@ -767,6 +836,9 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             }
             
             $('#entry_docket').val(prevDocket);
+            const isAuto = prevDocket.indexOf('DCK-') === 0;
+            $('#check_generate_docket').prop('checked', isAuto).prop('disabled', false);
+            updateDocketAutoState();
             $('#entry_invoice').val('');
             $('#entry_part_no').val(prevPartNo);
             $('#entry_invoice_date').val(prevInvoiceDate);
@@ -787,7 +859,16 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             $('#entry_customer').val(item.customer);
             $('#entry_bill_to').val(item.bill_to);
             $('#entry_consignee').val(item.consignee);
-            $('#entry_docket').val(item.docket);
+            const itemDocket = item.docket || '';
+            $('#entry_docket').val(itemDocket);
+            const isAuto = itemDocket.indexOf('DCK-') === 0;
+            $('#check_generate_docket').prop('checked', isAuto);
+            if (isAuto && itemDocket !== '') {
+                $('#check_generate_docket').prop('disabled', true);
+            } else {
+                $('#check_generate_docket').prop('disabled', false);
+            }
+            updateDocketAutoState();
             $('#entry_invoice').val(item.invoice_no);
             $('#entry_part_no').val(item.part_no || '');
             $('#entry_invoice_date').val(item.invoice_date || '');

@@ -27,6 +27,17 @@ class BookingService
     {
         $this->validateBasicData($postData);
 
+        // Enforce AWB uniqueness for the company
+        $awbNo = trim($postData['awb_no'] ?? '');
+        if (!empty($awbNo)) {
+            $existing = $this->bookingModel->where('awb_no', $awbNo)
+                                           ->where('company_id', $companyId)
+                                           ->first();
+            if ($existing) {
+                throw new Exception("Duplicate AWB Number: A booking with AWB <b>{$awbNo}</b> already exists for this company.");
+            }
+        }
+
         $this->db->transStart();
 
         // Handle Base64 Signature Canvas
@@ -95,7 +106,7 @@ class BookingService
 
         $bookingId = $this->bookingModel->getInsertID();
 
-        $this->processShipments($bookingId, $postData['items'] ?? []);
+        $this->processShipments($bookingId, $postData['items'] ?? [], $companyId);
         $this->processSales($bookingId, $postData);
 
         $this->db->transComplete();
@@ -111,6 +122,17 @@ class BookingService
     {
         $this->validateBasicData($postData);
 
+        // Enforce AWB uniqueness for the company (excluding this booking)
+        $awbNo = trim($postData['awb_no'] ?? '');
+        if (!empty($awbNo)) {
+            $existing = $this->bookingModel->where('awb_no', $awbNo)
+                                           ->where('company_id', $companyId)
+                                           ->where('id !=', $id)
+                                           ->first();
+            if ($existing) {
+                throw new Exception("Duplicate AWB Number: Another booking with AWB <b>{$awbNo}</b> already exists for this company.");
+            }
+        }
 
         $this->db->transStart();
 
@@ -227,6 +249,34 @@ class BookingService
         }
         // --- NEW JSON MIGRATION BLOCK END ---
         
+        // Enforce Docket number uniqueness inside submitted list and against DB
+        $submittedDockets = [];
+        foreach ($items as $item) {
+            $docketNo = trim($item['docket_no'] ?? '');
+            if (!empty($docketNo)) {
+                if (in_array($docketNo, $submittedDockets)) {
+                    throw new Exception("Duplicate Docket Number in form: Docket <b>{$docketNo}</b> is specified multiple times in this booking.");
+                }
+                $submittedDockets[] = $docketNo;
+
+                // Validate Docket Uniqueness in Database for this Company
+                $builder = $this->shipmentModel
+                    ->select('shipment_items.docket_no')
+                    ->join('bookings', 'bookings.id = shipment_items.booking_id')
+                    ->where('bookings.company_id', $companyId)
+                    ->where('shipment_items.docket_no', $docketNo);
+                
+                if (!empty($item['id'])) {
+                    $builder->where('shipment_items.id !=', (int)$item['id']);
+                }
+                
+                $existingDocket = $builder->first();
+                if ($existingDocket) {
+                    throw new Exception("Duplicate Docket Number: Docket <b>{$docketNo}</b> is already registered in the system under another booking.");
+                }
+            }
+        }
+        
         $submittedIds = [];
 
         foreach ($items as $item) {
@@ -279,6 +329,42 @@ class BookingService
 
                 if ($shipmentData['final_chargeable_weight'] != $shipmentData['calculated_chargeable_weight']) {
                     $this->logAudit('shipment_items', $recordId, 'chargeable_weight_override', $shipmentData['calculated_chargeable_weight'], $shipmentData['final_chargeable_weight']);
+                }
+
+                // Lazy-Association Hook: Link dynamic docket_master record to saved shipment_item_id and booking_id
+                if (!empty($shipmentData['docket_no'])) {
+                    // 1. Unlink any old docket master records for this shipment item if they don't match the current docket_no
+                    $this->db->table('docket_master')
+                       ->where('shipment_item_id', $recordId)
+                       ->where('docket_no !=', $shipmentData['docket_no'])
+                       ->update([
+                           'shipment_item_id' => null,
+                           'booking_id'       => null
+                       ]);
+
+                    // 2. Link or create the current docket in docket_master for this company
+                    $exists = $this->db->table('docket_master')
+                                       ->where('company_id', $companyId)
+                                       ->where('docket_no', $shipmentData['docket_no'])
+                                       ->get()->getRowArray();
+
+                    if ($exists) {
+                        $this->db->table('docket_master')
+                           ->where('id', $exists['id'])
+                           ->update([
+                               'shipment_item_id' => $recordId,
+                               'booking_id'       => $id
+                           ]);
+                    } else {
+                        $this->db->table('docket_master')->insert([
+                            'docket_no'        => $shipmentData['docket_no'],
+                            'company_id'       => $companyId,
+                            'booking_id'       => $id,
+                            'shipment_item_id' => $recordId,
+                            'created_at'       => date('Y-m-d H:i:s'),
+                            'updated_at'       => date('Y-m-d H:i:s')
+                        ]);
+                    }
                 }
         }
 
@@ -333,7 +419,7 @@ class BookingService
         return true;
     }
 
-    private function processShipments($bookingId, array $items)
+    private function processShipments($bookingId, array $items, int $companyId)
     {
         // --- NEW JSON MIGRATION BLOCK START ---
         $postData = service('request')->getPost();
@@ -383,6 +469,30 @@ class BookingService
             throw new Exception("Items must be an array");
         }
 
+        // Enforce Docket number uniqueness inside submitted list and against DB
+        $submittedDockets = [];
+        foreach ($items as $item) {
+            $docketNo = trim($item['docket_no'] ?? '');
+            if (!empty($docketNo)) {
+                if (in_array($docketNo, $submittedDockets)) {
+                    throw new Exception("Duplicate Docket Number in form: Docket <b>{$docketNo}</b> is specified multiple times in this booking.");
+                }
+                $submittedDockets[] = $docketNo;
+
+                // Validate Docket Uniqueness in Database for this Company
+                $existingDocket = $this->shipmentModel
+                    ->select('shipment_items.docket_no')
+                    ->join('bookings', 'bookings.id = shipment_items.booking_id')
+                    ->where('bookings.company_id', $companyId)
+                    ->where('shipment_items.docket_no', $docketNo)
+                    ->first();
+                
+                if ($existingDocket) {
+                    throw new Exception("Duplicate Docket Number: Docket <b>{$docketNo}</b> is already registered in the system under another booking.");
+                }
+            }
+        }
+
         foreach ($items as $item) {
             if (empty($item['customer_name'])) {
                 throw new \Exception('Customer Name is required for all shipment items.');
@@ -423,6 +533,42 @@ class BookingService
 
                 if ($shipmentData['final_chargeable_weight'] != $shipmentData['calculated_chargeable_weight']) {
                     $this->logAudit('shipment_items', $recordId, 'chargeable_weight_override', $shipmentData['calculated_chargeable_weight'], $shipmentData['final_chargeable_weight']);
+                }
+
+                // Lazy-Association Hook: Link dynamic docket_master record to saved shipment_item_id and booking_id
+                if (!empty($shipmentData['docket_no'])) {
+                    // 1. Unlink any old docket master records for this shipment item if they don't match the current docket_no
+                    $this->db->table('docket_master')
+                       ->where('shipment_item_id', $recordId)
+                       ->where('docket_no !=', $shipmentData['docket_no'])
+                       ->update([
+                           'shipment_item_id' => null,
+                           'booking_id'       => null
+                       ]);
+
+                    // 2. Link or create the current docket in docket_master for this company
+                    $exists = $this->db->table('docket_master')
+                                       ->where('company_id', $companyId)
+                                       ->where('docket_no', $shipmentData['docket_no'])
+                                       ->get()->getRowArray();
+
+                    if ($exists) {
+                        $this->db->table('docket_master')
+                           ->where('id', $exists['id'])
+                           ->update([
+                               'shipment_item_id' => $recordId,
+                               'booking_id'       => $bookingId
+                           ]);
+                    } else {
+                        $this->db->table('docket_master')->insert([
+                            'docket_no'        => $shipmentData['docket_no'],
+                            'company_id'       => $companyId,
+                            'booking_id'       => $bookingId,
+                            'shipment_item_id' => $recordId,
+                            'created_at'       => date('Y-m-d H:i:s'),
+                            'updated_at'       => date('Y-m-d H:i:s')
+                        ]);
+                    }
                 }
         }
     }

@@ -28,7 +28,7 @@ const ERPUtils = {
         return Swal.fire({
             icon: 'success',
             title: title,
-            text: text,
+            html: text,
             timer: 2000,
             showConfirmButton: false,
             toast: true,
@@ -43,7 +43,7 @@ const ERPUtils = {
         return Swal.fire({
             icon: 'error',
             title: title,
-            text: text,
+            html: text,
             confirmButtonColor: '#d33'
         });
     },
@@ -55,7 +55,7 @@ const ERPUtils = {
         return Swal.fire({
             icon: 'warning',
             title: title,
-            text: text,
+            html: text,
             confirmButtonColor: '#f59e0b'
         });
     },
