@@ -168,11 +168,11 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 </div>
                 <div class="col-md-4">
                     <label class="form-label text-muted fs-7 fw-semibold">BILL TO <span class="text-danger">*</span></label>
-                    <textarea id="global_bill_to" class="form-control form-control-sm shadow-none" rows="2" required></textarea>
+                    <textarea id="global_bill_to" class="form-control form-control-sm shadow-none" rows="2" maxlength="250" required></textarea>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label text-muted fs-7 fw-semibold">CONSIGNEE <span class="text-danger">*</span></label>
-                    <textarea id="global_consignee" class="form-control form-control-sm shadow-none" rows="2" required></textarea>
+                    <textarea id="global_consignee" class="form-control form-control-sm shadow-none" rows="2" maxlength="250" required></textarea>
                 </div>
             </div>
 
@@ -478,11 +478,11 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             </div>
             <div class="col-md-3">
                 <label class="fs-8 text-muted fw-semibold">Bill To</label>
-                <input type="text" id="entry_bill_to" class="form-control form-control-sm">
+                <input type="text" id="entry_bill_to" class="form-control form-control-sm" maxlength="250">
             </div>
             <div class="col-md-3">
                 <label class="fs-8 text-muted fw-semibold">Consignee</label>
-                <input type="text" id="entry_consignee" class="form-control form-control-sm">
+                <input type="text" id="entry_consignee" class="form-control form-control-sm" maxlength="250">
             </div>
             <div class="col-md-3">
                 <label class="fs-8 text-muted fw-semibold">Docket No / Ref</label>
@@ -585,6 +585,36 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     let manifestDataTable;
 
     $(document).ready(function() {
+        // Dynamic visual character counters for fields with maxlength attribute
+        $('[maxlength]').each(function() {
+            const $field = $(this);
+            const maxLength = parseInt($field.attr('maxlength'));
+            
+            // Create counter element
+            const $counter = $('<div class="char-counter text-muted text-end mt-1" style="font-size: 0.75rem; font-weight: 600; min-height: 18px;"></div>');
+            $field.after($counter);
+            
+            function updateCounter() {
+                const currentLength = $field.val().length;
+                const remaining = maxLength - currentLength;
+                
+                $counter.text(`${remaining} characters remaining / limit: ${maxLength}`);
+                
+                if (remaining <= 20) {
+                    $counter.removeClass('text-muted text-warning').addClass('text-danger');
+                } else if (remaining <= 50) {
+                    $counter.removeClass('text-muted text-danger').addClass('text-warning');
+                } else {
+                    $counter.removeClass('text-danger text-warning').addClass('text-muted');
+                }
+            }
+            
+            $field.on('input propertychange change keyup paste', updateCounter);
+            // Re-sync on modal openings or value bindings
+            $field.on('sync-counter', updateCounter);
+            updateCounter();
+        });
+
         // Initialize DataTable for Grid
         manifestDataTable = ERPUtils.initDataTable('#manifestTable', null, [
             { 
@@ -895,6 +925,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             $('#entry_handling').val(item.handling_charges);
             $('#entry_service').val(item.service_charges);
         }
+        $('[maxlength]').trigger('sync-counter');
         
         var modal = bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('itemModal'));
         modal.show();

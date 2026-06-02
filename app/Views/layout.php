@@ -81,6 +81,10 @@
                     <i class="fas fa-truck"></i> Shipment Entry
                 </a>
                 <?php endif; ?>
+
+                <a href="<?= base_url('logistics/manage') ?>" class="sidebar-nav-item <?= ($seg2 == 'manage') ? 'active' : '' ?> mt-2">
+                    <i class="fas fa-list-ul"></i> All Bookings
+                </a>
                 
                 <?php if (session()->get('role') === 'admin'): ?>
                 <!-- Masters Collapse -->
@@ -101,10 +105,6 @@
                         </div>
                     </div>
                 </div>
-
-                <a href="<?= base_url('logistics/manage') ?>" class="sidebar-nav-item <?= ($seg2 == 'manage') ? 'active' : '' ?> mt-2">
-                    <i class="fas fa-list-ul"></i> All Bookings
-                </a>
                 
                 <!-- Hiding Reports for Demo
                 <a href="<?= base_url('logistics/export') ?>" class="sidebar-nav-item <?= ($seg2 == 'export') ? 'active' : '' ?>">

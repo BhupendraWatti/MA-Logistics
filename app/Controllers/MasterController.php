@@ -499,6 +499,9 @@ class MasterController extends BaseController
             return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized or no active company selected.']);
         }
 
+        $branchId = session()->get('branch_id') ?? 1; // Default to branch 1 if not set yet
+        $year = date('Y');
+
         $excludeDockets = $this->request->getPost('exclude_dockets');
         if (!is_array($excludeDockets)) {
             $excludeDockets = [];
@@ -507,27 +510,60 @@ class MasterController extends BaseController
 
         try {
             $db = \Config\Database::connect();
-            
-            // Get the maximum sequential suffix in the company for generated dockets from BOTH docket_master and shipment_items
-            $rowMaster = $db->table('docket_master')
-                            ->select("MAX(CAST(SUBSTRING(docket_no, 5) AS UNSIGNED)) AS max_num", false)
-                            ->where('company_id', $companyId)
-                            ->where('docket_no LIKE', 'DCK-%')
-                            ->get()->getRowArray();
-            $maxMaster = (int) ($rowMaster['max_num'] ?? 0);
+            $db->transStart(); // Start atomic transaction
 
-            $rowItems = $db->table('shipment_items')
-                           ->select("MAX(CAST(SUBSTRING(shipment_items.docket_no, 5) AS UNSIGNED)) AS max_num", false)
-                           ->join('bookings', 'bookings.id = shipment_items.booking_id')
-                           ->where('bookings.company_id', $companyId)
-                           ->where('shipment_items.docket_no LIKE', 'DCK-%')
-                           ->get()->getRowArray();
-            $maxItems = (int) ($rowItems['max_num'] ?? 0);
+            // Locks sequence row for exclusive update
+            $seq = $db->table('sys_sequences')
+                      ->where('company_id', $companyId)
+                      ->where('branch_id', $branchId)
+                      ->where('sequence_type', 'docket')
+                      ->where('suffix_year', $year)
+                      ->select('current_val, prefix')
+                      ->getForShareOrUpdate(true)
+                      ->getRowArray();
 
-            $nextNumber = max($maxMaster, $maxItems) + 1;
-            $docketNo = 'DCK-' . $nextNumber;
+            if (!$seq) {
+                // Initialize sequence row using max from DB or default
+                $rowMaster = $db->table('docket_master')
+                                ->select("MAX(CAST(SUBSTRING(docket_no, 5) AS UNSIGNED)) AS max_num", false)
+                                ->where('company_id', $companyId)
+                                ->where('docket_no LIKE', 'DCK-%')
+                                ->get()->getRowArray();
+                $maxMaster = (int) ($rowMaster['max_num'] ?? 0);
 
-            // Handle manual override safety net (insure unique docket is selected across both tables and local exclusion list)
+                $rowItems = $db->table('shipment_items')
+                               ->select("MAX(CAST(SUBSTRING(shipment_items.docket_no, 5) AS UNSIGNED)) AS max_num", false)
+                               ->join('bookings', 'bookings.id = shipment_items.booking_id')
+                               ->where('bookings.company_id', $companyId)
+                               ->where('shipment_items.docket_no LIKE', 'DCK-%')
+                               ->get()->getRowArray();
+                $maxItems = (int) ($rowItems['max_num'] ?? 0);
+
+                $startVal = max($maxMaster, $maxItems, 10000);
+                $nextVal = $startVal + 1;
+
+                $db->table('sys_sequences')->insert([
+                    'company_id'    => $companyId,
+                    'branch_id'     => $branchId,
+                    'sequence_type' => 'docket',
+                    'current_val'   => $nextVal,
+                    'prefix'        => 'DCK-',
+                    'suffix_year'   => $year
+                ]);
+            } else {
+                $nextVal = intval($seq['current_val']) + 1;
+                
+                $db->table('sys_sequences')
+                   ->where('company_id', $companyId)
+                   ->where('branch_id', $branchId)
+                   ->where('sequence_type', 'docket')
+                   ->where('suffix_year', $year)
+                   ->update(['current_val' => $nextVal]);
+            }
+
+            $docketNo = 'DCK-' . $nextVal;
+
+            // Extra collision check against exclude list or override checks
             $checkExists = function($no) use ($db, $companyId, $excludeDockets) {
                 $existsInMaster = $db->table('docket_master')
                                      ->where('company_id', $companyId)
@@ -546,14 +582,29 @@ class MasterController extends BaseController
             };
 
             while ($checkExists($docketNo)) {
-                $nextNumber++;
-                $docketNo = 'DCK-' . $nextNumber;
+                $nextVal++;
+                $docketNo = 'DCK-' . $nextVal;
+            }
+
+            // Sync updated value back to sequence table
+            $db->table('sys_sequences')
+               ->where('company_id', $companyId)
+               ->where('branch_id', $branchId)
+               ->where('sequence_type', 'docket')
+               ->where('suffix_year', $year)
+               ->update(['current_val' => $nextVal]);
+
+            $db->transComplete();
+
+            if ($db->transStatus() === FALSE) {
+                throw new \RuntimeException("Transaction failed: Concurrency lock timeout.");
             }
 
             session_write_close();
             return $this->response->setJSON(['status' => 'success', 'docket_no' => $docketNo]);
         } catch (\Throwable $e) {
             log_message('error', '[Generate Docket Error] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+            session_write_close();
             return $this->response->setJSON(['status' => 'error', 'message' => 'Failed to generate docket: ' . $e->getMessage()]);
         }
     }

@@ -46,12 +46,31 @@ class AuthFilter implements FilterInterface
         
         // EDIT/DELETE - Check can_edit/can_delete
         if (preg_match('/logistics\/(view|edit|delete)\/(\d+)/', $uri, $matches)) {
-            if ($matches[1] === 'edit' && !($permissions['can_edit'] ?? 0)) {
+            $bookingId = intval($matches[2]);
+            $action = $matches[1];
+
+            if ($action === 'edit' && !($permissions['can_edit'] ?? 0)) {
                 return redirect()->to('/logistics')->with('error', 'Edit permission denied!');
             }
-            if ($matches[1] === 'delete' && !($permissions['can_delete'] ?? 0)) {
+            if ($action === 'delete' && !($permissions['can_delete'] ?? 0)) {
                 return redirect()->to('/logistics')->with('error', 'Delete permission denied!');
             }
+
+            // Perform branch-level row isolation checks for non-admins (TEMPORARILY SUSPENDED)
+            /*
+            $userRole = session()->get('role');
+            if ($userRole !== 'admin') {
+                $db = \Config\Database::connect();
+                $booking = $db->table('bookings')->where('id', $bookingId)->select('branch_id')->get()->getRowArray();
+                if ($booking) {
+                    $userBranchId = session()->get('branch_id') ?? 1;
+                    $bookingBranchId = intval($booking['branch_id'] ?? 1);
+                    if ($bookingBranchId !== intval($userBranchId)) {
+                        return redirect()->to('/logistics')->with('error', 'Access Denied: You cannot modify bookings originating outside your branch.');
+                    }
+                }
+            }
+            */
         }
     }
 

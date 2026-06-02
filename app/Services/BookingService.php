@@ -68,6 +68,7 @@ class BookingService
         $bookingData = [
             'awb_no' => $postData['awb_no'] ?? '',
             'company_id' => $companyId,
+            'branch_id' => session()->get('branch_id') ?? 1, // Store the branch_id context from session
             'booking_date' => $postData['booking_date'] ?? null,
             'origin' => $postData['origin'] ?? '',
             'destination' => $postData['destination'] ?? '',
@@ -249,30 +250,21 @@ class BookingService
         }
         // --- NEW JSON MIGRATION BLOCK END ---
         
-        // Enforce Docket number uniqueness inside submitted list and against DB
-        $submittedDockets = [];
+        // Enforce Docket number uniqueness against other bookings in the DB
         foreach ($items as $item) {
             $docketNo = trim($item['docket_no'] ?? '');
             if (!empty($docketNo)) {
-                if (in_array($docketNo, $submittedDockets)) {
-                    throw new Exception("Duplicate Docket Number in form: Docket <b>{$docketNo}</b> is specified multiple times in this booking.");
-                }
-                $submittedDockets[] = $docketNo;
-
-                // Validate Docket Uniqueness in Database for this Company
-                $builder = $this->shipmentModel
+                // Validate Docket Uniqueness in Database (only match bookings belonging to a DIFFERENT booking ID)
+                $existingDocket = $this->shipmentModel
                     ->select('shipment_items.docket_no')
                     ->join('bookings', 'bookings.id = shipment_items.booking_id')
                     ->where('bookings.company_id', $companyId)
-                    ->where('shipment_items.docket_no', $docketNo);
+                    ->where('shipment_items.docket_no', $docketNo)
+                    ->where('bookings.id !=', $id) // Exclude current booking being updated
+                    ->first();
                 
-                if (!empty($item['id'])) {
-                    $builder->where('shipment_items.id !=', (int)$item['id']);
-                }
-                
-                $existingDocket = $builder->first();
                 if ($existingDocket) {
-                    throw new Exception("Duplicate Docket Number: Docket <b>{$docketNo}</b> is already registered in the system under another booking.");
+                    throw new Exception("Duplicate Docket Number: Docket <b>{$docketNo}</b> is already registered under another booking.");
                 }
             }
         }
@@ -469,26 +461,21 @@ class BookingService
             throw new Exception("Items must be an array");
         }
 
-        // Enforce Docket number uniqueness inside submitted list and against DB
-        $submittedDockets = [];
+        // Enforce Docket number uniqueness against other bookings in the DB
         foreach ($items as $item) {
             $docketNo = trim($item['docket_no'] ?? '');
             if (!empty($docketNo)) {
-                if (in_array($docketNo, $submittedDockets)) {
-                    throw new Exception("Duplicate Docket Number in form: Docket <b>{$docketNo}</b> is specified multiple times in this booking.");
-                }
-                $submittedDockets[] = $docketNo;
-
-                // Validate Docket Uniqueness in Database for this Company
+                // Validate Docket Uniqueness in Database (only match bookings belonging to a DIFFERENT booking ID)
                 $existingDocket = $this->shipmentModel
                     ->select('shipment_items.docket_no')
                     ->join('bookings', 'bookings.id = shipment_items.booking_id')
                     ->where('bookings.company_id', $companyId)
                     ->where('shipment_items.docket_no', $docketNo)
+                    ->where('bookings.id !=', $bookingId) // Exclude current booking being created
                     ->first();
                 
                 if ($existingDocket) {
-                    throw new Exception("Duplicate Docket Number: Docket <b>{$docketNo}</b> is already registered in the system under another booking.");
+                    throw new Exception("Duplicate Docket Number: Docket <b>{$docketNo}</b> is already registered under another booking.");
                 }
             }
         }

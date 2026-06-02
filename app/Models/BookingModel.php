@@ -8,7 +8,7 @@ class BookingModel extends Model
     protected $table = 'bookings';
     protected $primaryKey = 'id';
     protected $allowedFields = [
-        'awb_no', 'company_id', 'booking_date', 'origin', 'destination', 
+        'awb_no', 'company_id', 'branch_id', 'booking_date', 'origin', 'destination', 
         'mode_transport', 'material_type', 'material_details', 
         'material_category', 'status', 'transporter_name', 'transporter_mobile', 
         'driver_name', 'driver_mobile', 'driver_license_no', 
@@ -20,12 +20,21 @@ class BookingModel extends Model
 
     public function searchByCompany($companyId, $searchValue)
     {
-        return $this->select('bookings.*, companies.name as company_name, 
+        $query = $this->select('bookings.*, companies.name as company_name, 
            COALESCE(SUM(shipment_items.final_chargeable_weight), 0) as total_chargeable_weight')
         ->join('companies', 'companies.id = bookings.company_id')
         ->join('shipment_items', 'shipment_items.booking_id = bookings.id', 'left')
-        ->where('bookings.company_id', $companyId)
-        ->groupStart()
+        ->where('bookings.company_id', $companyId);
+
+        $userRole = session()->get('role');
+        /* Branch filter temporarily suspended
+        if ($userRole !== 'admin') {
+            $branchId = session()->get('branch_id') ?? 1;
+            $query = $query->where('bookings.branch_id', $branchId);
+        }
+        */
+
+        return $query->groupStart()
         ->like('bookings.awb_no', $searchValue)
         ->orLike('shipment_items.docket_no', $searchValue)
         ->groupEnd()
@@ -70,10 +79,19 @@ class BookingModel extends Model
 
    public function getCompanyBookings($companyId, $limit = 5)
    {
-    return $this->where('company_id', $companyId)
-    ->orderBy('id', 'DESC')
-    ->limit($limit)
-    ->findAll();
+       $query = $this->where('company_id', $companyId);
+
+       $userRole = session()->get('role');
+       /* Branch filter temporarily suspended
+       if ($userRole !== 'admin') {
+           $branchId = session()->get('branch_id') ?? 1;
+           $query = $query->where('branch_id', $branchId);
+       }
+       */
+
+       return $query->orderBy('id', 'DESC')
+                    ->limit($limit)
+                    ->findAll();
    }
 
 

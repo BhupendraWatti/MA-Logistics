@@ -511,6 +511,14 @@ public function companySelection()
     
     $builder->where('b.company_id', $companyId);
 
+    $userRole = session()->get('role');
+    /* Branch filter temporarily suspended
+    if ($userRole !== 'admin') {
+        $branchId = session()->get('branch_id') ?? 1;
+        $builder->where('b.branch_id', $branchId);
+    }
+    */
+
     // Total records
     $totalRecords = $builder->countAllResults(false);
 
