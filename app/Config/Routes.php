@@ -89,6 +89,9 @@ $routes->get('api/masters/airlines',                  'MasterController::apiAirl
 $routes->get('api/masters/lookup/(:segment)',            'MasterController::apiLookup/$1');
 $routes->get('api/masters/company-gst',               'MasterController::apiCompanyGst');
 
+// ====== PUBLIC API ENDPOINTS ======
+$routes->get('api/track/(:any)', 'TrackingController::trackByAwb/$1');
+
 // DEFAULT FALLBACK (LAST!)
 $routes->get('(:segment)', 'Logistics::index');
 

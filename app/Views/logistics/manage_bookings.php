@@ -5,10 +5,11 @@
         #bookingsTable th, #bookingsTable td {
             white-space: nowrap;
         }
-        #bookingsTable td.consignee-cell {
+        #bookingsTable .consignee-cell {
             white-space: normal !important;
             word-break: break-word;
-            min-width: 150px;
+            min-width: 250px !important;
+            width: 250px !important;
         }
     </style>
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -44,7 +45,7 @@
                             <th>Date</th>
                             <th>Origin → Dest</th>
                             <th>Customer</th>
-                            <th>Consignee</th>
+                            <th class="consignee-cell">Consignee</th>
                             <th>Status</th>
                             <th>Pieces</th>
                             <th>Total Wt</th>

@@ -713,6 +713,9 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             $.ajax({
                 url: BASE_URL + 'masters/dockets/generate',
                 type: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
                 data: { exclude_dockets: activeDockets },
                 dataType: 'json',
                 success: function(response) {

@@ -75,12 +75,13 @@ class Filters extends BaseFilters
      */
     public array $globals = [
         'before' => [
-            'auth' => ['except' => ['login', 'auth/*', 'register']],   // Auth Added Here
+            'auth' => ['except' => ['login', 'auth/*', 'register', 'api/track/*']],   // Auth Added Here
             // 'honeypot',
             'csrf' => ['except' => [
                 'logistics/ajax-datatable', 
                 'masters/ajax-datatable/*', 
-                'admin/ajax-datatable'
+                'admin/ajax-datatable',
+                'api/track/*'
             ]],
             // 'invalidchars',
         ],

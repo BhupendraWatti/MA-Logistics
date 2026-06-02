@@ -143,7 +143,7 @@
         </div>
         
         <!-- Main Content -->
-        <div class="main-content">
+        <div class="main-content d-flex flex-column min-vh-100">
             <!-- Top Header -->
             <div class="top-header d-flex justify-content-end">
                 <div class="header-actions d-flex align-items-center">
@@ -162,13 +162,26 @@
             </div>
 
             <div class="p-4 flex-grow-1">
-                
                 <?= $this->renderSection('content') ?>
             </div>
+
+            <!-- Global Footer -->
+            <footer class="footer mt-auto py-3 bg-light border-top text-center">
+                <div class="container-fluid">
+                    <span class="text-muted small fw-semibold">All Right Reserved @2026 Developed By - Granth Infotech Pvt. Ltd.</span>
+                </div>
+            </footer>
         </div>
     <?php else: ?>
-        <div class="container mt-5">
-            <?= $this->renderSection('content') ?>
+        <div class="d-flex flex-column min-vh-100 justify-content-between">
+            <div class="container mt-5 flex-grow-1">
+                <?= $this->renderSection('content') ?>
+            </div>
+            <footer class="footer mt-auto py-3 text-center">
+                <div class="container">
+                    <span class="text-muted small fw-semibold" style="opacity: 0.8;">All Right Reserved @2026 Developed By - Granth Infotech Pvt. Ltd.</span>
+                </div>
+            </footer>
         </div>
     <?php endif; ?>
 

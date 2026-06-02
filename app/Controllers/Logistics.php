@@ -958,9 +958,9 @@ public function exportExcel()
     $idArray = explode(',', $ids);
     
     // CSV Headers
-    $headers = ['SR NO', 'AWB NO', 'DATE', 'COMPANY', 'ORIGIN', 'DESTINATION', 'STATUS', 'PIECES', 
+    $headers = ['SR NO', 'AWB NO', 'DOCKET NO', 'DATE', 'COMPANY', 'ORIGIN', 'DESTINATION', 'STATUS', 'PIECES', 
                'INVOICE NO', 'CUSTOMER', 'BILL TO', 'CONSIGNEE', 'WEIGHT', 'RATE', 
-               'FREIGHT', 'FUEL SUR', 'FUEL AMT', 'DOCKET', 'PICKUP', 'DELIVERY', 'TAXABLE'];
+               'FREIGHT', 'FUEL SUR', 'FUEL AMT', 'DOCKET CHARGES', 'PICKUP', 'DELIVERY', 'TAXABLE'];
     
     // Output buffer
     $output = implode(',', $headers) . "\n";
@@ -992,6 +992,7 @@ public function exportExcel()
             $row = [
                 $srNo,
                 $booking['awb_no'],
+                $item['docket_no'] ?? '',  // ← Actual alphanumeric Docket Number
                 date('d-m-Y', strtotime($booking['booking_date'])),
                 $companyName,  // ← Now shows company NAME
                 $booking['origin'],
@@ -1007,7 +1008,7 @@ public function exportExcel()
                 $freight,
                 $fuelSur,
                 $fuelAmt,
-                $dock,
+                $dock,         // ← Aligned with "DOCKET CHARGES" column
                 $pickup,
                 $delivery,
                 $taxable

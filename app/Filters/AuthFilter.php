@@ -12,8 +12,9 @@ class AuthFilter implements FilterInterface
         $uri = $request->getUri()->getPath();
         
         // PUBLIC ROUTES
+        $cleanUri = ltrim($uri, '/');
         $publicRoutes = ['login', 'auth/attemptLogin', 'auth/logout', 'company-selection', 'logistics/clearCompany'];
-        if (in_array($uri, $publicRoutes)) {
+        if (strpos($cleanUri, 'api/track') === 0 || in_array($cleanUri, $publicRoutes)) {
             return;
         }
 

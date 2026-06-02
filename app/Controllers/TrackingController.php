@@ -150,4 +150,125 @@ class TrackingController extends BaseController
         session_write_close();
         return $this->response->setJSON(['status' => 'error', 'message' => 'Failed to delete record']);
     }
+
+    public function trackByAwb($searchVal)
+    {
+        // Set standard CORS headers dynamically to prevent any cross-origin blocks
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE");
+        header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+
+        if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+            exit(0);
+        }
+
+        try {
+            $searchVal = trim(urldecode($searchVal));
+            if (empty($searchVal)) {
+                session_write_close();
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'Please enter a valid search value.'
+                ]);
+            }
+
+            $db = \Config\Database::connect();
+            
+            // 1. Search by AWB no in bookings table
+            $booking = $db->table('bookings')
+                          ->select('bookings.*')
+                          ->where('bookings.awb_no', $searchVal)
+                          ->get()->getRowArray();
+
+            if (!$booking) {
+                // 2. Search by Docket no in shipment_items
+                $shipItem = $db->table('shipment_items')
+                               ->where('docket_no', $searchVal)
+                               ->get()->getRowArray();
+                if ($shipItem) {
+                    $booking = $db->table('bookings')
+                                  ->where('id', $shipItem['booking_id'])
+                                  ->get()->getRowArray();
+                }
+            }
+
+            if (!$booking) {
+                session_write_close();
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'No tracking records found for AWB/Docket: ' . esc($searchVal)
+                ]);
+            }
+
+            // Fetch shipment items details (consignee and eway bill / forwarding no)
+            $shipDetails = $db->table('shipment_items')
+                              ->select('GROUP_CONCAT(DISTINCT docket_no SEPARATOR ", ") AS dockets,
+                                        GROUP_CONCAT(DISTINCT customer_name SEPARATOR ", ") AS customers,
+                                        GROUP_CONCAT(DISTINCT consignee SEPARATOR ", ") AS consignees,
+                                        GROUP_CONCAT(DISTINCT eway_bill_no SEPARATOR ", ") AS eway_bills')
+                              ->where('booking_id', $booking['id'])
+                              ->get()->getRowArray();
+
+            // Fetch tracking history
+            $history = $db->table('tracking_history')
+                          ->where('booking_id', $booking['id'])
+                          ->orderBy('event_date', 'DESC')
+                          ->orderBy('event_time', 'DESC')
+                          ->get()->getResultArray();
+
+            $deliveryDate = '-';
+            $deliveryTime = '-';
+            $receiverName = '-';
+
+            foreach ($history as $event) {
+                if (isset($event['status']) && stripos($event['status'], 'Delivered') !== false) {
+                    $deliveryDate = $event['event_date'] ?? '-';
+                    $deliveryTime = $event['event_time'] ?? '-';
+                    $receiverName = $event['remarks'] ?? '-';
+                    break;
+                }
+            }
+
+            $formattedHistory = [];
+            foreach ($history as $event) {
+                $formattedHistory[] = [
+                    'date'     => $event['event_date'] ?? '-',
+                    'time'     => $event['event_time'] ?? '-',
+                    'location' => $event['current_location'] ?? '-',
+                    'activity' => $event['status'] ?? '-',
+                    'remarks'  => $event['remarks'] ?? '-',
+                ];
+            }
+
+            $formattedBooking = [
+                'awb_no'         => $booking['awb_no'] ?? '-',
+                'current_status' => $booking['status'] ?? 'Billed',
+                'booking_date'   => $booking['booking_date'] ?? '-',
+                'consignee_name' => !empty($shipDetails['consignees']) ? $shipDetails['consignees'] : '-',
+                'destination'    => $booking['destination'] ?? '-',
+                'total_pieces'   => $booking['total_pieces'] ?? '0',
+                'delivery_date'  => $deliveryDate,
+                'delivery_time'  => $deliveryTime,
+                'receiver_name'  => $receiverName,
+                'forwarding_no'  => !empty($shipDetails['eway_bills']) ? $shipDetails['eway_bills'] : '-',
+            ];
+
+            session_write_close();
+            return $this->response->setJSON([
+                'status' => 'success',
+                'data'   => [
+                    'booking' => $formattedBooking,
+                    'history' => $formattedHistory
+                ]
+            ]);
+
+        } catch (\Throwable $e) {
+            log_message('error', '[trackByAwb Error] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+            session_write_close();
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'An unexpected server error occurred: ' . $e->getMessage()
+            ]);
+        }
+    }
 }

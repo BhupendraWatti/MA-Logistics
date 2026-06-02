@@ -6,10 +6,11 @@
         .table-responsive table th, .table-responsive table td {
             white-space: nowrap;
         }
-        .table-responsive table td.consignee-cell {
+        .table-responsive table .consignee-cell {
             white-space: normal !important;
             word-break: break-word;
-            min-width: 150px;
+            min-width: 250px !important;
+            width: 250px !important;
         }
     </style>
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -42,7 +43,7 @@
                             <th>Docket No</th>
                             <th>Origin &rarr; Dest</th>
                             <th>Customer</th>
-                            <th>Consignee</th>
+                            <th class="consignee-cell">Consignee</th>
                             <th>Pieces</th>
                             <th>Weight</th>
                             <th class="pe-4">Status</th>
