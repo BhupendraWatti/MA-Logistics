@@ -1120,10 +1120,10 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         if ($(this).is(':checked')) {
             if (!name) {
                 $(this).prop('checked', false);
-                ERPUtils.showWarning("GST Not Applicable", "Please select a customer first.");
+                ERPUtils.showWarning("Can't Apply GST", "Please select a customer first.");
             } else if (!hasGst) {
                 $(this).prop('checked', false);
-                ERPUtils.showWarning("GST Not Applicable", "GST cannot be checked because your GST number is not filled in Customer Master.");
+                ERPUtils.showWarning("GST Not Filled", "GST cannot be checked because your GST number is not filled in Customer Master.");
             }
         }
         syncGstOptionsVisibility();

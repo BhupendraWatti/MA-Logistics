@@ -22,7 +22,8 @@ class Session extends BaseConfig
      *
      * @var class-string<BaseHandler>
      */
-    public string $driver = \CodeIgniter\Session\Handlers\DatabaseHandler::class;
+    /** FileHandler: less MySQL contention than DatabaseHandler (better for multi-user go-live). */
+    public string $driver = FileHandler::class;
 
     /**
      * --------------------------------------------------------------------------
@@ -58,7 +59,7 @@ class Session extends BaseConfig
      *
      * IMPORTANT: You are REQUIRED to set a valid save path!
      */
-    public string $savePath = 'ci_sessions';
+    public string $savePath = WRITEPATH . 'session';
 
     /**
      * --------------------------------------------------------------------------

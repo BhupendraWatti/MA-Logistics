@@ -18,6 +18,14 @@ class Logistics extends BaseController
     {
         $permissions = session()->get('permissions') ?? [];
         if (!($permissions[$permission] ?? 0)) {
+            if ($this->request->isAJAX()) {
+                session_write_close();
+                return $this->response->setStatusCode(403)->setJSON([
+                    'success' => false,
+                    'status'  => 'error',
+                    'message' => 'Permission denied',
+                ]);
+            }
             return redirect()->to('/logistics')->with('error', 'Permission denied!');
         }
 
@@ -301,18 +309,32 @@ public function edit($id)
   }
 
 
-  public function delete($id)
+  public function delete($id = null)
   {
-    $this->checkPermission('can_delete');
-    
+    $perm = $this->checkPermission('can_delete');
+    if ($perm !== true) {
+        return $perm;
+    }
+
+    $id = (int) $id;
+    if ($id < 1) {
+        session_write_close();
+        return $this->response->setStatusCode(400)->setJSON([
+            'success' => false,
+            'status'  => 'error',
+            'message' => 'Invalid booking id',
+        ]);
+    }
+
     $bookingModel = new BookingModel();
     $booking = $bookingModel->find($id);
-    
-    if (!$booking || $booking['company_id'] != session()->get('selected_company_id')) {
+
+    if (!$booking || (int) $booking['company_id'] !== (int) session()->get('selected_company_id')) {
         session_write_close();
-        return $this->response->setJSON([
-            'success' => false, 
-            'message' => 'Booking not found or access denied. ID: ' . $id . ', Found: ' . ($booking ? 'YES' : 'NO') . ', Booking Co: ' . ($booking ? $booking['company_id'] : 'N/A') . ', Session Co: ' . (session()->get('selected_company_id') ?? 'NULL')
+        return $this->response->setStatusCode(404)->setJSON([
+            'success' => false,
+            'status'  => 'error',
+            'message' => 'Booking not found or access denied',
         ]);
     }
     
@@ -488,10 +510,24 @@ public function companySelection()
     $searchValue = $post['search']['value'] ?? '';
 
     $db = \Config\Database::connect();
-    $builder = $db->table('bookings b');
 
-    // Select core columns + aggregated columns
-    // Select core columns + optimized aggregated joins
+    // Fast counts on bookings only (avoid double COUNT with heavy joins)
+    $totalRecords = $db->table('bookings')->where('company_id', $companyId)->countAllResults();
+    if ($searchValue !== '') {
+        $filteredRecords = $db->table('bookings')
+            ->where('company_id', $companyId)
+            ->groupStart()
+            ->like('awb_no', $searchValue)
+            ->orLike('origin', $searchValue)
+            ->orLike('destination', $searchValue)
+            ->orLike('status', $searchValue)
+            ->groupEnd()
+            ->countAllResults();
+    } else {
+        $filteredRecords = $totalRecords;
+    }
+
+    $builder = $db->table('bookings b');
     $builder->select("
         b.id,
         b.awb_no,
@@ -504,34 +540,18 @@ public function companySelection()
         COALESCE(si.total_weight, 0) AS total_weight,
         COALESCE(sc.total_amount, 0) AS total_amount
     ");
-    
-    // Aggregated Subqueries via Hash Joins
     $builder->join("(SELECT booking_id, SUM(final_chargeable_weight) AS total_weight FROM shipment_items GROUP BY booking_id) si", "si.booking_id = b.id", "left");
     $builder->join("(SELECT booking_id, ((COALESCE(rate,0) * COALESCE(weight,0)) + COALESCE(ddc,0) + COALESCE(ssc,0) + COALESCE(btc,0) + COALESCE(flc,0) + COALESCE(doc,0) + COALESCE(inbound_tsp,0) + COALESCE(outbound_tsp,0) + COALESCE(tcp,0) + COALESCE(utility_charges,0) + COALESCE(xray_charges,0) + COALESCE(ado,0) + COALESCE(awb_fees_agent,0) + COALESCE(awb_fees_carrier,0) + COALESCE(admin_charges,0) + COALESCE(delivery_order_charges,0) + COALESCE(inbound_handling,0) + COALESCE(inbound_storage,0) + COALESCE(outbound_storage,0) + COALESCE(misc_charges,0)) AS total_amount FROM sales_charges) sc", "sc.booking_id = b.id", "left");
-    
     $builder->where('b.company_id', $companyId);
 
-    $userRole = session()->get('role');
-    /* Branch filter temporarily suspended
-    if ($userRole !== 'admin') {
-        $branchId = session()->get('branch_id') ?? 1;
-        $builder->where('b.branch_id', $branchId);
-    }
-    */
-
-    // Total records
-    $totalRecords = $builder->countAllResults(false);
-
-    // Search
-    if (!empty($searchValue)) {
+    if ($searchValue !== '') {
         $builder->groupStart()
-                ->like('b.awb_no', $searchValue)
-                ->orLike('b.origin', $searchValue)
-                ->orLike('b.destination', $searchValue)
-                ->orLike('b.status', $searchValue)
-                ->groupEnd();
+            ->like('b.awb_no', $searchValue)
+            ->orLike('b.origin', $searchValue)
+            ->orLike('b.destination', $searchValue)
+            ->orLike('b.status', $searchValue)
+            ->groupEnd();
     }
-    $filteredRecords = $builder->countAllResults(false);
 
     // Pagination
     if ($length != -1) {
@@ -555,28 +575,38 @@ public function companySelection()
         $bookingLogs = $bookingModel->getLatestAuditActions($bookingIds);
     }
 
-    // Formatting
+    // Batch-load shipment labels (one query per page, not per row)
+    $shipByBooking = [];
+    if (!empty($bookingIds)) {
+        $shipRows = $db->table('shipment_items')
+            ->select("booking_id,
+                GROUP_CONCAT(DISTINCT docket_no SEPARATOR ', ') AS dockets,
+                GROUP_CONCAT(DISTINCT customer_name SEPARATOR ', ') AS customers,
+                GROUP_CONCAT(DISTINCT consignee SEPARATOR ', ') AS consignees")
+            ->whereIn('booking_id', $bookingIds)
+            ->groupBy('booking_id')
+            ->get()
+            ->getResultArray();
+        foreach ($shipRows as $sr) {
+            $shipByBooking[(int) $sr['booking_id']] = $sr;
+        }
+    }
+
     foreach ($data as &$row) {
-        $row['total_weight'] = number_format((float)$row['total_weight'], 1);
-        $row['total_amount'] = number_format((float)$row['total_amount'], 0);
+        $row['total_weight'] = number_format((float) $row['total_weight'], 1);
+        $row['total_amount'] = number_format((float) $row['total_amount'], 0);
         $time = !empty($row['created_at']) ? date('H:i', strtotime($row['created_at'])) : '00:00';
         $row['booking_date'] = date('d-M-Y', strtotime($row['booking_date'])) . ' ' . $time;
         $row['can_edit'] = $canEdit;
         $row['can_delete'] = $canDelete;
         $row['last_action'] = $bookingLogs[$row['id']] ?? null;
 
-        // Fetch aggregated shipment details for docket, customer, and consignee
-        $shipDetails = $db->table('shipment_items')
-                          ->select('GROUP_CONCAT(DISTINCT docket_no SEPARATOR ", ") AS dockets,
-                                    GROUP_CONCAT(DISTINCT customer_name SEPARATOR ", ") AS customers,
-                                    GROUP_CONCAT(DISTINCT consignee SEPARATOR ", ") AS consignees')
-                          ->where('booking_id', $row['id'])
-                          ->get()->getRowArray();
-
+        $shipDetails = $shipByBooking[(int) $row['id']] ?? [];
         $row['docket_no'] = !empty($shipDetails['dockets']) ? $shipDetails['dockets'] : '-';
         $row['customer_name'] = !empty($shipDetails['customers']) ? $shipDetails['customers'] : 'Unknown';
         $row['consignee'] = !empty($shipDetails['consignees']) ? $shipDetails['consignees'] : '-';
     }
+    unset($row);
 
     session_write_close(); // Prevent database session write shutdown errors overriding 200 OK status
     return $this->response->setJSON([
