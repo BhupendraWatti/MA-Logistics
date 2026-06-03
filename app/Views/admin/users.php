@@ -35,6 +35,7 @@
         <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas"></button>
     </div>
     <form action="<?= base_url('admin/createUser') ?>" method="post" class="d-flex flex-column h-100 mb-0">
+        <?= csrf_field() ?>
         <div class="offcanvas-body position-relative p-0">
             <div class="erp-drawer-content pb-5">
                 <div class="mb-3">
@@ -72,6 +73,7 @@
         <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas"></button>
     </div>
     <form action="<?= base_url('admin/changePassword') ?>" method="post" class="d-flex flex-column h-100 mb-0">
+        <?= csrf_field() ?>
         <div class="offcanvas-body position-relative p-0">
             <div class="erp-drawer-content pb-5">
                 <input type="hidden" name="user_id" id="passwordUserId">

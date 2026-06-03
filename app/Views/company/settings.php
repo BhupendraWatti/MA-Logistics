@@ -14,6 +14,7 @@
         </div>
         <div class="card-body">
             <form action="<?= base_url('company/settings/update') ?>" method="POST" enctype="multipart/form-data">
+                <?= csrf_field() ?>
                 
                 <h5 class="mb-3">General Information</h5>
                 <div class="row mb-3">

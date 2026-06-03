@@ -29,13 +29,12 @@ class AuthController extends BaseController
             'password' => $this->request->getPost('password')
         ];
 
-        // --- TEMPORARY AUTO-FIX & DEBUGGING ---
+        // --- FIRST-TIME ADMIN BOOTSTRAP ONLY ---
         $db = \Config\Database::connect();
-        $dbUser = $db->table('users')->where('username', $credentials['username'])
-                     ->orWhere('email', $credentials['username'])->get()->getRowArray();
+        $userCount = $db->table('users')->countAllResults();
         
-        if (!$dbUser) {
-            // Auto-create the user if they don't exist
+        if ($userCount === 0) {
+            // No users exist in the system yet. Auto-create the initial admin user.
             $db->table('users')->insert([
                 'username' => $credentials['username'],
                 'email' => $credentials['username'] . '@example.com',
@@ -46,23 +45,8 @@ class AuthController extends BaseController
                 'can_edit' => 1,
                 'can_delete' => 1
             ]);
-            return redirect()->back()->with('error', 'DEBUG: Username "' . esc($credentials['username']) . '" was not found. I have automatically CREATED an admin account for you with the password you just typed! Please click Login one more time to enter.');
+            return redirect()->back()->with('error', 'Database was empty. Automatically created initial admin user "' . esc($credentials['username']) . '". Please login with the password you just typed.');
         }
-        
-        if (!$dbUser['is_active']) {
-            // Auto-activate the user
-            $db->table('users')->where('id', $dbUser['id'])->update(['is_active' => 1]);
-            return redirect()->back()->with('error', 'DEBUG: Your account was inactive. I have automatically activated it! Please try logging in again.');
-        }
-
-        if (!password_verify($credentials['password'], $dbUser['password'])) {
-            // Auto-fix the password to what they just typed!
-            $db->table('users')->where('id', $dbUser['id'])->update([
-                'password' => password_hash($credentials['password'], PASSWORD_DEFAULT)
-            ]);
-            return redirect()->back()->with('error', 'DEBUG: Password was not hashed correctly in DB. I have automatically fixed it to match what you just typed! Please click Login one more time.');
-        }
-        // --------------------------------------
 
         $user = $userModel->attemptLogin($credentials);
 

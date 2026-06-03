@@ -1168,7 +1168,27 @@ public function exportExcel()
     
     if ($returnVar !== 0 || !file_exists($tempXlsx)) {
         @unlink($tempJson);
-        return redirect()->back()->with('error', 'Failed to generate professional Excel file. Internal scripting error.');
+        
+        // Log detailed error for debugging
+        log_message('error', '[Excel Generation Error] Python command failed. Cmd: ' . $cmd . ' | Return Code: ' . $returnVar . ' | Output: ' . implode("\n", $output));
+        
+        // Fallback to streaming raw CSV
+        $filename = 'AWB_Export_' . date('Y-m-d') . '.csv';
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        
+        $out = fopen('php://output', 'w');
+        // Add UTF-8 BOM to support special/Unicode characters in Excel
+        fwrite($out, "\xEF\xBB\xBF");
+        
+        fputcsv($out, $headers);
+        foreach ($rows as $row) {
+            fputcsv($out, $row);
+        }
+        fclose($out);
+        exit;
     }
     
     // Download XLSX

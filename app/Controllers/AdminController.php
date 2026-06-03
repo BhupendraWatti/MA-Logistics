@@ -101,14 +101,40 @@ class AdminController extends BaseController
 
         $userModel = new UserModel();
         $data = [
-            'username' => $this->request->getPost('username'),
-            'email' => $this->request->getPost('email'),
-            'password' => $this->request->getPost('password'),
-            'role' => $this->request->getPost('role'),
+            'username' => trim($this->request->getPost('username') ?? ''),
+            'email' => trim($this->request->getPost('email') ?? ''),
+            'password' => $this->request->getPost('password') ?? '',
+            'role' => $this->request->getPost('role') ?? 'user',
+            'is_active' => 1,
             'can_create' => 1,
             'can_edit' => 1,
             'can_delete' => $this->request->getPost('role') === 'admin' ? 1 : 0
         ];
+
+        // Validations
+        if (empty($data['username']) || empty($data['email']) || empty($data['password'])) {
+            return redirect()->back()->withInput()->with('error', 'All fields are required.');
+        }
+
+        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            return redirect()->back()->withInput()->with('error', 'Please enter a valid email address.');
+        }
+
+        if (strlen($data['password']) < 6) {
+            return redirect()->back()->withInput()->with('error', 'Password must be at least 6 characters long.');
+        }
+
+        // Check for duplicate username
+        $existingUser = $userModel->where('username', $data['username'])->first();
+        if ($existingUser) {
+            return redirect()->back()->withInput()->with('error', 'Username is already taken.');
+        }
+
+        // Check for duplicate email
+        $existingEmail = $userModel->where('email', $data['email'])->first();
+        if ($existingEmail) {
+            return redirect()->back()->withInput()->with('error', 'Email address is already registered.');
+        }
 
         $userModel->insert($data);
         return redirect()->to('/admin')->with('success', 'User created successfully!');
