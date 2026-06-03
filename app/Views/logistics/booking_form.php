@@ -722,29 +722,44 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     function autoFillShipperGlobal() {
         let name = $('#global_shipper').val();
         if(name) {
-            const c = _customers.find(x => x.name === name);
-            if(c) {
-                $('#global_bill_to').val(c.bill_to || '');
-                $('#global_consignee').val(c.consignee || '');
-                if (c.payment_type) $('#payment_type').val(c.payment_type);
-            } else {
-                $('#global_bill_to').val('');
-                $('#global_consignee').val('');
-            }
+            const c = _customers.find(x => (x.name || '').trim().toLowerCase() === (name || '').trim().toLowerCase());
+            const newBillTo    = c ? (c.bill_to   || '') : '';
+            const newConsignee = c ? (c.consignee || '') : '';
             
-            // CRITICAL: Always update entry_customer so new items added after this pick up the correct name
+            $('#global_bill_to').val(newBillTo);
+            $('#global_consignee').val(newConsignee);
+            if (c && c.payment_type) $('#payment_type').val(c.payment_type);
+            
+            // CRITICAL: Update entry_customer so new items pick up the correct name
             $('#entry_customer').val(name);
+            $('#entry_bill_to').val(newBillTo);
+            $('#entry_consignee').val(newConsignee);
             
-            // Also update ALL existing items in the grid to use the new customer name
+            // Also update ALL existing items: customer, bill_to, and consignee
+            // This ensures the invoice is generated with the NEW customer's details
             if (items.length > 0) {
                 items.forEach(s => {
-                    s.customer = name;
+                    s.customer  = name;
+                    s.bill_to   = newBillTo;
+                    s.consignee = newConsignee;
                 });
                 renderGrid();
             }
         }
         syncGstOptionsVisibility();
     }
+
+    $(document).on('input change', '#global_bill_to, #global_consignee', function() {
+        const billTo = $('#global_bill_to').val() || '';
+        const consignee = $('#global_consignee').val() || '';
+        if (items.length > 0) {
+            items.forEach(s => {
+                s.bill_to = billTo;
+                s.consignee = consignee;
+            });
+            renderGrid();
+        }
+    });
     
     function autoFillTransporter() {
         const opt = $('#transporter_name option:selected');
@@ -823,37 +838,30 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 $('#entry_consignee').val(prev.consignee);
             }
             
-            // Auto generation logic
+            // Docket is generated only at Save time (saveItemToGrid), not on drawer open.
+            // This prevents accidental docket consumption when user opens and closes drawer.
             if ($('#auto_generate_docket').is(':checked')) {
-                $('#entry_docket').val('Generating...').prop('readonly', true);
-                let activeDockets = [];
-                items.forEach(item => {
-                    if (item.docket) activeDockets.push(item.docket.trim());
-                });
-                
+                $('#entry_docket').val('Fetching...').prop('readonly', true).css('color', '#888888');
+                // Show a faint preview of the next docket number — calls /preview which does NOT increment counter
+                let previewDockets = items.map(i => i.docket).filter(d => d);
                 $.ajax({
-                    url: BASE_URL + 'masters/dockets/generate',
+                    url: BASE_URL + 'masters/dockets/preview',
                     type: 'POST',
-                    data: { exclude_dockets: activeDockets },
+                    data: { exclude_dockets: previewDockets },
                     dataType: 'json',
-                    success: function(response) {
-                        if (response.status === 'success') {
-                            if ($('#entry_edit_index').val() === '-1' && $('#entry_docket').val() === 'Generating...') {
-                                $('#entry_docket').val(response.docket_no).prop('readonly', true);
-                            }
-                        } else {
-                            $('#entry_docket').val('').prop('readonly', false);
-                            ERPUtils.showError("Error", response.message || "Failed to generate docket.");
+                    success: function(res) {
+                        if (res.status === 'success' && $('#entry_edit_index').val() === '-1') {
+                            $('#entry_docket').val(res.docket_no).css('color', '#888888');
                         }
                     },
                     error: function() {
-                        $('#entry_docket').val('').prop('readonly', false);
-                        ERPUtils.showError("Error", "Server error during docket generation.");
+                        $('#entry_docket').val('Auto-generated').css('color', '#888888');
                     }
                 });
             } else {
-                // If manual docket generation is off, leave it blank for manual entry
-                $('#entry_docket').val('').prop('readonly', false);
+                // Manual docket entry
+                $('#entry_docket').val('').prop('readonly', false).css('color', '');
+                $('#entry_docket').attr('placeholder', 'Enter Docket No manually');
             }
             
             $('#entry_invoice').val('');
@@ -876,7 +884,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             $('#entry_customer').val(item.customer);
             $('#entry_bill_to').val(item.bill_to);
             $('#entry_consignee').val(item.consignee);
-            $('#entry_docket').val(item.docket || '').prop('readonly', false);
+            $('#entry_docket').val(item.docket || '').prop('readonly', false).css('color', '');
             
             $('#entry_invoice').val(item.invoice_no);
             $('#entry_part_no').val(item.part_no || '');
@@ -924,9 +932,9 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         let docket = $('#entry_docket').val() || '';
         const editIndex = parseInt($('#entry_edit_index').val());
         
-        // Auto generate if checked and empty
+        // Auto generate if checked and it's a new item
         const isAutoGen = $('#auto_generate_docket').is(':checked');
-        if (isAutoGen && (docket.trim() === '' || docket === 'Generating...')) {
+        if (isAutoGen && editIndex === -1) {
             Swal.fire({
                 title: 'Generating Docket...',
                 text: 'Please wait while we generate a unique docket number.',
@@ -1132,6 +1140,9 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         handleGstTypeChange(false);
     });
 
+    // Track whether we're in initial page-load sync (to avoid overriding saved gst_applied on edit)
+    let _gstSyncIsInitialLoad = false;
+
     function syncGstOptionsVisibility() {
         const rawName = $('#global_shipper').val();
         const name = (rawName || '').trim().toLowerCase();
@@ -1143,21 +1154,25 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             }
         }
         
-        // Auto-check GST applied checkbox if shipper has a GST number (only for new bookings)
         <?php if (!isset($booking['id'])): ?>
+        // NEW booking: auto-check/uncheck based on customer GST status
         if (hasGst) {
             $('#gst_applied').prop('checked', true);
         } else {
             $('#gst_applied').prop('checked', false);
         }
+        <?php else: ?>
+        // EDIT booking: only override checkbox when user actively changes customer (not on initial load)
+        if (!_gstSyncIsInitialLoad) {
+            if (hasGst) {
+                $('#gst_applied').prop('checked', true);
+            } else {
+                $('#gst_applied').prop('checked', false);
+            }
+        }
         <?php endif; ?>
         
-        // If customer does not have a GST number, force GST Applied to be unchecked
-        if (!hasGst) {
-            $('#gst_applied').prop('checked', false);
-        }
-        
-        // Show/hide red validation warning text
+        // Show/hide red validation warning text (no GST number in customer master)
         if (name && !hasGst) {
             $('#gst_warning_msg').removeClass('d-none');
         } else {
@@ -1167,8 +1182,9 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         // Always keep the GST Applied checkbox container visible
         $('#gst_applied_container').removeClass('d-none');
         
-        // Only show customizable GST rate configuration if shipper has GST number AND checkbox is checked
-        if (hasGst && $('#gst_applied').is(':checked')) {
+        // Show GST config card when: checkbox is checked AND (customer has GST number OR it's being overridden manually)
+        // FIX: Use checkbox state as primary signal — not hasGst — so edit-load works correctly
+        if ($('#gst_applied').is(':checked')) {
             $('#gst_config_card_container').removeClass('d-none');
         } else {
             $('#gst_config_card_container').addClass('d-none');
@@ -1212,15 +1228,32 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             });
 
             function resizeCanvas() {
-                var ratio =  Math.max(window.devicePixelRatio || 1, 1);
+                // Guard: if canvas is inside a hidden tab, offsetWidth is 0 - skip until visible
+                if (canvas.offsetWidth === 0) return;
+                var ratio = Math.max(window.devicePixelRatio || 1, 1);
+                // Save existing signature data before resize
+                var existingData = signaturePad.toData();
                 canvas.width = canvas.offsetWidth * ratio;
                 canvas.height = canvas.offsetHeight * ratio;
                 canvas.getContext("2d").scale(ratio, ratio);
                 signaturePad.clear();
+                // Restore signature data after resize (preserves drawing on window resize)
+                if (existingData && existingData.length > 0) {
+                    signaturePad.fromData(existingData);
+                }
             }
 
             window.addEventListener("resize", resizeCanvas);
-            resizeCanvas();
+            // DO NOT call resizeCanvas() here - canvas is inside a hidden tab (offsetWidth = 0)
+
+            // FIX: Resize canvas when Tab 3 (Financials) becomes visible
+            var tab3Btn = document.getElementById('tab3-tab');
+            if (tab3Btn) {
+                tab3Btn.addEventListener('shown.bs.tab', function() {
+                    // Small timeout ensures Bootstrap has fully shown the tab pane
+                    setTimeout(resizeCanvas, 50);
+                });
+            }
 
             document.getElementById('clearCanvas').addEventListener('click', function () {
                 signaturePad.clear();
@@ -1236,7 +1269,12 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             $('#gst_type').val('intra');
         }
         handleGstTypeChange(true);
+        
+        // CRITICAL FIX (Issue-2): Set flag so syncGstOptionsVisibility does NOT override
+        // the saved gst_applied value from the database during initial page load on edit.
+        _gstSyncIsInitialLoad = true;
         syncGstOptionsVisibility();
+        _gstSyncIsInitialLoad = false;
         
         // Initial GST calculations update
         calcTotals();
@@ -1253,11 +1291,16 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             document.getElementById('signatureBase64').value = signaturePad.toDataURL('image/jpeg');
         }
         
-        // Always sync global shipper to all items before submitting
+        // Always sync global shipper, bill_to, and consignee to all items before submitting
+        // to make sure any manual edits or customer changes are properly reflected in the shipments.
         const globalShipper = $('#global_shipper').val() || '';
-        if (globalShipper) {
-            items.forEach(s => { s.customer = globalShipper; });
-        }
+        const globalBillTo  = $('#global_bill_to').val() || '';
+        const globalConsignee = $('#global_consignee').val() || '';
+        items.forEach(s => {
+            if (globalShipper) s.customer = globalShipper;
+            if (globalBillTo) s.bill_to = globalBillTo;
+            if (globalConsignee) s.consignee = globalConsignee;
+        });
         
         // Re-render to ensure hidden inputs are fresh/current
         renderGrid();

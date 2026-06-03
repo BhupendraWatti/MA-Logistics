@@ -647,7 +647,20 @@ public function exportPdf($id)
     $invoiceDate = !empty($invoiceDates) ? date('d.m.Y', strtotime(end($invoiceDates))) : date('d.m.Y');
     $billingBranch = $booking['origin'] ?: 'Pune';
     $modeTransport = strtoupper($booking['mode_transport'] ?: 'AIR');
-    $recipientName = $booking['company_name'] ?: 'NA';
+    
+    // Fetch customer details from customer master to show recipient name and GSTIN
+    $customerModel = new \App\Models\CustomerModel();
+    $customerNameClean = trim($shipments[0]['customer_name'] ?? '');
+    $customerObj = null;
+    if (!empty($customerNameClean)) {
+        $customerObj = $customerModel->where('name', $customerNameClean)->first();
+        if (!$customerObj) {
+            $customerObj = $customerModel->where('LOWER(name)', strtolower($customerNameClean))->first();
+        }
+    }
+    $customerGst = $customerObj ? ($customerObj['gst_number'] ?? '') : '';
+
+    $recipientName = $shipments[0]['customer_name'] ?? 'NA';
     $recipientAddress = $shipments[0]['bill_to'] ?? $shipments[0]['consignee'] ?? '';
     $recipientAddress = $recipientAddress ?: 'Address not available';
 
@@ -743,6 +756,7 @@ public function exportPdf($id)
         'company' => $companyData,
         'recipientName' => $recipientName,
         'recipientAddress' => $recipientAddress,
+        'customerGst' => $customerGst,
         'invoiceNo' => $invoiceNo,
         'invoicePeriod' => $invoicePeriod,
         'invoiceDate' => $invoiceDate,

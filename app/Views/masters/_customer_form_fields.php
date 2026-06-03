@@ -1,18 +1,18 @@
 <?php $c = $customer ?? []; ?>
 
 <div class="row g-4">
-    <!-- LEFT COLUMN: COMPANY & FINANCE DETAILS -->
+    <!-- LEFT COLUMN: Customer & FINANCE DETAILS -->
     <div class="col-lg-7">
         
         <!-- General Info -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-                <h6 class="fw-bold text-primary mb-0"><i class="fas fa-building me-2"></i> Company Details</h6>
+                <h6 class="fw-bold text-primary mb-0"><i class="fas fa-building me-2"></i> Customer Details</h6>
             </div>
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-8">
-                        <label class="form-label text-muted fs-7 fw-semibold">Company Name <span class="text-danger">*</span></label>
+                        <label class="form-label text-muted fs-7 fw-semibold">Customer Name <span class="text-danger">*</span></label>
                         <input type="text" name="name" class="form-control form-control-sm shadow-none fw-bold" value="<?= esc($c['name'] ?? '') ?>" required>
                     </div>
                     <div class="col-md-4">

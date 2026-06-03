@@ -7,7 +7,9 @@
         </td>
     </tr>
     <?php 
-    $showGstRow = ($cgstRate > 0 || $sgstRate > 0 || $igstRate > 0);
+    // Show GSTIN/SAC/PAN row ONLY when gst_applied is checked, the customer has a GST number, AND rates are non-zero.
+    // This prevents the row from appearing for customers without a GST number.
+    $showGstRow = (!empty($booking['gst_applied']) && !empty($customerGst) && ($cgstRate > 0 || $sgstRate > 0 || $igstRate > 0));
     if ($showGstRow): 
     ?>
     <tr>
@@ -24,7 +26,7 @@
             <strong>TO : <?= htmlspecialchars($recipientName, ENT_QUOTES, 'UTF-8') ?></strong><br>
             <?= htmlspecialchars($recipientAddress, ENT_QUOTES, 'UTF-8') ?>
             <?php if (!empty($customerGst)): ?><br>
-                <strong>GSTIN : <?= htmlspecialchars($customerGst, ENT_QUOTES, 'UTF-8') ?></strong>
+                <!-- <strong>GSTIN : <?= htmlspecialchars($customerGst, ENT_QUOTES, 'UTF-8') ?></strong> -->
             <?php endif; ?>
         </td>
         <td colspan="8" style="vertical-align:top;">

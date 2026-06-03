@@ -605,4 +605,62 @@ class MasterController extends BaseController
             return $this->response->setJSON(['status' => 'error', 'message' => 'Failed to generate docket: ' . $e->getMessage()]);
         }
     }
+
+    /**
+     * Preview next docket number WITHOUT consuming/incrementing the sequence.
+     * Used by the "Add Item" drawer to show a faint placeholder hint to the user.
+     */
+    public function previewDocket()
+    {
+        $userId    = session()->get('user_id');
+        $companyId = $this->companyId();
+        if (!$userId || !$companyId) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized']);
+        }
+
+        $branchId = session()->get('branch_id') ?? 1;
+        $year     = date('Y');
+
+        try {
+            $db  = \Config\Database::connect();
+            $seq = $db->table('sys_sequences')
+                      ->where('company_id',    $companyId)
+                      ->where('branch_id',     $branchId)
+                      ->where('sequence_type', 'docket')
+                      ->where('suffix_year',   $year)
+                      ->get()->getRowArray();
+
+            if ($seq) {
+                $nextVal  = intval($seq['current_val']) + 1;
+                $prefix   = $seq['prefix'] ?? 'DCK-';
+            } else {
+                // Sequence not initialised yet — compute from existing data (same logic as generate)
+                $rowMaster = $db->table('docket_master')
+                                ->select("MAX(CAST(SUBSTRING(docket_no, 5) AS UNSIGNED)) AS max_num", false)
+                                ->where('company_id', $companyId)
+                                ->where('docket_no LIKE', 'DCK-%')
+                                ->get()->getRowArray();
+
+                $rowItems = $db->table('shipment_items')
+                               ->select("MAX(CAST(SUBSTRING(shipment_items.docket_no, 5) AS UNSIGNED)) AS max_num", false)
+                               ->join('bookings', 'bookings.id = shipment_items.booking_id')
+                               ->where('bookings.company_id', $companyId)
+                               ->where('shipment_items.docket_no LIKE', 'DCK-%')
+                               ->get()->getRowArray();
+
+                $startVal = max((int)($rowMaster['max_num'] ?? 0), (int)($rowItems['max_num'] ?? 0), 10000);
+                $nextVal  = $startVal + 1;
+                $prefix   = 'DCK-';
+            }
+
+            session_write_close();
+            return $this->response->setJSON([
+                'status'    => 'success',
+                'docket_no' => $prefix . $nextVal
+            ]);
+        } catch (\Throwable $e) {
+            session_write_close();
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Preview failed']);
+        }
+    }
 }
