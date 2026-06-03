@@ -53,9 +53,9 @@
                         <h6 class="text-uppercase fw-bold text-muted mb-4" style="font-size:0.75rem; letter-spacing:1px;">Options</h6>
                         <div class="mb-4"><i class="fas fa-th-large me-3"></i> Dashboard</div>
                         <div class="mb-4"><i class="fas fa-truck me-3"></i> Shipment Entry</div>
-                        <div class="mb-4"><i class="fas fa-database me-3"></i> Masters</div>
                         <div class="mb-4"><i class="fas fa-list-ul me-3"></i> All Bookings</div>
-                        <div class="mb-4"><i class="fas fa-cog me-3"></i> Settings</div>
+                        <!-- <div class="mb-4"><i class="fas fa-database me-3"></i> Masters</div> -->
+                        <!-- <div class="mb-4"><i class="fas fa-cog me-3"></i> Settings</div> -->
                     </div>
                     
                     <div class="mt-auto mb-5 text-center px-4" style="color: #64748b;">

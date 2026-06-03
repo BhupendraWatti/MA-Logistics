@@ -57,6 +57,9 @@ class MasterController extends BaseController
             'address'          => $this->request->getPost('address'),
             'email'            => $this->request->getPost('email'),
             'mobile'           => $this->request->getPost('mobile'),
+            'gstin'            => $this->request->getPost('gstin'),
+            'pan'              => $this->request->getPost('pan'),
+            'sac_code'         => $this->request->getPost('sac_code'),
             'terms_conditions' => $this->request->getPost('terms_conditions'),
         ];
 
@@ -513,14 +516,8 @@ class MasterController extends BaseController
             $db->transStart(); // Start atomic transaction
 
             // Locks sequence row for exclusive update
-            $seq = $db->table('sys_sequences')
-                      ->where('company_id', $companyId)
-                      ->where('branch_id', $branchId)
-                      ->where('sequence_type', 'docket')
-                      ->where('suffix_year', $year)
-                      ->select('current_val, prefix')
-                      ->getForShareOrUpdate(true)
-                      ->getRowArray();
+            $sql = "SELECT current_val, prefix FROM sys_sequences WHERE company_id = ? AND branch_id = ? AND sequence_type = ? AND suffix_year = ? FOR UPDATE";
+            $seq = $db->query($sql, [$companyId, $branchId, 'docket', $year])->getRowArray();
 
             if (!$seq) {
                 // Initialize sequence row using max from DB or default

@@ -547,6 +547,14 @@ public function companySelection()
     $canEdit = $permissions['can_edit'] ?? 0;
     $canDelete = $permissions['can_delete'] ?? 0;
 
+    // Fetch audit logs for loaded bookings in a single query to preserve speed and optimization
+    $bookingIds = array_column($data, 'id');
+    $bookingLogs = [];
+    if (!empty($bookingIds)) {
+        $bookingModel = new BookingModel();
+        $bookingLogs = $bookingModel->getLatestAuditActions($bookingIds);
+    }
+
     // Formatting
     foreach ($data as &$row) {
         $row['total_weight'] = number_format((float)$row['total_weight'], 1);
@@ -555,6 +563,7 @@ public function companySelection()
         $row['booking_date'] = date('d-M-Y', strtotime($row['booking_date'])) . ' ' . $time;
         $row['can_edit'] = $canEdit;
         $row['can_delete'] = $canDelete;
+        $row['last_action'] = $bookingLogs[$row['id']] ?? null;
 
         // Fetch aggregated shipment details for docket, customer, and consignee
         $shipDetails = $db->table('shipment_items')
@@ -956,6 +965,7 @@ public function exportExcel()
     $bookingModel = new BookingModel();
     $shipmentModel = new ShipmentItemModel();
     $companyModel = new CompanyModel();
+    $salesModel = new \App\Models\SalesChargeModel();
     
     $ids = $this->request->getGet('ids');
     
@@ -965,23 +975,30 @@ public function exportExcel()
     
     $idArray = explode(',', $ids);
     
-    // CSV Headers
-    $headers = ['SR NO', 'AWB NO', 'DOCKET NO', 'DATE', 'COMPANY', 'ORIGIN', 'DESTINATION', 'STATUS', 'PIECES', 
-               'INVOICE NO', 'CUSTOMER', 'BILL TO', 'CONSIGNEE', 'WEIGHT', 'RATE', 
-               'FREIGHT', 'FUEL SUR', 'FUEL AMT', 'DOCKET CHARGES', 'PICKUP', 'DELIVERY', 'TAXABLE'];
+    // CSV Headers covering all filled fields - shifted to put important logistics info at the start
+    $headers = [
+        'SR NO', 'AWB NO', 'DOCKET NO', 'COMPANY', 'CUSTOMER NAME', 'CONSIGNEE', 'INVOICE NO', 'PART NO',
+        'BOOKING DATE', 'ORIGIN', 'DESTINATION', 'MODE OF TRANSPORT', 'STATUS',
+        'EXPECTED DELIVERY DATE', 'EXPECTED DELIVERY TIME', 'INVOICE DATE', 'BILL TO',
+        'ACTUAL WEIGHT', 'LENGTH', 'WIDTH', 'HEIGHT', 'VOLUMETRIC WEIGHT', 'CALCULATED WEIGHT', 'FINAL CHARGEABLE WEIGHT', 'ITEM PIECES',
+        'E-WAY BILL NO', 'E-WAY BILL DATE',
+        'ITEM RATE', 'ITEM FREIGHT', 'ITEM FUEL SURCHARGE RATE', 'ITEM FUEL SURCHARGE AMOUNT', 'ITEM DOCKET CHARGES', 'ITEM PICKUP CHARGES', 'ITEM DELIVERY CHARGES', 'ITEM FOV CHARGES', 'ITEM HANDLING CHARGES', 'ITEM SERVICE CHARGES', 'ITEM TAXABLE AMOUNT',
+        'AIRLINES / CARRIER', 'FLIGHT NUMBER', 'VEHICLE NO', 'DRIVER NAME', 'DRIVER MOBILE', 'DRIVER LICENSE', 'TRANSPORTER NAME', 'TRANSPORTER MOBILE',
+        'PAYMENT TYPE', 'GST APPLIED', 'GSTIN', 'PAN', 'SAC CODE', 'CGST RATE (%)', 'SGST RATE (%)', 'IGST RATE (%)', 'NARRATION',
+        'SALES RATE', 'SALES WEIGHT', 'SALES DDC', 'SALES SSC', 'SALES BTC', 'SALES FLC', 'SALES DOC', 'SALES INBOUND TSP', 'SALES OUTBOUND TSP', 'SALES TCP', 'SALES UTILITY CHARGES', 'SALES XRAY CHARGES', 'SALES ADO', 'SALES AWB FEES AGENT', 'SALES AWB FEES CARRIER', 'SALES ADMIN CHARGES', 'SALES DELIVERY ORDER CHARGES', 'SALES INBOUND HANDLING', 'SALES INBOUND STORAGE', 'SALES OUTBOUND STORAGE', 'SALES MISC CHARGES', 'TOTAL BILLING AMOUNT'
+    ];
     
-    // Output buffer
-    $output = implode(',', $headers) . "\n";
-    
+    $rows = [];
     $srNo = 1;
     
     foreach ($idArray as $bookingId) {
         $booking = $bookingModel->find($bookingId);
         if (!$booking) continue;
         
-        // Get company name
         $company = $companyModel->find($booking['company_id']);
         $companyName = $company['name'] ?? 'N/A';
+        
+        $sales = $salesModel->where('booking_id', $bookingId)->first() ?: [];
         
         $shipments = $shipmentModel->where('booking_id', $bookingId)->findAll();
         
@@ -992,46 +1009,136 @@ public function exportExcel()
             $dock = floatval($item['docket_charges'] ?? 0);
             $pickup = floatval($item['pickup_charges'] ?? 0);
             $delivery = floatval($item['delivery_charges'] ?? 0);
+            $fov = floatval($item['fov_charges'] ?? 0);
+            $handling = floatval($item['handling_charges'] ?? 0);
+            $service = floatval($item['service_charges'] ?? 0);
             
             $freight = $wt * $rate;
             $fuelAmt = $wt * $fuelSur;
-            $taxable = $freight + $fuelAmt + $dock + $pickup + $delivery;
+            $taxable = $freight + $fuelAmt + $dock + $pickup + $delivery + $fov + $handling + $service;
             
-            $row = [
+            $rows[] = [
                 $srNo,
-                $booking['awb_no'],
-                $item['docket_no'] ?? '',  // ← Actual alphanumeric Docket Number
-                date('d-m-Y', strtotime($booking['booking_date'])),
-                $companyName,  // ← Now shows company NAME
-                $booking['origin'],
-                $booking['destination'],
-                $booking['status'],
-                $booking['total_pieces'],
-                $item['invoice_no'] ?? '',
+                $booking['awb_no'] ?? '',
+                $item['docket_no'] ?? '',
+                $companyName,
                 $item['customer_name'] ?? '',
-                $item['bill_to'] ?? '',
                 $item['consignee'] ?? '',
+                $item['invoice_no'] ?? '',
+                $item['part_no'] ?? '',
+                
+                !empty($booking['booking_date']) ? date('d-m-Y', strtotime($booking['booking_date'])) : '',
+                $booking['origin'] ?? '',
+                $booking['destination'] ?? '',
+                $booking['mode_transport'] ?? '',
+                $booking['status'] ?? '',
+                
+                !empty($booking['expected_delivery_date']) ? date('d-m-Y', strtotime($booking['expected_delivery_date'])) : '',
+                !empty($booking['expected_delivery_time']) ? substr($booking['expected_delivery_time'], 0, 5) : '',
+                !empty($item['invoice_date']) ? date('d-m-Y', strtotime($item['invoice_date'])) : '',
+                $item['bill_to'] ?? '',
+                
                 $wt,
+                floatval($item['length'] ?? 0),
+                floatval($item['width'] ?? 0),
+                floatval($item['height'] ?? 0),
+                floatval($item['volumetric_weight'] ?? 0),
+                floatval($item['calculated_chargeable_weight'] ?? 0),
+                floatval($item['final_chargeable_weight'] ?? 0),
+                intval($item['pieces'] ?? 0),
+                $item['eway_bill_no'] ?? '',
+                !empty($item['eway_bill_date']) ? date('d-m-Y', strtotime($item['eway_bill_date'])) : '',
+                
                 $rate,
                 $freight,
                 $fuelSur,
                 $fuelAmt,
-                $dock,         // ← Aligned with "DOCKET CHARGES" column
+                $dock,
                 $pickup,
                 $delivery,
-                $taxable
+                $fov,
+                $handling,
+                $service,
+                $taxable,
+                
+                $booking['airlines'] ?? '',
+                $booking['flight_number'] ?? '',
+                $booking['vehicle_no'] ?? '',
+                $booking['driver_name'] ?? '',
+                $booking['driver_mobile'] ?? '',
+                $booking['driver_license_no'] ?? '',
+                $booking['transporter_name'] ?? '',
+                $booking['transporter_mobile'] ?? '',
+                
+                $booking['payment_type'] ?? '',
+                ($booking['gst_applied'] ?? 0) == 1 ? 'Yes' : 'No',
+                $booking['gstin'] ?? '',
+                $booking['pan'] ?? '',
+                $booking['sac_code'] ?? '',
+                $booking['cgst_rate'] ?? 0,
+                $booking['sgst_rate'] ?? 0,
+                $booking['igst_rate'] ?? 0,
+                $booking['narration'] ?? '',
+                
+                floatval($sales['rate'] ?? 0),
+                floatval($sales['weight'] ?? 0),
+                floatval($sales['ddc'] ?? 0),
+                floatval($sales['ssc'] ?? 0),
+                floatval($sales['btc'] ?? 0),
+                floatval($sales['flc'] ?? 0),
+                floatval($sales['doc'] ?? 0),
+                floatval($sales['inbound_tsp'] ?? 0),
+                floatval($sales['outbound_tsp'] ?? 0),
+                floatval($sales['tcp'] ?? 0),
+                floatval($sales['utility_charges'] ?? 0),
+                floatval($sales['xray_charges'] ?? 0),
+                floatval($sales['ado'] ?? 0),
+                floatval($sales['awb_fees_agent'] ?? 0),
+                floatval($sales['awb_fees_carrier'] ?? 0),
+                floatval($sales['admin_charges'] ?? 0),
+                floatval($sales['delivery_order_charges'] ?? 0),
+                floatval($sales['inbound_handling'] ?? 0),
+                floatval($sales['inbound_storage'] ?? 0),
+                floatval($sales['outbound_storage'] ?? 0),
+                floatval($sales['misc_charges'] ?? 0),
+                floatval($sales['total_amount'] ?? 0)
             ];
-            
-            // Escape CSV values
-            $output .= '"' . implode('","', $row) . '"' . "\n";
             $srNo++;
         }
     }
     
-    // Download CSV
-    header('Content-Type: application/csv');
-    header('Content-Disposition: attachment; filename="AWB_Export_' . date('Y-m-d') . '.csv"');
-    echo $output;
+    // Save to temp JSON
+    $tempJson = WRITEPATH . 'export_' . uniqid() . '.json';
+    $tempXlsx = WRITEPATH . 'export_' . uniqid() . '.xlsx';
+    
+    file_put_contents($tempJson, json_encode([
+        'headers' => $headers,
+        'rows' => $rows
+    ], JSON_UNESCAPED_UNICODE));
+    
+    // Execute python script to generate XLSX
+    $scriptPath = ROOTPATH . 'scripts/generate_xlsx.py';
+    $cmd = 'python ' . escapeshellarg($scriptPath) . ' ' . escapeshellarg($tempJson) . ' ' . escapeshellarg($tempXlsx);
+    
+    exec($cmd, $output, $returnVar);
+    
+    if ($returnVar !== 0 || !file_exists($tempXlsx)) {
+        @unlink($tempJson);
+        return redirect()->back()->with('error', 'Failed to generate professional Excel file. Internal scripting error.');
+    }
+    
+    // Download XLSX
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    header('Content-Disposition: attachment; filename="AWB_Export_' . date('Y-m-d') . '.xlsx"');
+    header('Content-Length: ' . filesize($tempXlsx));
+    header('Pragma: no-cache');
+    header('Expires: 0');
+    
+    readfile($tempXlsx);
+    
+    // Clean up
+    @unlink($tempJson);
+    @unlink($tempXlsx);
     exit;
 }
 

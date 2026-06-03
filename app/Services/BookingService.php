@@ -65,6 +65,8 @@ class BookingService
             $signaturePath = 'uploads/signatures/' . $newName;
         }
 
+        $company = $this->db->table('companies')->where('id', $companyId)->get()->getRowArray();
+
         $bookingData = [
             'awb_no' => $postData['awb_no'] ?? '',
             'company_id' => $companyId,
@@ -92,9 +94,9 @@ class BookingService
             'flight_number' => $postData['flight_number'] ?? '',
             'airlines' => $postData['airlines'] ?? '',
             'created_by' => $userId,
-            'gstin' => $postData['gstin'] ?? '',
-            'pan' => $postData['pan'] ?? '',
-            'sac_code' => $postData['sac_code'] ?? '',
+            'gstin' => $company['gstin'] ?? '',
+            'pan' => $company['pan'] ?? '',
+            'sac_code' => $company['sac_code'] ?? '',
             'cgst_rate' => $this->validateNumeric($postData['cgst_rate'] ?? 9.00),
             'sgst_rate' => $this->validateNumeric($postData['sgst_rate'] ?? 9.00),
             'igst_rate' => $this->validateNumeric($postData['igst_rate'] ?? 9.00),
@@ -109,6 +111,17 @@ class BookingService
 
         $this->processShipments($bookingId, $postData['items'] ?? [], $companyId);
         $this->processSales($bookingId, $postData);
+
+        // Insert audit log for created action
+        $this->db->table('audit_logs')->insert([
+            'table_name' => 'bookings',
+            'record_id'  => $bookingId,
+            'field_name' => 'action',
+            'old_value'  => null,
+            'new_value'  => 'created',
+            'changed_by' => $userId,
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
 
         $this->db->transComplete();
 
@@ -162,6 +175,8 @@ class BookingService
             $signaturePath = 'uploads/signatures/' . $newName;
         }
 
+        $company = $this->db->table('companies')->where('id', $companyId)->get()->getRowArray();
+
         $bookingData = [
             'awb_no' => $postData['awb_no'] ?? '',
             'company_id' => $companyId,
@@ -188,9 +203,9 @@ class BookingService
             'flight_number' => $postData['flight_number'] ?? '',
             'airlines' => $postData['airlines'] ?? '',
             'created_by' => $userId,
-            'gstin' => $postData['gstin'] ?? '',
-            'pan' => $postData['pan'] ?? '',
-            'sac_code' => $postData['sac_code'] ?? '',
+            'gstin' => $company['gstin'] ?? '',
+            'pan' => $company['pan'] ?? '',
+            'sac_code' => $company['sac_code'] ?? '',
             'cgst_rate' => $this->validateNumeric($postData['cgst_rate'] ?? 9.00),
             'sgst_rate' => $this->validateNumeric($postData['sgst_rate'] ?? 9.00),
             'igst_rate' => $this->validateNumeric($postData['igst_rate'] ?? 9.00)
@@ -401,6 +416,17 @@ class BookingService
         } else {
             $this->salesModel->insert($salesData);
         }
+
+        // Insert audit log for updated action
+        $this->db->table('audit_logs')->insert([
+            'table_name' => 'bookings',
+            'record_id'  => $id,
+            'field_name' => 'action',
+            'old_value'  => null,
+            'new_value'  => 'updated',
+            'changed_by' => $userId,
+            'created_at' => date('Y-m-d H:i:s'),
+        ]);
 
         $this->db->transComplete();
 

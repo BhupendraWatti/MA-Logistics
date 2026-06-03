@@ -94,7 +94,39 @@ $(document).ready(function() {
                 return `<span class="text-muted fw-semibold" style="font-size:0.85rem;">${data || '-'}</span>`;
             }
         },
-        { data: 'booking_date' },
+        { 
+            data: 'booking_date',
+            render: function(data, type, row) {
+                let html = `<div class="fw-bold text-dark" style="font-size: 0.85rem;">${data}</div>`;
+                let logsHtml = '<div class="mt-1" style="font-size: 0.68rem; line-height: 1.35; color: #475569;">';
+                
+                if (row.last_action) {
+                    let actionText = '';
+                    let badgeClass = '';
+                    if (row.last_action.action === 'created') {
+                        actionText = 'Created';
+                        badgeClass = 'text-success';
+                    } else if (row.last_action.action === 'updated') {
+                        actionText = 'Updated';
+                        badgeClass = 'text-primary';
+                    } else if (row.last_action.action === 'viewed') {
+                        actionText = 'Viewed';
+                        badgeClass = 'text-info';
+                    } else {
+                        actionText = row.last_action.action.charAt(0).toUpperCase() + row.last_action.action.slice(1);
+                        badgeClass = 'text-secondary';
+                    }
+                    logsHtml += `<div><span class="${badgeClass} fw-bold">${actionText}:</span> ${row.last_action.username} (ID: ${row.last_action.user_id})</div>`;
+                } else if (row.creator_name) {
+                    logsHtml += `<div><span class="text-success fw-bold">Created:</span> ${row.creator_name} (ID: ${row.creator_id})</div>`;
+                } else {
+                    logsHtml += `<div><span class="text-muted italic">No logs available</span></div>`;
+                }
+                
+                logsHtml += '</div>';
+                return html + logsHtml;
+            }
+        },
         {
             data: null,
             render: function(data, type, row) {

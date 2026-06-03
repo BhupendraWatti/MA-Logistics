@@ -142,10 +142,19 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     </select>
                     <input type="text" id="material_category_other" class="form-control form-control-sm shadow-none mt-1 d-none" placeholder="Enter Material Category">
                 </div>
-                <div class="col-md-4 d-flex align-items-end">
+                <div class="col-md-3 d-flex flex-column justify-content-end" id="gst_applied_container">
                     <div class="form-check mb-1">
                         <input class="form-check-input" type="checkbox" name="gst_applied" id="gst_applied" value="1" <?= (!isset($booking['id']) || !empty($booking['gst_applied'])) ? 'checked' : '' ?>>
                         <label class="form-check-label fw-bold text-dark" for="gst_applied">GST Applied</label>
+                    </div>
+                    <small id="gst_warning_msg" class="text-danger fw-bold d-none" style="font-size: 0.75rem; margin-top: 2px;">
+                        <i class="fas fa-exclamation-triangle me-1"></i> Customer GST number is not filled.
+                    </small>
+                </div>
+                <div class="col-md-3 d-flex align-items-end" id="auto_docket_container">
+                    <div class="form-check mb-1">
+                        <input class="form-check-input" type="checkbox" id="auto_generate_docket" name="auto_generate_docket" value="1" checked>
+                        <label class="form-check-label fw-bold text-dark" for="auto_generate_docket">Auto-Gen Dockets</label>
                     </div>
                 </div>
                 <div class="col-md-12">
@@ -321,47 +330,42 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
 
             <!-- Tax & Digital Signature overrides per Booking -->
             <div class="row g-4 mb-4">
-                <div class="col-lg-6">
+                <div class="col-lg-6" id="gst_config_card_container">
                     <div class="card border-0 shadow-sm h-100" style="background-color: #fcfcfc; border: 1px solid #eaeaea !important;">
                         <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
                             <h6 class="fw-bold text-primary mb-0"><i class="fas fa-percent me-1"></i> Tax &amp; GST Configuration (Customizable)</h6>
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label text-muted fs-7 fw-semibold">GSTIN</label>
-                                    <input type="text" name="gstin" id="gstin" class="form-control form-control-sm shadow-none text-uppercase fw-bold" value="<?= esc($booking['gstin'] ?? $company['gstin'] ?? '') ?>">
+                                <div class="col-md-12 mb-2">
+                                    <label class="form-label text-muted fs-8 fw-semibold mb-1">GST Billing Type</label>
+                                    <select id="gst_type" class="form-select form-select-sm shadow-none fw-bold">
+                                        <option value="intra">Intra-State (CGST + SGST)</option>
+                                        <option value="inter">Inter-State (IGST)</option>
+                                    </select>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label text-muted fs-7 fw-semibold">PAN</label>
-                                    <input type="text" name="pan" id="pan" class="form-control form-control-sm shadow-none text-uppercase fw-bold" value="<?= esc($booking['pan'] ?? $company['pan'] ?? '') ?>">
-                                </div>
-                                <div class="col-md-12">
-                                    <label class="form-label text-muted fs-7 fw-semibold">SAC Code</label>
-                                    <input type="text" name="sac_code" id="sac_code" class="form-control form-control-sm shadow-none" value="<?= esc($booking['sac_code'] ?? $company['sac_code'] ?? '') ?>">
-                                </div>
-                                <div class="col-12 mt-3 border-top pt-3">
+                                <div class="col-12 border-top pt-2">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <label class="form-label text-muted fs-7 fw-semibold mb-0">Booking Tax Rates (%)</label>
                                         <span class="badge bg-primary fs-8" id="totalGstBadge">Total GST: 18.00%</span>
                                     </div>
                                     <div class="row g-2">
-                                        <div class="col-4">
+                                        <div class="col-4" id="cgst_col">
                                             <div class="input-group input-group-sm">
                                                 <span class="input-group-text bg-light text-muted fs-8">CGST</span>
                                                 <input type="number" step="0.01" min="0" max="50" name="cgst_rate" id="cgst_rate" class="form-control shadow-none tabular-nums fw-bold rate-input" value="<?= isset($booking['id']) ? esc($booking['cgst_rate']) : '9.00' ?>">
                                             </div>
                                         </div>
-                                        <div class="col-4">
+                                        <div class="col-4" id="sgst_col">
                                             <div class="input-group input-group-sm">
                                                 <span class="input-group-text bg-light text-muted fs-8">SGST</span>
                                                 <input type="number" step="0.01" min="0" max="50" name="sgst_rate" id="sgst_rate" class="form-control shadow-none tabular-nums fw-bold rate-input" value="<?= isset($booking['id']) ? esc($booking['sgst_rate']) : '9.00' ?>">
                                             </div>
                                         </div>
-                                        <div class="col-4">
+                                        <div class="col-4" id="igst_col">
                                             <div class="input-group input-group-sm">
                                                 <span class="input-group-text bg-light text-muted fs-8">IGST</span>
-                                                <input type="number" step="0.01" min="0" max="50" name="igst_rate" id="igst_rate" class="form-control shadow-none tabular-nums fw-bold rate-input" value="<?= isset($booking['id']) ? esc($booking['igst_rate']) : '9.00' ?>">
+                                                <input type="number" step="0.01" min="0" max="50" name="igst_rate" id="igst_rate" class="form-control shadow-none tabular-nums fw-bold rate-input" value="<?= isset($booking['id']) ? esc($booking['igst_rate']) : '0.00' ?>">
                                             </div>
                                         </div>
                                     </div>
@@ -486,18 +490,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             </div>
             <div class="col-md-3">
                 <label class="fs-8 text-muted fw-semibold">Docket No / Ref</label>
-                <div class="input-group input-group-sm">
-                    <div class="input-group-text bg-light border-end-0 py-0" style="padding-left: 0.5rem; padding-right: 0.5rem;">
-                        <div class="form-check form-switch mb-0 d-flex align-items-center" style="min-height: auto;">
-                            <input class="form-check-input me-1" type="checkbox" id="check_generate_docket" style="width: 2em; height: 1em; cursor: pointer; margin-top: 0;">
-                            <label class="form-check-label fs-9 text-primary fw-bold mb-0" for="check_generate_docket" style="cursor: pointer; font-size: 0.7rem;">Auto</label>
-                        </div>
-                    </div>
-                    <input type="text" id="entry_docket" class="form-control form-control-sm shadow-none" placeholder="Enter Docket No manually">
-                    <button type="button" id="btn_generate_docket" class="btn btn-outline-secondary fw-bold" title="Generate next sequential docket" disabled>
-                        <i class="fas fa-magic me-1"></i> Gen
-                    </button>
-                </div>
+                <input type="text" id="entry_docket" class="form-control form-control-sm shadow-none" placeholder="Enter Docket No manually">
             </div>
             <div class="col-md-3">
                 <label class="fs-8 text-muted fw-semibold">Invoice No</label>
@@ -716,54 +709,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             renderGrid();
         }
         
-        // Auto-Gen Switch Listener
-        $('#check_generate_docket').on('change', updateDocketAutoState);
-
-        // AJAX Docket Generation Event Listener
-        $('#btn_generate_docket').on('click', function() {
-            const editIndex = parseInt($('#entry_edit_index').val());
-            const originalDocket = editIndex >= 0 ? (items[editIndex].docket || '') : '';
-
-            if (originalDocket !== '') {
-                ERPUtils.showWarning("Duplicate Generation Blocked", "A docket number is already set for this item. Duplicate generation is prevented.");
-                return;
-            }
-
-            // Collect active docket numbers in other unsaved grid items
-            let activeDockets = [];
-            items.forEach(function(item, idx) {
-                if (idx !== editIndex && item.docket) {
-                    activeDockets.push(item.docket.trim());
-                }
-            });
-
-            // Disable button prior to request to preserve global ajaxSetup CSRF injection
-            $('#btn_generate_docket').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-
-            $.ajax({
-                url: BASE_URL + 'masters/dockets/generate',
-                type: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                data: { exclude_dockets: activeDockets },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        $('#entry_docket').val(response.docket_no);
-                        ERPUtils.showSuccess("Success", "Docket number generated: " + response.docket_no);
-                    } else {
-                        ERPUtils.showError("Error", response.message || "Failed to generate docket.");
-                    }
-                },
-                error: function(xhr, status, error) {
-                    ERPUtils.showError("Error", "Server error during docket generation.");
-                },
-                complete: function() {
-                    $('#btn_generate_docket').prop('disabled', false).html('<i class="fas fa-magic me-1"></i> Gen');
-                }
-            });
-        });
+        // Global docket generation listeners removed as auto-generation is now handled automatically
 
         calcTotals();
     });
@@ -797,6 +743,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 renderGrid();
             }
         }
+        syncGstOptionsVisibility();
     }
     
     function autoFillTransporter() {
@@ -823,15 +770,25 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         }
     }
 
-    function updateDocketAutoState() {
-        const isAuto = $('#check_generate_docket').is(':checked');
-        if (isAuto) {
-            $('#entry_docket').prop('readonly', true).attr('placeholder', 'Click Gen to Auto-Generate');
-            $('#btn_generate_docket').prop('disabled', false).removeClass('btn-outline-secondary').addClass('btn-outline-primary');
-        } else {
-            $('#entry_docket').prop('readonly', false).attr('placeholder', 'Enter Docket No manually');
-            $('#btn_generate_docket').prop('disabled', true).removeClass('btn-outline-primary').addClass('btn-outline-secondary');
-        }
+    function fetchNextDocket(activeDockets) {
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: BASE_URL + 'masters/dockets/generate',
+                type: 'POST',
+                data: { exclude_dockets: activeDockets },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        resolve(response.docket_no);
+                    } else {
+                        reject(response.message || "Failed to generate docket.");
+                    }
+                },
+                error: function() {
+                    reject("Server error during docket generation.");
+                }
+            });
+        });
     }
 
     function openItemModal(index) {
@@ -846,12 +803,10 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             // New Item
             $('#itemModalLabel').text('Add Shipment Item');
             
-            let prevDocket = '';
             let prevPartNo = '';
             let prevInvoiceDate = '';
             if (items.length > 0) {
                 const prev = items[items.length - 1];
-                prevDocket = prev.docket || '';
                 prevPartNo = prev.part_no || '';
                 prevInvoiceDate = prev.invoice_date || '';
             }
@@ -868,10 +823,39 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 $('#entry_consignee').val(prev.consignee);
             }
             
-            $('#entry_docket').val(prevDocket);
-            const isAuto = prevDocket.indexOf('DCK-') === 0;
-            $('#check_generate_docket').prop('checked', isAuto).prop('disabled', false);
-            updateDocketAutoState();
+            // Auto generation logic
+            if ($('#auto_generate_docket').is(':checked')) {
+                $('#entry_docket').val('Generating...').prop('readonly', true);
+                let activeDockets = [];
+                items.forEach(item => {
+                    if (item.docket) activeDockets.push(item.docket.trim());
+                });
+                
+                $.ajax({
+                    url: BASE_URL + 'masters/dockets/generate',
+                    type: 'POST',
+                    data: { exclude_dockets: activeDockets },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            if ($('#entry_edit_index').val() === '-1' && $('#entry_docket').val() === 'Generating...') {
+                                $('#entry_docket').val(response.docket_no).prop('readonly', true);
+                            }
+                        } else {
+                            $('#entry_docket').val('').prop('readonly', false);
+                            ERPUtils.showError("Error", response.message || "Failed to generate docket.");
+                        }
+                    },
+                    error: function() {
+                        $('#entry_docket').val('').prop('readonly', false);
+                        ERPUtils.showError("Error", "Server error during docket generation.");
+                    }
+                });
+            } else {
+                // If manual docket generation is off, leave it blank for manual entry
+                $('#entry_docket').val('').prop('readonly', false);
+            }
+            
             $('#entry_invoice').val('');
             $('#entry_part_no').val(prevPartNo);
             $('#entry_invoice_date').val(prevInvoiceDate);
@@ -892,16 +876,8 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             $('#entry_customer').val(item.customer);
             $('#entry_bill_to').val(item.bill_to);
             $('#entry_consignee').val(item.consignee);
-            const itemDocket = item.docket || '';
-            $('#entry_docket').val(itemDocket);
-            const isAuto = itemDocket.indexOf('DCK-') === 0;
-            $('#check_generate_docket').prop('checked', isAuto);
-            if (isAuto && itemDocket !== '') {
-                $('#check_generate_docket').prop('disabled', true);
-            } else {
-                $('#check_generate_docket').prop('disabled', false);
-            }
-            updateDocketAutoState();
+            $('#entry_docket').val(item.docket || '').prop('readonly', false);
+            
             $('#entry_invoice').val(item.invoice_no);
             $('#entry_part_no').val(item.part_no || '');
             $('#entry_invoice_date').val(item.invoice_date || '');
@@ -931,7 +907,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         modal.show();
     }
 
-    function saveItemToGrid() {
+    async function saveItemToGrid() {
         const customer = $('#entry_customer').val();
         const contents = $('#entry_contents').val();
         const act_wt = parseFloat($('#entry_act_wt').val()) || 0;
@@ -945,21 +921,51 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             return;
         }
 
+        let docket = $('#entry_docket').val() || '';
+        const editIndex = parseInt($('#entry_edit_index').val());
+        
+        // Auto generate if checked and empty
+        const isAutoGen = $('#auto_generate_docket').is(':checked');
+        if (isAutoGen && (docket.trim() === '' || docket === 'Generating...')) {
+            Swal.fire({
+                title: 'Generating Docket...',
+                text: 'Please wait while we generate a unique docket number.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            try {
+                let activeDockets = [];
+                items.forEach((item, idx) => {
+                    if (idx !== editIndex && item.docket) {
+                        activeDockets.push(item.docket.trim());
+                    }
+                });
+                docket = await fetchNextDocket(activeDockets);
+                $('#entry_docket').val(docket);
+                Swal.close();
+            } catch (err) {
+                Swal.close();
+                ERPUtils.showError("Generation Failed", err);
+                return;
+            }
+        }
+
         const l = parseFloat($('#entry_l').val()) || 0;
         const w = parseFloat($('#entry_w').val()) || 0;
         const h = parseFloat($('#entry_h').val()) || 0;
         const formula = parseFloat($('#volumetric_formula').val()) || 6000;
         const vol_wt = (l*w*h)/formula;
-        const chg_wt = Math.max(act_wt, vol_wt); // User requested NO MIN 45KG. Just max of actual or vol.
+        const chg_wt = Math.max(act_wt, vol_wt); 
 
-        const editIndex = parseInt($('#entry_edit_index').val());
-        
         const itemObj = {
             id: editIndex >= 0 ? items[editIndex].id : '',
             customer: $('#entry_customer').val(),
             bill_to: $('#entry_bill_to').val(),
             consignee: $('#entry_consignee').val(),
-            docket: $('#entry_docket').val(),
+            docket: docket,
             invoice_no: $('#entry_invoice').val(),
             part_no: $('#entry_part_no').val(),
             invoice_date: $('#entry_invoice_date').val(),
@@ -1099,7 +1105,102 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     }
 
     $(document).on('input', '#salesRate, .calc-surcharge, .rate-input', calcTotals);
-    $(document).on('change', '#gst_applied', calcTotals);
+    $(document).on('change', '#gst_applied', function() {
+        const rawName = $('#global_shipper').val();
+        const name = (rawName || '').trim().toLowerCase();
+        let hasGst = false;
+        
+        if (name && typeof _customers !== 'undefined' && Array.isArray(_customers)) {
+            const c = _customers.find(x => (x.name || '').trim().toLowerCase() === name);
+            if (c && c.gst_number && c.gst_number.trim() !== '') {
+                hasGst = true;
+            }
+        }
+        
+        if ($(this).is(':checked')) {
+            if (!name) {
+                $(this).prop('checked', false);
+                ERPUtils.showWarning("GST Not Applicable", "Please select a customer first.");
+            } else if (!hasGst) {
+                $(this).prop('checked', false);
+                ERPUtils.showWarning("GST Not Applicable", "GST cannot be checked because your GST number is not filled in Customer Master.");
+            }
+        }
+        syncGstOptionsVisibility();
+    });
+    $(document).on('change', '#gst_type', function() {
+        handleGstTypeChange(false);
+    });
+
+    function syncGstOptionsVisibility() {
+        const rawName = $('#global_shipper').val();
+        const name = (rawName || '').trim().toLowerCase();
+        let hasGst = false;
+        if (name && typeof _customers !== 'undefined' && Array.isArray(_customers)) {
+            const c = _customers.find(x => (x.name || '').trim().toLowerCase() === name);
+            if (c && c.gst_number && c.gst_number.trim() !== '') {
+                hasGst = true;
+            }
+        }
+        
+        // Auto-check GST applied checkbox if shipper has a GST number (only for new bookings)
+        <?php if (!isset($booking['id'])): ?>
+        if (hasGst) {
+            $('#gst_applied').prop('checked', true);
+        } else {
+            $('#gst_applied').prop('checked', false);
+        }
+        <?php endif; ?>
+        
+        // If customer does not have a GST number, force GST Applied to be unchecked
+        if (!hasGst) {
+            $('#gst_applied').prop('checked', false);
+        }
+        
+        // Show/hide red validation warning text
+        if (name && !hasGst) {
+            $('#gst_warning_msg').removeClass('d-none');
+        } else {
+            $('#gst_warning_msg').addClass('d-none');
+        }
+        
+        // Always keep the GST Applied checkbox container visible
+        $('#gst_applied_container').removeClass('d-none');
+        
+        // Only show customizable GST rate configuration if shipper has GST number AND checkbox is checked
+        if (hasGst && $('#gst_applied').is(':checked')) {
+            $('#gst_config_card_container').removeClass('d-none');
+        } else {
+            $('#gst_config_card_container').addClass('d-none');
+        }
+        calcTotals();
+    }
+
+    function handleGstTypeChange(isInit) {
+        const mode = $('#gst_type').val();
+        if (mode === 'intra') {
+            $('#cgst_col').removeClass('d-none');
+            $('#sgst_col').removeClass('d-none');
+            $('#igst_col').addClass('d-none');
+            
+            if (!isInit) {
+                $('#cgst_rate').val('9.00');
+                $('#sgst_rate').val('9.00');
+                $('#igst_rate').val('0.00');
+            }
+        } else {
+            $('#cgst_col').addClass('d-none');
+            $('#sgst_col').addClass('d-none');
+            $('#igst_col').removeClass('d-none');
+            
+            if (!isInit) {
+                $('#cgst_rate').val('0.00');
+                $('#sgst_rate').val('0.00');
+                $('#igst_rate').val('18.00');
+            }
+        }
+        calcTotals();
+    }
 
     let signaturePad;
     document.addEventListener("DOMContentLoaded", function() {
@@ -1126,6 +1227,16 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 document.getElementById('signatureBase64').value = "";
             });
         }
+        
+        // Initialize GST mode dropdown state based on loaded values
+        const initialIgst = parseFloat($('#igst_rate').val()) || 0;
+        if (initialIgst > 0) {
+            $('#gst_type').val('inter');
+        } else {
+            $('#gst_type').val('intra');
+        }
+        handleGstTypeChange(true);
+        syncGstOptionsVisibility();
         
         // Initial GST calculations update
         calcTotals();

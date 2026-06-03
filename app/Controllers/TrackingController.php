@@ -68,35 +68,40 @@ class TrackingController extends BaseController
                 $data['proof_image'] = $proofImage;
             }
 
-            if (!empty($postData['id'])) {
+            $isUpdate = !empty($postData['id']);
+            if ($isUpdate) {
                 // Update
                 if (!$this->trackingModel->update($postData['id'], $data)) {
                     throw new \Exception(implode(', ', $this->trackingModel->errors()));
                 }
-                
-                // Sync latest status to main booking
-                if (!empty($postData['status'])) {
-                   $this->bookingModel->update($postData['booking_id'], ['status' => $postData['status']]);
-                }
-                
-                // does not attempt a session DB write and cause a 500 status override.
-                session_write_close();
-                return $this->response->setJSON(['status' => 'success', 'message' => 'Tracking updated successfully']);
             } else {
                 // Insert
                 if (!$this->trackingModel->insert($data)) {
                     throw new \Exception(implode(', ', $this->trackingModel->errors()));
                 }
-                
-                // Sync latest status to main booking
-                if (!empty($postData['status'])) {
-                   $this->bookingModel->update($postData['booking_id'], ['status' => $postData['status']]);
-                }
-                
-                // CRITICAL: close session before returning JSON
-                session_write_close();
-                return $this->response->setJSON(['status' => 'success', 'message' => 'Tracking added successfully']);
             }
+            
+            // Sync status and expected delivery details to main booking
+            $bookingUpdates = [];
+            if (!empty($postData['status'])) {
+                $bookingUpdates['status'] = $postData['status'];
+            }
+            if (isset($postData['expected_delivery_date'])) {
+                $bookingUpdates['expected_delivery_date'] = empty($postData['expected_delivery_date']) ? null : $postData['expected_delivery_date'];
+            }
+            if (isset($postData['expected_delivery_time'])) {
+                $bookingUpdates['expected_delivery_time'] = empty($postData['expected_delivery_time']) ? null : $postData['expected_delivery_time'];
+            }
+            
+            if (!empty($bookingUpdates) && !empty($postData['booking_id'])) {
+                $this->bookingModel->update($postData['booking_id'], $bookingUpdates);
+            }
+            
+            session_write_close();
+            return $this->response->setJSON([
+                'status' => 'success', 
+                'message' => $isUpdate ? 'Tracking updated successfully' : 'Tracking added successfully'
+            ]);
         } catch (\Throwable $e) {
             log_message('error', '[Tracking saveUpdate error] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
             
@@ -251,6 +256,8 @@ class TrackingController extends BaseController
                 'delivery_time'  => $deliveryTime,
                 'receiver_name'  => $receiverName,
                 'forwarding_no'  => !empty($shipDetails['eway_bills']) ? $shipDetails['eway_bills'] : '-',
+                'expected_delivery_date' => $booking['expected_delivery_date'] ?? '-',
+                'expected_delivery_time' => $booking['expected_delivery_time'] ? substr($booking['expected_delivery_time'], 0, 5) : '-',
             ];
 
             session_write_close();

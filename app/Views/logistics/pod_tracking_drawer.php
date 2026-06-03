@@ -21,9 +21,17 @@
                     <input type="hidden" name="booking_id" id="track_booking_id">
                     
                     <div class="row g-3 mb-3">
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <label class="form-label fw-medium small text-muted mb-1">Tracking / AWB Number <span class="text-danger">*</span></label>
                             <input type="text" class="form-control form-control-sm" name="awb_no" id="track_awb_no" readonly>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-medium small text-muted mb-1">Expected Delivery Date</label>
+                            <input type="date" class="form-control form-control-sm" name="expected_delivery_date" id="track_expected_delivery_date">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-medium small text-muted mb-1">Expected Delivery Time</label>
+                            <input type="time" class="form-control form-control-sm" name="expected_delivery_time" id="track_expected_delivery_time">
                         </div>
                     </div>
 
@@ -153,12 +161,16 @@ $(document).ready(function() {
     $('#resetTrackingBtn').on('click', function() {
         let currentBookingId = $('#track_booking_id').val();
         let currentAwb = $('#track_awb_no').val();
+        let expDate = $('#track_expected_delivery_date').attr('data-loaded') || '';
+        let expTime = $('#track_expected_delivery_time').attr('data-loaded') || '';
         
         $('#trackingForm')[0].reset();
         
         $('#track_booking_id').val(currentBookingId);
         $('#track_awb_no').val(currentAwb);
         $('#track_id').val('');
+        $('#track_expected_delivery_date').val(expDate).attr('data-loaded', expDate);
+        $('#track_expected_delivery_time').val(expTime).attr('data-loaded', expTime);
         
         $('#proofFileName').text('Click to upload image (e.g., POD signature)');
         $('#proofImagePreview').hide().attr('src', '');
@@ -248,6 +260,15 @@ function loadTrackingHistory(bookingId) {
         },
         success: function(response) {
             if(response.status === 'success' && response.data) {
+                if (response.booking) {
+                    let expDate = response.booking.expected_delivery_date || '';
+                    let expTime = response.booking.expected_delivery_time || '';
+                    if (expTime && expTime.length > 5) {
+                        expTime = expTime.substring(0, 5);
+                    }
+                    $('#track_expected_delivery_date').val(expDate).attr('data-loaded', expDate);
+                    $('#track_expected_delivery_time').val(expTime).attr('data-loaded', expTime);
+                }
                 // Save to window globally to bypass HTML quoting crash with single quotes in remarks
                 window.trackingHistoryData = response.data;
                 

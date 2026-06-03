@@ -8,7 +8,7 @@ class BookingModel extends Model
     protected $table = 'bookings';
     protected $primaryKey = 'id';
     protected $allowedFields = [
-        'awb_no', 'company_id', 'branch_id', 'booking_date', 'origin', 'destination', 
+        'awb_no', 'company_id', 'branch_id', 'booking_date', 'expected_delivery_date', 'expected_delivery_time', 'origin', 'destination', 
         'mode_transport', 'material_type', 'material_details', 
         'material_category', 'status', 'transporter_name', 'transporter_mobile', 
         'driver_name', 'driver_mobile', 'driver_license_no', 
@@ -94,5 +94,35 @@ class BookingModel extends Model
                     ->findAll();
    }
 
+   public function getLatestAuditActions(array $bookingIds): array
+   {
+       if (empty($bookingIds)) {
+           return [];
+       }
 
+       $db = \Config\Database::connect();
+       $logs = $db->table('audit_logs al')
+                  ->select('al.record_id, al.new_value as action, al.created_at, u.username, u.id as user_id')
+                  ->join('users u', 'u.id = al.changed_by', 'left')
+                  ->where('al.table_name', 'bookings')
+                  ->where('al.field_name', 'action')
+                  ->whereIn('al.record_id', $bookingIds)
+                  ->orderBy('al.id', 'DESC')
+                  ->get()->getResultArray();
+
+       $bookingLogs = [];
+       foreach ($logs as $log) {
+           $bid = $log['record_id'];
+           if (!isset($bookingLogs[$bid])) {
+               $bookingLogs[$bid] = [
+                   'action'     => $log['action'],
+                   'username'   => $log['username'] ?: 'Unknown',
+                   'user_id'    => $log['user_id'] ?: '-',
+                   'created_at' => date('d-M-Y H:i', strtotime($log['created_at']))
+               ];
+           }
+       }
+
+       return $bookingLogs;
+   }
 }

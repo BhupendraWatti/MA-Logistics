@@ -23,6 +23,9 @@
         <td colspan="8" style="vertical-align:top;">
             <strong>TO : <?= htmlspecialchars($recipientName, ENT_QUOTES, 'UTF-8') ?></strong><br>
             <?= htmlspecialchars($recipientAddress, ENT_QUOTES, 'UTF-8') ?>
+            <?php if (!empty($customerGst)): ?><br>
+                <strong>GSTIN : <?= htmlspecialchars($customerGst, ENT_QUOTES, 'UTF-8') ?></strong>
+            <?php endif; ?>
         </td>
         <td colspan="8" style="vertical-align:top;">
             <table cellpadding="1" cellspacing="0" style="width:100%;">

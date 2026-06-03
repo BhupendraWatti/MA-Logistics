@@ -38,6 +38,28 @@
 
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                        <h6 class="fw-bold text-primary mb-0"><i class="fas fa-file-invoice-dollar me-1"></i> Taxation Details</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label text-muted fs-7 fw-semibold">PAN Number</label>
+                                <input type="text" name="pan" class="form-control form-control-sm shadow-none text-uppercase" value="<?= esc($company['pan'] ?? '') ?>">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted fs-7 fw-semibold">GSTIN</label>
+                                <input type="text" name="gstin" class="form-control form-control-sm shadow-none text-uppercase fw-bold" value="<?= esc($company['gstin'] ?? '') ?>">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-muted fs-7 fw-semibold">SAC Code</label>
+                                <input type="text" name="sac_code" class="form-control form-control-sm shadow-none" value="<?= esc($company['sac_code'] ?? '') ?>">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
                         <h6 class="fw-bold text-primary mb-0"><i class="fas fa-file-invoice me-1"></i> Invoice Settings</h6>
                     </div>
                     <div class="card-body">

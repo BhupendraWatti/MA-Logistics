@@ -546,6 +546,7 @@
             <!-- Black Header Band exactly matching shared layout -->
             <div class="ma-result-header-band">
                 <span class="ma-result-awb-title" id="val-awb-header">AWB: PA1019318</span>
+                <span class="ma-result-expected-title d-none" id="val-expected-header" style="font-size: 13px; text-transform: uppercase; background: #2563eb; padding: 4px 12px; border-radius: 4px; font-weight: 700; color: #fff;">Expected Delivery: -</span>
                 <span class="ma-result-status-title" id="val-status-header">Status: DELIVERED</span>
             </div>
 
@@ -713,6 +714,18 @@
             // Set Header Band text
             document.getElementById("val-awb-header").innerText = "AWB: " + b.awb_no;
             document.getElementById("val-status-header").innerText = "Status: " + b.current_status;
+
+            const expectedHeader = document.getElementById("val-expected-header");
+            if (b.expected_delivery_date && b.expected_delivery_date !== '-') {
+                let expText = "Expected Delivery: " + b.expected_delivery_date;
+                if (b.expected_delivery_time && b.expected_delivery_time !== '-') {
+                    expText += " " + b.expected_delivery_time;
+                }
+                expectedHeader.innerText = expText;
+                expectedHeader.classList.remove('d-none');
+            } else {
+                expectedHeader.classList.add('d-none');
+            }
 
             // Update Right Side Table header
             document.getElementById("val-history-header-title").innerHTML = `<i class="fa-solid fa-list-check me-2 text-primary"></i>AWB: ${b.awb_no}`;
