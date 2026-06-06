@@ -380,7 +380,7 @@ class MasterController extends BaseController
         switch ($type) {
             case 'customers':
                 $model = new CustomerModel();
-                $searchFields = ['name', 'code', 'email', 'mobile'];
+                $searchFields = ['name', 'code', 'email', 'city'];
                 break;
             case 'transporters':
                 $model = new TransporterModel();
@@ -621,6 +621,12 @@ class MasterController extends BaseController
         $branchId = session()->get('branch_id') ?? 1;
         $year     = date('Y');
 
+        $excludeDockets = $this->request->getPost('exclude_dockets');
+        if (!is_array($excludeDockets)) {
+            $excludeDockets = [];
+        }
+        $excludeDockets = array_map('trim', $excludeDockets);
+
         try {
             $db  = \Config\Database::connect();
             $seq = $db->table('sys_sequences')
@@ -653,12 +659,38 @@ class MasterController extends BaseController
                 $prefix   = 'DCK-';
             }
 
+            $docketNo = $prefix . $nextVal;
+
+            // Extra collision check against exclude list or override checks (matching generateDocket)
+            $checkExists = function($no) use ($db, $companyId, $excludeDockets) {
+                $existsInMaster = $db->table('docket_master')
+                                     ->where('company_id', $companyId)
+                                     ->where('docket_no', $no)
+                                     ->get()->getRowArray();
+                if ($existsInMaster) return true;
+
+                $existsInItems = $db->table('shipment_items')
+                                    ->join('bookings', 'bookings.id = shipment_items.booking_id')
+                                    ->where('bookings.company_id', $companyId)
+                                    ->where('shipment_items.docket_no', $no)
+                                    ->get()->getRowArray();
+                if ($existsInItems) return true;
+
+                return in_array($no, $excludeDockets);
+            };
+
+            while ($checkExists($docketNo)) {
+                $nextVal++;
+                $docketNo = $prefix . $nextVal;
+            }
+
             session_write_close();
             return $this->response->setJSON([
                 'status'    => 'success',
-                'docket_no' => $prefix . $nextVal
+                'docket_no' => $docketNo
             ]);
         } catch (\Throwable $e) {
+            log_message('error', '[Preview Docket Error] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
             session_write_close();
             return $this->response->setJSON(['status' => 'error', 'message' => 'Preview failed']);
         }

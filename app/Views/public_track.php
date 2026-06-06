@@ -310,6 +310,54 @@
             }
         }
 
+        .d-none {
+            display: none !important;
+        }
+
+        .ma-expected-delivery-container {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 16px 24px;
+            margin: 20px 24px 0 24px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .ma-expected-card-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .ma-expected-icon {
+            font-size: 24px;
+            color: #3b82f6;
+            display: flex;
+            align-items: center;
+        }
+
+        .ma-expected-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ma-expected-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #1e3a8a;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+
+        .ma-expected-value {
+            font-size: 16px;
+            font-weight: 800;
+            color: #1d4ed8;
+            margin-top: 2px;
+        }
+
         /* Header Band (Black Background) matching Screenshot */
         .ma-result-header-band {
             background: #000000;
@@ -546,8 +594,18 @@
             <!-- Black Header Band exactly matching shared layout -->
             <div class="ma-result-header-band">
                 <span class="ma-result-awb-title" id="val-awb-header">AWB: PA1019318</span>
-                <span class="ma-result-expected-title d-none" id="val-expected-header" style="font-size: 13px; text-transform: uppercase; background: #2563eb; padding: 4px 12px; border-radius: 4px; font-weight: 700; color: #fff;">Expected Delivery: -</span>
                 <span class="ma-result-status-title" id="val-status-header">Status: DELIVERED</span>
+            </div>
+
+            <!-- Expected Delivery Date & Time (Alert Card positioned between search bar/header and results table grid) -->
+            <div id="ma-expected-delivery-card" class="ma-expected-delivery-container d-none">
+                <div class="ma-expected-card-content">
+                    <span class="ma-expected-icon"><i class="fa-solid fa-calendar-days"></i></span>
+                    <div class="ma-expected-details">
+                        <div class="ma-expected-label">Expected Delivery Date & Time</div>
+                        <div class="ma-expected-value" id="val-expected-delivery-info">-</div>
+                    </div>
+                </div>
             </div>
 
             <!-- Double Table Grid Structure (100% responsive responsive grid) -->
@@ -565,6 +623,10 @@
                             <tr>
                                 <td class="label-cell">Booking Date</td>
                                 <td class="value-cell" id="val-booking-date">-</td>
+                            </tr>
+                            <tr>
+                                <td class="label-cell">Expected Delivery</td>
+                                <td class="value-cell" id="val-expected-delivery">-</td>
                             </tr>
                             <tr>
                                 <td class="label-cell">Consignee Name</td>
@@ -626,18 +688,18 @@
             </div>
 
             <!-- Dynamic footer inside the result container -->
-            <div class="ma-result-footer">
-                All Right Reserved @2026 Developed By - Granth Infotech Pvt. Ltd.
-            </div>
+            <!-- <div class="ma-result-footer">
+               All Right Reserved @2026 MARL Express Pvt. Ltd. | Developed By - <a href="https://granthinfotech.in/" target="_blank" style="font-style:bold; color:#f48b24;"> Granth Infotech Pvt. Ltd.</a>
+            </div> -->
 
         </div>
 
     </div>
 
     <!-- Global Layout Footer -->
-    <footer class="global-footer">
-        All Right Reserved @2026 Developed By - Granth Infotech Pvt. Ltd.
-    </footer>
+    <!-- <footer class="global-footer">
+        All Right Reserved @2026 MARL Express Pvt. Ltd. | Developed By - <a href="https://granthinfotech.in/" target="_blank" style="font-style:bold; color:#f48b24;"> Granth Infotech Pvt. Ltd.</a>
+    </footer> -->
 
     <!-- ================== DYNAMIC JAVASCRIPT LOGIC ================== -->
     <script>
@@ -715,16 +777,24 @@
             document.getElementById("val-awb-header").innerText = "AWB: " + b.awb_no;
             document.getElementById("val-status-header").innerText = "Status: " + b.current_status;
 
-            const expectedHeader = document.getElementById("val-expected-header");
+            const expectedCard = document.getElementById("ma-expected-delivery-card");
+            const expectedVal = document.getElementById("val-expected-delivery-info");
+            const expectedTableVal = document.getElementById("val-expected-delivery");
+            
+            let expText = '-';
             if (b.expected_delivery_date && b.expected_delivery_date !== '-') {
-                let expText = "Expected Delivery: " + b.expected_delivery_date;
+                expText = b.expected_delivery_date;
                 if (b.expected_delivery_time && b.expected_delivery_time !== '-') {
-                    expText += " " + b.expected_delivery_time;
+                    expText += " at " + b.expected_delivery_time;
                 }
-                expectedHeader.innerText = expText;
-                expectedHeader.classList.remove('d-none');
+                expectedVal.innerText = expText;
+                expectedCard.classList.remove('d-none');
             } else {
-                expectedHeader.classList.add('d-none');
+                expectedCard.classList.add('d-none');
+            }
+            
+            if (expectedTableVal) {
+                expectedTableVal.innerText = (expText && expText !== '-') ? expText : 'Pending / Not Scheduled';
             }
 
             // Update Right Side Table header

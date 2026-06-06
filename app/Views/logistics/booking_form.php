@@ -72,7 +72,11 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">ORIGIN <span class="text-danger">*</span></label>
                     <select name="origin" id="origin" class="form-select form-select-sm shadow-none fw-bold" onchange="handleOtherOption(this)" required>
-                        <option value="<?= esc($booking['origin'] ?? '') ?>" selected><?= esc($booking['origin'] ?? '') ?></option>
+                        <?php if (empty($booking['origin'])): ?>
+                            <option value="" selected disabled>--Select Origin--</option>
+                        <?php else: ?>
+                            <option value="<?= esc($booking['origin']) ?>" selected><?= esc($booking['origin']) ?></option>
+                        <?php endif; ?>
                         <?php foreach($lookups['origin'] ?? [] as $l): ?>
                             <?php if (($booking['origin'] ?? '') != $l['value']): ?>
                                 <option value="<?= esc($l['value']) ?>"><?= esc($l['value']) ?></option>
@@ -85,7 +89,11 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">DESTINATION <span class="text-danger">*</span></label>
                     <select name="destination" id="destination" class="form-select form-select-sm shadow-none fw-bold" onchange="handleOtherOption(this)" required>
-                        <option value="<?= esc($booking['destination'] ?? '') ?>" selected><?= esc($booking['destination'] ?? '') ?></option>
+                        <?php if (empty($booking['destination'])): ?>
+                            <option value="" selected disabled>--Select Destination--</option>
+                        <?php else: ?>
+                            <option value="<?= esc($booking['destination']) ?>" selected><?= esc($booking['destination']) ?></option>
+                        <?php endif; ?>
                         <?php foreach($lookups['destination'] ?? [] as $l): ?>
                             <?php if (($booking['destination'] ?? '') != $l['value']): ?>
                                 <option value="<?= esc($l['value']) ?>"><?= esc($l['value']) ?></option>
@@ -153,7 +161,19 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 </div>
                 <div class="col-md-3 d-flex align-items-end" id="auto_docket_container">
                     <div class="form-check mb-1">
-                        <input class="form-check-input" type="checkbox" id="auto_generate_docket" name="auto_generate_docket" value="1" checked>
+                        <?php
+                        $autoGenChecked = true;
+                        if (isset($booking['id']) && !empty($shipments)) {
+                            foreach ($shipments as $s) {
+                                $docketNo = $s['docket_no'] ?? '';
+                                if ($docketNo !== '' && strpos($docketNo, 'DCK-') !== 0) {
+                                    $autoGenChecked = false;
+                                    break;
+                                }
+                            }
+                        }
+                        ?>
+                        <input class="form-check-input" type="checkbox" id="auto_generate_docket" name="auto_generate_docket" value="1" <?= $autoGenChecked ? 'checked' : '' ?>>
                         <label class="form-check-label fw-bold text-dark" for="auto_generate_docket">Auto-Gen Dockets</label>
                     </div>
                 </div>
@@ -190,7 +210,11 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">TRANSPORTER</label>
                     <select name="transporter_name" id="transporter_name" class="form-select form-select-sm shadow-none" onchange="autoFillTransporter()">
-                        <option value="<?= esc($booking['transporter_name'] ?? '') ?>" selected><?= esc($booking['transporter_name'] ?? '') ?></option>
+                        <?php if (empty($booking['transporter_name'])): ?>
+                            <option value="" selected disabled>--Select Transporter--</option>
+                        <?php else: ?>
+                            <option value="<?= esc($booking['transporter_name']) ?>" selected><?= esc($booking['transporter_name']) ?></option>
+                        <?php endif; ?>
                         <?php foreach($transporters ?? [] as $t): ?>
                             <?php if (($booking['transporter_name'] ?? '') != $t['name']): ?>
                                 <option value="<?= esc($t['name']) ?>" data-mobile="<?= esc($t['mobile']) ?>"><?= esc($t['name']) ?></option>
@@ -205,7 +229,11 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">DRIVER NAME</label>
                     <select name="driver_name" id="driver_name" class="form-select form-select-sm shadow-none" onchange="autoFillDriver()">
-                        <option value="<?= esc($booking['driver_name'] ?? '') ?>" selected><?= esc($booking['driver_name'] ?? '') ?></option>
+                        <?php if (empty($booking['driver_name'])): ?>
+                            <option value="" selected disabled>--Select Driver--</option>
+                        <?php else: ?>
+                            <option value="<?= esc($booking['driver_name']) ?>" selected><?= esc($booking['driver_name']) ?></option>
+                        <?php endif; ?>
                         <?php foreach($drivers ?? [] as $d): ?>
                             <?php if (($booking['driver_name'] ?? '') != $d['name']): ?>
                                 <option value="<?= esc($d['name']) ?>" data-mobile="<?= esc($d['mobile']) ?>" data-vehicle="<?= esc($d['vehicle_no']) ?>"><?= esc($d['name']) ?></option>
@@ -567,6 +595,42 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
 
 <script>
     let items = [];
+
+    function updateDocketInputState() {
+        const isAutoGen = $('#auto_generate_docket').is(':checked');
+        const editIndex = $('#entry_edit_index').val();
+        
+        // Only apply auto-gen preview/manual carryover if we are adding a NEW item
+        if (editIndex === '-1') {
+            if (isAutoGen) {
+                // Show "DCK-XXXXX" instead of empty/fetching message while calling the preview endpoint
+                $('#entry_docket').val('DCK-XXXXX').prop('readonly', true).css('color', '#888888');
+                
+                let previewDockets = items.map(i => i.docket).filter(d => d);
+                $.ajax({
+                    url: BASE_URL + 'masters/dockets/preview',
+                    type: 'POST',
+                    data: { exclude_dockets: previewDockets },
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.status === 'success' && $('#entry_edit_index').val() === '-1' && $('#auto_generate_docket').is(':checked')) {
+                            $('#entry_docket').val(res.docket_no).css('color', '#888888');
+                        }
+                    },
+                    error: function() {
+                        $('#entry_docket').val('DCK-XXXXX').css('color', '#888888');
+                    }
+                });
+            } else {
+                let nextDocket = '';
+                if (items.length > 0) {
+                    // Carry over the exact manual docket number from the last added item without incrementing
+                    nextDocket = items[items.length - 1].docket || '';
+                }
+                $('#entry_docket').val(nextDocket).prop('readonly', false).css('color', '').attr('placeholder', 'Enter Docket No manually');
+            }
+        }
+    }
     const _customers = <?= json_encode($customers ?? []) ?>;
     const _companyGst = { 
         cgst: <?= isset($company['cgst_rate']) && $company['cgst_rate'] !== '' ? $company['cgst_rate'] : 9 ?>, 
@@ -709,6 +773,11 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             renderGrid();
         }
         
+        // Listen for change in auto-generate checkbox to update docket field if modal is open
+        $(document).on('change', '#auto_generate_docket', function() {
+            updateDocketInputState();
+        });
+        
         // Global docket generation listeners removed as auto-generation is now handled automatically
 
         calcTotals();
@@ -838,31 +907,8 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 $('#entry_consignee').val(prev.consignee);
             }
             
-            // Docket is generated only at Save time (saveItemToGrid), not on drawer open.
-            // This prevents accidental docket consumption when user opens and closes drawer.
-            if ($('#auto_generate_docket').is(':checked')) {
-                $('#entry_docket').val('Fetching...').prop('readonly', true).css('color', '#888888');
-                // Show a faint preview of the next docket number — calls /preview which does NOT increment counter
-                let previewDockets = items.map(i => i.docket).filter(d => d);
-                $.ajax({
-                    url: BASE_URL + 'masters/dockets/preview',
-                    type: 'POST',
-                    data: { exclude_dockets: previewDockets },
-                    dataType: 'json',
-                    success: function(res) {
-                        if (res.status === 'success' && $('#entry_edit_index').val() === '-1') {
-                            $('#entry_docket').val(res.docket_no).css('color', '#888888');
-                        }
-                    },
-                    error: function() {
-                        $('#entry_docket').val('Auto-generated').css('color', '#888888');
-                    }
-                });
-            } else {
-                // Manual docket entry
-                $('#entry_docket').val('').prop('readonly', false).css('color', '');
-                $('#entry_docket').attr('placeholder', 'Enter Docket No manually');
-            }
+            // Set input state & fetch docket if needed
+            updateDocketInputState();
             
             $('#entry_invoice').val('');
             $('#entry_part_no').val(prevPartNo);

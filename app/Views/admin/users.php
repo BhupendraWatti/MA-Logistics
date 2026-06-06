@@ -34,7 +34,7 @@
         <h5 class="offcanvas-title fw-bold text-primary"><i class="fas fa-user-plus me-2"></i> Create New User</h5>
         <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas"></button>
     </div>
-    <form action="<?= base_url('admin/createUser') ?>" method="post" class="d-flex flex-column h-100 mb-0">
+    <form action="<?= base_url('admin/createUser') ?>" method="post" class="d-flex flex-column h-100 mb-0 no-track">
         <?= csrf_field() ?>
         <div class="offcanvas-body position-relative p-0">
             <div class="erp-drawer-content pb-5">
@@ -72,7 +72,7 @@
         <h5 class="offcanvas-title fw-bold text-warning"><i class="fas fa-key me-2"></i> Change Password</h5>
         <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas"></button>
     </div>
-    <form action="<?= base_url('admin/changePassword') ?>" method="post" class="d-flex flex-column h-100 mb-0">
+    <form action="<?= base_url('admin/changePassword') ?>" method="post" class="d-flex flex-column h-100 mb-0 no-track">
         <?= csrf_field() ?>
         <div class="offcanvas-body position-relative p-0">
             <div class="erp-drawer-content pb-5">

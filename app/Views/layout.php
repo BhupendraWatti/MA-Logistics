@@ -168,7 +168,7 @@
             <!-- Global Footer -->
             <footer class="footer mt-auto py-3 bg-light border-top text-center">
                 <div class="container-fluid">
-                    <span class="text-muted small fw-semibold">All Right Reserved @2026 Developed By - Granth Infotech Pvt. Ltd.</span>
+                    <span class="text-muted small fw-semibold">All Right Reserved @2026 MARL Express Pvt. Ltd. | Developed By - <a href="https://granthinfotech.in/" target="_blank" style="font-style:bold; color:#f48b24;"> Granth Infotech Pvt. Ltd.</a></span>
                 </div>
             </footer>
         </div>
@@ -179,7 +179,7 @@
             </div>
             <footer class="footer mt-auto py-3 text-center">
                 <div class="container">
-                    <span class="text-muted small fw-semibold" style="opacity: 0.8;">All Right Reserved @2026 Developed By - Granth Infotech Pvt. Ltd.</span>
+                    <span class="text-muted small fw-semibold">All Right Reserved @2026 MARL Express Pvt. Ltd. | Developed By - <a href="https://granthinfotech.in/" target="_blank" style="font-style:bold; color:#f48b24;"> Granth Infotech Pvt. Ltd.</a></span>
                 </div>
             </footer>
         </div>

@@ -213,13 +213,19 @@ public function create()
     
     $shipments = $shipmentModel->where('booking_id', $id)->findAll();
     $sales = $salesModel->where('booking_id', $id)->first();
-    
+    $trackingHistory = (new \App\Models\TrackingHistoryModel())
+        ->where('booking_id', $id)
+        ->orderBy('event_date', 'DESC')
+        ->orderBy('event_time', 'DESC')
+        ->findAll();
+
     $companyData = (new \App\Models\CompanyModel())->find(session()->get('selected_company_id'));
-    
+
     $data = [
         'booking' => $booking,
         'shipments' => $shipments,
         'sales' => $sales,
+        'trackingHistory' => $trackingHistory,
         'company' => $companyData,
         'user' => session()->get()
     ];

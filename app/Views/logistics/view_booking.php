@@ -24,14 +24,10 @@
             <a href="<?= base_url('logistics/exportPdf/' . $booking['id']) ?>" class="btn btn-outline-dark bg-white shadow-sm fw-bold">
                 <i class="fas fa-file-pdf text-danger"></i> Export PDF
             </a>
-            <!-- 
-            <button class="btn btn-outline-dark bg-white shadow-sm fw-bold">
-                <i class="fas fa-print"></i> Print AWB
+            <button type="button" class="btn btn-primary shadow-sm fw-bold" title="Update Tracking / POD"
+                onclick="openTrackingDrawer('<?= $booking['id'] ?>', '<?= esc($booking['awb_no']) ?>', '<?= esc(addslashes($booking['customer_name'] ?? '')) ?>')">
+                <i class="fas fa-location-dot"></i> Update Tracking / POD
             </button>
-            <button class="btn btn-primary shadow-sm fw-bold">
-                <i class="fas fa-satellite-dish"></i> Track Shipment
-            </button>
-            -->
         </div>
     </div>
 
@@ -345,10 +341,99 @@
         </div>
     </div>
 
+    <!-- Tracking History -->
+    <div class="card shadow-sm border-0 rounded-3 mt-4" id="booking-tracking-history">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h6 class="mb-0 fw-bold text-dark">
+                <i class="fa-solid fa-clock-rotate-left me-2 text-primary"></i>Tracking History
+            </h6>
+            <span class="badge bg-light text-dark border px-3 py-2 fw-bold">AWB: <?= esc($booking['awb_no']) ?></span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="viewBookingTrackingHistory">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4" style="width: 5%">#</th>
+                            <th style="width: 15%">Date</th>
+                            <th style="width: 10%">Time</th>
+                            <th style="width: 20%">Location</th>
+                            <th style="width: 15%">Status</th>
+                            <th class="pe-4" style="width: 35%">Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($trackingHistory)): ?>
+                            <?php foreach ($trackingHistory as $index => $entry): ?>
+                                <?php
+                                $statusClass = match ($entry['status']) {
+                                    'Delivered' => 'bg-success',
+                                    'In Transit' => 'bg-warning text-dark',
+                                    'Picked Up' => 'bg-info text-dark',
+                                    'Booked' => 'bg-primary',
+                                    default => 'bg-secondary',
+                                };
+                                $displayTime = $entry['event_time'];
+                                if ($displayTime && strlen($displayTime) > 5) {
+                                    $displayTime = substr($displayTime, 0, 5);
+                                }
+                                ?>
+                                <tr>
+                                    <td class="ps-4 text-muted"><?= $index + 1 ?></td>
+                                    <td class="fw-medium"><?= esc($entry['event_date']) ?></td>
+                                    <td><?= esc($displayTime) ?></td>
+                                    <td class="fw-bold text-dark">
+                                        <i class="fa-solid fa-location-dot me-1 text-primary"></i><?= esc($entry['current_location']) ?>
+                                    </td>
+                                    <td><span class="badge <?= $statusClass ?>"><?= esc($entry['status']) ?></span></td>
+                                    <td class="pe-4">
+                                        <?= esc($entry['remarks'] ?: '-') ?>
+                                        <?php if (!empty($entry['proof_image'])): ?>
+                                            <a href="<?= base_url($entry['proof_image']) ?>" target="_blank" class="ms-2 text-primary" title="View Proof">
+                                                <i class="fa-solid fa-image"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">No tracking history available for this shipment.</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
 </div>
+
+<?= $this->include('logistics/pod_tracking_drawer') ?>
 
 <style>
     .fs-7 { font-size: 0.875rem; }
     .fs-8 { font-size: 0.75rem; }
 </style>
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script>
+$(document).ready(function() {
+    $(document).ajaxSuccess(function(event, xhr, settings) {
+        if (settings.url.indexOf('tracking/save') !== -1 || settings.url.indexOf('tracking/delete') !== -1) {
+            try {
+                var response = JSON.parse(xhr.responseText);
+                if (response.status === 'success') {
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1000);
+                }
+            } catch (e) {
+                // Ignore parsing errors
+            }
+        }
+    });
+});
+</script>
 <?= $this->endSection() ?>
