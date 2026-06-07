@@ -1,61 +1,61 @@
-# CodeIgniter 4 Framework
+# MA Logistics ERP (Phase 2)
 
-## What is CodeIgniter?
+An Enterprise Resource Planning (ERP) application tailored for logistics operations, multi-tenant billing, automated volumetric weight calculations, real-time shipment tracking, and TCPDF-based digital signature invoice generation.
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+Built on the **CodeIgniter 4 full-stack PHP framework**, utilizing a clean MVC pattern coupled with transactional services.
 
-This repository holds the distributable version of the framework.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+---
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+## 🚀 Quick Navigation & Developer Documentation
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+*   **[Core Developer Documentation & Session Logs](CONTEXT.md)**: A complete reference guide outlining:
+    *   System Architecture (MVC & Service layers)
+    *   Volumetric and Chargeable Weight calculation logic
+    *   Multi-Tenant company isolation mechanisms
+    *   Database schema layout, key relationships, and migration history
+    *   Interactive client-side controls (SweetAlert2 navigation traps, responsive UI)
+    *   API endpoints, formulas, and production scaling guidelines
+    *   Detailed logs of changes, frontend bug fixes, database schema modifications, and layout improvements implemented during recent development cycles.
 
-## Important Change with index.php
+---
 
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
+## 🛠️ Tech Stack & Requirements
 
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
+*   **Backend**: PHP 8.1+ / 8.2+
+*   **Framework**: CodeIgniter 4
+*   **Database**: MySQL / MariaDB (5.7+ or 8.0+)
+*   **Frontend**: Bootstrap 5, jQuery 3.x, SweetAlert2
+*   **PDF Compiler**: TCPDF
+*   **Required PHP Extensions**:
+    *   `intl`
+    *   `mbstring`
+    *   `json`
+    *   `mysqlnd`
+    *   `curl`
 
-**Please** read the user guide for a better explanation of how CI4 works!
+---
 
-## Repository Management
+## 📦 Local Installation & Setup
 
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
-
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
-
-## Contributing
-
-We welcome contributions from the community.
-
-Please read the [*Contributing to CodeIgniter*](https://github.com/codeigniter4/CodeIgniter4/blob/develop/CONTRIBUTING.md) section in the development repository.
-
-## Server Requirements
-
-PHP version 8.2 or higher is required, with the following extensions installed:
-
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
-
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - The end of life date for PHP 8.1 was December 31, 2025.
-> - If you are still using below PHP 8.2, you should upgrade immediately.
-> - The end of life date for PHP 8.2 will be December 31, 2026.
-
-Additionally, make sure that the following extensions are enabled in your PHP:
-
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+1.  **Clone the Repository** and make sure it is configured under your local PHP/Apache environment pointing to the `public/` directory.
+2.  **Configure Environment Variables**:
+    *   Copy `env` to `.env` in the root directory.
+    *   Configure your MySQL database credentials:
+        ```env
+        database.default.hostname = localhost
+        database.default.database = malogistics
+        database.default.username = root
+        database.default.password = 
+        database.default.DBDriver = MySQLi
+        ```
+3.  **Run Migrations**:
+    Apply the database tables, fields, and tenant contexts by running the CodeIgniter spark command:
+    ```bash
+    php spark migrate
+    ```
+4.  **Launch the Application**:
+    Run CodeIgniter's internal server for development:
+    ```bash
+    php spark serve
+    ```
+    Or configure a virtual host (e.g. `http://malogistic.local`) targeting the `public/` directory.
