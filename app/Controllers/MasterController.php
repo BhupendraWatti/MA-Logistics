@@ -81,11 +81,14 @@ class MasterController extends BaseController
             'payment_type' => (new LookupValueModel())->getByType($companyId, 'payment_type'),
         ];
         
+        $googleMapsApiKey = env('GOOGLE_MAPS_API_KEY') ?: (getenv('GOOGLE_MAPS_API_KEY') ?: '');
+        
         return view('masters/customers', [
             'customers' => (new CustomerModel())->getByCompany($companyId),
             'contacts'  => (new \App\Models\ContactsMasterModel())->getByCompany($companyId),
             'lookups'   => $lookups,
             'user'      => session()->get(),
+            'google_maps_api_key' => $googleMapsApiKey,
         ]);
     }
 
@@ -115,11 +118,14 @@ class MasterController extends BaseController
             'payment_type' => (new LookupValueModel())->getByType($companyId, 'payment_type'),
         ];
         
+        $googleMapsApiKey = env('GOOGLE_MAPS_API_KEY') ?: (getenv('GOOGLE_MAPS_API_KEY') ?: '');
+        
         return view('masters/customer_form', [
             'customer' => $customer,
             'contacts' => (new \App\Models\ContactsMasterModel())->getByCompany($companyId),
             'lookups'  => $lookups,
-            'user'     => session()->get()
+            'user'     => session()->get(),
+            'google_maps_api_key' => $googleMapsApiKey,
         ]);
     }
 

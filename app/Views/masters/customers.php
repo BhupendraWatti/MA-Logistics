@@ -39,7 +39,11 @@
         <?= csrf_field() ?>
         <div class="offcanvas-body bg-light p-0">
             <div class="erp-drawer-content pb-5 p-4">
-                <?= view('masters/_customer_form_fields', ['customer' => [], 'lookups' => $lookups]) ?>
+                <?= view('masters/_customer_form_fields', [
+                    'customer' => [],
+                    'lookups' => $lookups,
+                    'google_maps_api_key' => $google_maps_api_key ?? ''
+                ]) ?>
             </div>
         </div>
         <div class="sticky-footer bg-white">

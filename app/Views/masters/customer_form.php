@@ -12,7 +12,11 @@
         <?= csrf_field() ?>
         <input type="hidden" name="company_id" value="<?= session()->get('selected_company_id') ?>">
         
-        <?= view('masters/_customer_form_fields', ['customer' => $customer, 'lookups' => $lookups]) ?>
+        <?= view('masters/_customer_form_fields', [
+            'customer' => $customer,
+            'lookups' => $lookups,
+            'google_maps_api_key' => $google_maps_api_key ?? ''
+        ]) ?>
         
         <div class="row mt-4">
             <div class="col-12 text-end">

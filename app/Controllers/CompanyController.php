@@ -25,6 +25,9 @@ class CompanyController extends BaseController
         $data['company_name'] = session()->get('selected_company_name');
         $data['permissions'] = session()->get('permissions') ?? [];
 
+        // Fetch Google Maps API Key from .env environment configuration
+        $data['google_maps_api_key'] = env('GOOGLE_MAPS_API_KEY') ?: (getenv('GOOGLE_MAPS_API_KEY') ?: '');
+
         return view('company/settings', $data);
     }
 
@@ -88,6 +91,10 @@ class CompanyController extends BaseController
 
         $companyModel->update($companyId, $data);
 
+        // Save Google Maps API Key to the .env file
+        $apiKey = trim($this->request->getPost('google_maps_api_key') ?? '');
+        $this->updateEnvFile('GOOGLE_MAPS_API_KEY', $apiKey);
+
         return redirect()->to('/company/settings')->with('success', 'Company settings updated successfully!');
     }
 
@@ -110,5 +117,29 @@ class CompanyController extends BaseController
         $companyModel->update($companyId, ['signature_path' => null]);
         
         return redirect()->to('/company/settings')->with('success', 'Signature deleted successfully!');
+    }
+
+    /**
+     * Helper to write/update key in the .env file
+     */
+    private function updateEnvFile(string $key, string $value)
+    {
+        $path = ROOTPATH . '.env';
+        if (!file_exists($path)) {
+            return;
+        }
+
+        $content = file_get_contents($path);
+        
+        // Find existing key definition (can be commented out or active)
+        $pattern = "/^#?\s*(" . preg_quote($key, '/') . ")\s*=\s*(.*)$/m";
+        
+        if (preg_match($pattern, $content)) {
+            $content = preg_replace($pattern, "$key = '$value'", $content);
+        } else {
+            $content = rtrim($content) . "\n\n# Google Maps API Integration\n$key = '$value'\n";
+        }
+        
+        file_put_contents($path, $content);
     }
 }

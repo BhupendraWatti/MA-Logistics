@@ -74,6 +74,17 @@
                     </div>
                 </div>
 
+                <hr>
+
+                <h5 class="mb-3">Google Maps API Settings</h5>
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label>Google Maps API Key (Used for Pincode/Address Lookup)</label>
+                        <input type="text" name="google_maps_api_key" class="form-control" value="<?= esc($google_maps_api_key ?? '') ?>" placeholder="AIzaSy...">
+                        <small class="text-muted">If left blank, the system will fall back to a free Indian Pincode Directory lookup API (api.postalpincode.in).</small>
+                    </div>
+                </div>
+
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label>Digital Signature (Upload PNG)</label>

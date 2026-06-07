@@ -25,19 +25,19 @@
                     </div>
                     <div class="col-md-3">
                         <label class="form-label text-muted fs-7 fw-semibold">City</label>
-                        <input type="text" name="city" class="form-control form-control-sm shadow-none" value="<?= esc($c['city'] ?? '') ?>">
+                        <input type="text" name="city" class="form-control form-control-sm shadow-none city-field" value="<?= esc($c['city'] ?? '') ?>">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label text-muted fs-7 fw-semibold">State</label>
-                        <input type="text" name="state" class="form-control form-control-sm shadow-none" value="<?= esc($c['state'] ?? '') ?>">
+                        <input type="text" name="state" class="form-control form-control-sm shadow-none state-field" value="<?= esc($c['state'] ?? '') ?>">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label text-muted fs-7 fw-semibold">Pincode</label>
-                        <input type="text" name="pincode" class="form-control form-control-sm shadow-none" value="<?= esc($c['pincode'] ?? '') ?>">
+                        <input type="text" name="pincode" class="form-control form-control-sm shadow-none pincode-lookup" value="<?= esc($c['pincode'] ?? '') ?>">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label text-muted fs-7 fw-semibold">Country</label>
-                        <input type="text" name="country" class="form-control form-control-sm shadow-none" value="<?= esc($c['country'] ?? '') ?>">
+                        <input type="text" name="country" class="form-control form-control-sm shadow-none country-field" value="<?= esc($c['country'] ?? '') ?>">
                     </div>
                 </div>
             </div>
@@ -215,3 +215,162 @@
         </div>
     </div>
 </div>
+
+<!-- Dynamic Google Maps / Postal Pincode Auto-Fill Integration -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    $(document).ready(function() {
+        var apiKey = <?= json_encode($google_maps_api_key ?? '') ?>;
+        
+        // 1. Initialize Google Maps Autocomplete
+        function initGoogleAutocomplete() {
+            if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+                $('.pincode-lookup').each(function() {
+                    var inputEl = this;
+                    
+                    // Prevent double binding if initialized multiple times
+                    if ($(inputEl).data('autocomplete-bound')) return;
+                    $(inputEl).data('autocomplete-bound', true);
+                    
+                    var autocomplete = new google.maps.places.Autocomplete(inputEl, {
+                        types: ['(regions)'],
+                        componentRestrictions: { country: 'in' }
+                    });
+                    
+                    autocomplete.addListener('place_changed', function() {
+                        var place = autocomplete.getPlace();
+                        if (place && place.address_components) {
+                            var city = '', state = '', country = '';
+                            var zip = '';
+                            
+                            for (var i = 0; i < place.address_components.length; i++) {
+                                var component = place.address_components[i];
+                                var types = component.types;
+                                
+                                if (types.includes('locality') || types.includes('administrative_area_level_2')) {
+                                    city = component.long_name;
+                                }
+                                if (types.includes('administrative_area_level_1')) {
+                                    state = component.long_name;
+                                }
+                                if (types.includes('country')) {
+                                    country = component.long_name;
+                                }
+                                if (types.includes('postal_code')) {
+                                    zip = component.long_name;
+                                }
+                            }
+                            
+                            var row = $(inputEl).closest('.row');
+                            if (city) row.find('.city-field').val(city);
+                            if (state) row.find('.state-field').val(state);
+                            if (country) row.find('.country-field').val(country);
+                            if (zip) $(inputEl).val(zip);
+                            
+                            row.find('.city-field, .state-field, .country-field').trigger('change');
+                        }
+                    });
+                });
+            }
+        }
+        
+        // Load Google Maps API Key dynamically if configured
+        if (apiKey) {
+            if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+                var script = document.createElement('script');
+                script.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(apiKey) + '&libraries=places';
+                script.async = true;
+                script.defer = true;
+                script.onload = function() {
+                    initGoogleAutocomplete();
+                };
+                document.head.appendChild(script);
+            } else {
+                initGoogleAutocomplete();
+            }
+        }
+        
+        // 2. Fetch via Postal Pincode Directory API
+        function fetchPostalPincode(pincode, $input) {
+            var url = 'https://api.postalpincode.in/pincode/' + pincode;
+            var row = $input.closest('.row');
+            
+            // Show subtle loading state
+            var fields = row.find('.city-field, .state-field, .country-field');
+            fields.addClass('bg-light').prop('readonly', true);
+            
+            $.ajax({
+                url: url,
+                method: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    fields.removeClass('bg-light').prop('readonly', false);
+                    if (response && response[0] && response[0].Status === 'Success' && response[0].PostOffice && response[0].PostOffice.length > 0) {
+                        var postOffice = response[0].PostOffice[0];
+                        var district = postOffice.District;
+                        var state = postOffice.State;
+                        var country = 'India';
+                        
+                        var city = postOffice.Block && postOffice.Block !== 'NA' ? postOffice.Block : district;
+                        
+                        if (city) row.find('.city-field').val(city);
+                        if (state) row.find('.state-field').val(state);
+                        row.find('.country-field').val(country);
+                        
+                        row.find('.city-field, .state-field, .country-field').trigger('change');
+                    }
+                },
+                error: function() {
+                    fields.removeClass('bg-light').prop('readonly', false);
+                }
+            });
+        }
+        
+        // 3. Fallback and direct entry keyup/blur listener
+        $(document).on('change keyup blur', '.pincode-lookup', function(e) {
+            var pincode = $(this).val().trim();
+            var $this = $(this);
+            
+            // Match Indian 6-digit postal code pattern
+            if (/^[1-9][0-9]{5}$/.test(pincode)) {
+                if ($this.data('last-pincode') === pincode) {
+                    return; // Avoid multiple calls
+                }
+                $this.data('last-pincode', pincode);
+                
+                if (typeof google !== 'undefined' && google.maps && google.maps.Geocoder) {
+                    var geocoder = new google.maps.Geocoder();
+                    geocoder.geocode({ address: pincode, componentRestrictions: { country: 'in' } }, function(results, status) {
+                        if (status === 'OK' && results[0]) {
+                            var city = '', state = '', country = '';
+                            var components = results[0].address_components;
+                            for (var i = 0; i < components.length; i++) {
+                                var componentTypes = components[i].types;
+                                if (componentTypes.includes('locality') || componentTypes.includes('administrative_area_level_2')) {
+                                    city = components[i].long_name;
+                                }
+                                if (componentTypes.includes('administrative_area_level_1')) {
+                                    state = components[i].long_name;
+                                }
+                                if (componentTypes.includes('country')) {
+                                    country = components[i].long_name;
+                                }
+                            }
+                            var row = $this.closest('.row');
+                            if (city) row.find('.city-field').val(city);
+                            if (state) row.find('.state-field').val(state);
+                            if (country) row.find('.country-field').val(country);
+                            
+                            row.find('.city-field, .state-field, .country-field').trigger('change');
+                        } else {
+                            fetchPostalPincode(pincode, $this);
+                        }
+                    });
+                } else {
+                    fetchPostalPincode(pincode, $this);
+                }
+            }
+        });
+    });
+});
+</script>
