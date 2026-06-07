@@ -16,8 +16,11 @@
         <h2>
              Manage <?= esc($company_name ?? '') ?> Bookings
         </h2>
-        <div>
-            <a href="<?= base_url('logistics') ?>" class="btn btn-secondary me-2">
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-dark bg-white shadow-sm fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#screen-options-collapse" aria-expanded="false" aria-controls="screen-options-collapse">
+                <i class="fas fa-cog me-1"></i> Screen Options
+            </button>
+            <a href="<?= base_url('logistics') ?>" class="btn btn-secondary">
                 Dashboard
             </a>
             <?php if (($permissions['can_create'] ?? 0) == 1): ?>
@@ -25,6 +28,55 @@
                 New Booking
             </a>
             <?php endif; ?>
+        </div>
+    </div>
+
+    <!-- Screen Options Panel (WordPress Style) -->
+    <div class="collapse mb-4" id="screen-options-collapse">
+        <div class="card card-body shadow-sm border-0 rounded-3 p-4 bg-white">
+            <h6 class="fw-bold text-dark mb-3"><i class="fas fa-sliders-h me-2 text-primary"></i> Screen Options: Customize Table Columns</h6>
+            <div class="d-flex flex-wrap gap-4 align-items-center">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input col-toggle-chk" type="checkbox" id="chk-col-awb" value="1" checked>
+                    <label class="form-check-label fw-semibold text-dark fs-7" for="chk-col-awb">AWB No.</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input col-toggle-chk" type="checkbox" id="chk-col-docket" value="2" checked>
+                    <label class="form-check-label fw-semibold text-dark fs-7" for="chk-col-docket">Docket No</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input col-toggle-chk" type="checkbox" id="chk-col-date" value="3" checked>
+                    <label class="form-check-label fw-semibold text-dark fs-7" for="chk-col-date">Date</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input col-toggle-chk" type="checkbox" id="chk-col-route" value="4" checked>
+                    <label class="form-check-label fw-semibold text-dark fs-7" for="chk-col-route">Origin &rarr; Destination</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input col-toggle-chk" type="checkbox" id="chk-col-customer" value="5" checked>
+                    <label class="form-check-label fw-semibold text-dark fs-7" for="chk-col-customer">Customer</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input col-toggle-chk" type="checkbox" id="chk-col-consignee" value="6" checked>
+                    <label class="form-check-label fw-semibold text-dark fs-7" for="chk-col-consignee">Consignee</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input col-toggle-chk" type="checkbox" id="chk-col-status" value="7" checked>
+                    <label class="form-check-label fw-semibold text-dark fs-7" for="chk-col-status">Status</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input col-toggle-chk" type="checkbox" id="chk-col-pieces" value="8" checked>
+                    <label class="form-check-label fw-semibold text-dark fs-7" for="chk-col-pieces">Pieces</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input col-toggle-chk" type="checkbox" id="chk-col-weight" value="9" checked>
+                    <label class="form-check-label fw-semibold text-dark fs-7" for="chk-col-weight">Total Wt</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input col-toggle-chk" type="checkbox" id="chk-col-amount" value="10" checked>
+                    <label class="form-check-label fw-semibold text-dark fs-7" for="chk-col-amount">Amount</label>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -192,6 +244,59 @@ $(document).ready(function() {
             }
         }
     ]);
+
+    // Apply Saved Settings or Default
+    const storageKey = 'malogistics_booking_columns';
+
+    function loadColumnSettings() {
+        let savedSettings = localStorage.getItem(storageKey);
+        if (savedSettings) {
+            try {
+                let columns = JSON.parse(savedSettings);
+                $.each(columns, function(index, isVisible) {
+                    let colIdx = parseInt(index);
+                    // Update checkbox state
+                    $(`.col-toggle-chk[value="${colIdx}"]`).prop('checked', isVisible);
+                    // Apply visibility to DataTable column index
+                    dataTable.column(colIdx).visible(isVisible, false);
+                });
+                // Recalculate column layout once and redraw to apply changes
+                dataTable.columns.adjust().draw(false);
+                if (dataTable.responsive) {
+                    dataTable.responsive.recalc();
+                }
+            } catch(e) {
+                console.error("Error loading column settings:", e);
+            }
+        }
+    }
+
+    function saveColumnSettings() {
+        let settings = {};
+        $('.col-toggle-chk').each(function() {
+            let colIdx = $(this).val();
+            let isChecked = $(this).is(':checked');
+            settings[colIdx] = isChecked;
+        });
+        localStorage.setItem(storageKey, JSON.stringify(settings));
+    }
+
+    // Handle Checkbox Changes
+    $('.col-toggle-chk').on('change', function() {
+        let colIdx = parseInt($(this).val());
+        let isVisible = $(this).is(':checked');
+        
+        dataTable.column(colIdx).visible(isVisible);
+        dataTable.columns.adjust();
+        if (dataTable.responsive) {
+            dataTable.responsive.recalc();
+        }
+        
+        saveColumnSettings();
+    });
+
+    // Run column visibility logic right after DataTable initialization
+    loadColumnSettings();
 });
 
 function deleteBooking(id, awb) {

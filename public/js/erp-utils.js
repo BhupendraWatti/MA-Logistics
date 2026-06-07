@@ -196,7 +196,7 @@ $(document).ready(function() {
             if (e.isTrigger) return;
             
             // Ignore non-form action inputs like permission switches, select-all, or row checkboxes
-            if ($(this).hasClass('toggle-permission') || $(this).hasClass('booking-check') || $(this).attr('id') === 'selectAll') {
+            if ($(this).hasClass('toggle-permission') || $(this).hasClass('booking-check') || $(this).attr('id') === 'selectAll' || $(this).hasClass('col-toggle-chk')) {
                 return;
             }
             
