@@ -31,7 +31,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label fw-medium small text-muted mb-1">Expected Delivery Time</label>
-                            <input type="time" class="form-control form-control-sm" name="expected_delivery_time" id="track_expected_delivery_time">
+                            <input type="text" class="form-control form-control-sm" name="expected_delivery_time" id="track_expected_delivery_time" placeholder="HH:MM (24-hour)" pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$" title="Please enter time in 24-hour format (HH:MM), e.g. 14:30">
                         </div>
                     </div>
 
@@ -42,17 +42,17 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-medium small text-muted mb-1">Status <span class="text-danger">*</span></label>
-                            <select class="form-select form-select-sm" name="status" id="track_status" required>
-                                <option value="">Select Status</option>
-                                <option value="Booked">Booked</option>
-                                <option value="Picked Up">Picked Up</option>
-                                <option value="In Transit">In Transit</option>
-                                <option value="Arrived at Hub">Arrived at Hub</option>
-                                <option value="Out for Delivery">Out for Delivery</option>
-                                <option value="Delivered">Delivered</option>
-                                <option value="Failed Delivery">Failed Delivery</option>
-                                <option value="Returned">Returned</option>
-                            </select>
+                            <input type="text" class="form-control form-control-sm" name="status" id="track_status" list="status_list" placeholder="Select or type status..." required>
+                            <datalist id="status_list">
+                                <option value="Booked">
+                                <option value="Picked Up">
+                                <option value="In Transit">
+                                <option value="Arrived at Hub">
+                                <option value="Out for Delivery">
+                                <option value="Delivered">
+                                <option value="Failed Delivery">
+                                <option value="Returned">
+                            </datalist>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label fw-medium small text-muted mb-1">Date <span class="text-danger">*</span></label>
@@ -60,7 +60,22 @@
                         </div>
                         <div class="col-md-2">
                             <label class="form-label fw-medium small text-muted mb-1">Time <span class="text-danger">*</span></label>
-                            <input type="time" class="form-control form-control-sm" name="event_time" id="track_event_time" required>
+                            <input type="text" class="form-control form-control-sm" name="event_time" id="track_event_time" placeholder="HH:MM (24-hour)" pattern="^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$" title="Please enter time in 24-hour format (HH:MM), e.g. 14:30" required>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium small text-muted mb-1">Receiver Name</label>
+                            <input type="text" class="form-control form-control-sm" name="receiver_name" id="track_receiver_name" placeholder="Receiver Name">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium small text-muted mb-1">Receiver Phone</label>
+                            <input type="text" class="form-control form-control-sm" name="receiver_phone" id="track_receiver_phone" placeholder="Receiver Phone">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium small text-muted mb-1">Receiver Company</label>
+                            <input type="text" class="form-control form-control-sm" name="receiver_company" id="track_receiver_company" placeholder="Receiver Company">
                         </div>
                     </div>
 
@@ -172,6 +187,11 @@ $(document).ready(function() {
         $('#track_expected_delivery_date').val(expDate).attr('data-loaded', expDate);
         $('#track_expected_delivery_time').val(expTime).attr('data-loaded', expTime);
         
+        // Clear receiver fields
+        $('#track_receiver_name').val('');
+        $('#track_receiver_phone').val('');
+        $('#track_receiver_company').val('');
+        
         $('#proofFileName').text('Click to upload image (e.g., POD signature)');
         $('#proofImagePreview').hide().attr('src', '');
         
@@ -184,6 +204,29 @@ $(document).ready(function() {
     // Form Submit
     $('#trackingForm').on('submit', function(e) {
         e.preventDefault();
+        
+        let bookingDateStr = window.currentBookingDate;
+        let expDateVal = $('#track_expected_delivery_date').val();
+        let expTimeVal = $('#track_expected_delivery_time').val() || '00:00';
+        let eventDateVal = $('#track_event_date').val();
+        let eventTimeVal = $('#track_event_time').val() || '00:00';
+
+        if (bookingDateStr && expDateVal) {
+            let bookingDate = new Date(bookingDateStr + 'T00:00:00');
+            let expDateTime = new Date(expDateVal + 'T' + expTimeVal);
+            if (expDateTime <= bookingDate) {
+                Swal.fire('Validation Error', 'Expected Delivery Date & Time must be greater than Booking Date (' + bookingDateStr + ')', 'error');
+                return false;
+            }
+
+            if (eventDateVal) {
+                let eventDateTime = new Date(eventDateVal + 'T' + eventTimeVal);
+                if (eventDateTime >= expDateTime) {
+                    Swal.fire('Validation Error', 'Status Date & Time must be less than Expected Delivery Date & Time', 'error');
+                    return false;
+                }
+            }
+        }
         
         let formData = new FormData(this);
         let saveBtn = $('#saveTrackingBtn');
@@ -261,6 +304,9 @@ function loadTrackingHistory(bookingId) {
         success: function(response) {
             if(response.status === 'success' && response.data) {
                 if (response.booking) {
+                    let bookingDate = response.booking.booking_date || '';
+                    window.currentBookingDate = bookingDate;
+                    
                     let expDate = response.booking.expected_delivery_date || '';
                     let expTime = response.booking.expected_delivery_time || '';
                     if (expTime && expTime.length > 5) {
@@ -333,6 +379,10 @@ function editTracking(item) {
         timeVal = timeVal.substring(0, 5);
     }
     $('#track_event_time').val(timeVal);
+    
+    $('#track_receiver_name').val(item.receiver_name || '');
+    $('#track_receiver_phone').val(item.receiver_phone || '');
+    $('#track_receiver_company').val(item.receiver_company || '');
     
     // When editing, show existing preview if it exists
     if (item.proof_image) {

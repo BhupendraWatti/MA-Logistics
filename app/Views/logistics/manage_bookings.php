@@ -17,9 +17,11 @@
              Manage <?= esc($company_name ?? '') ?> Bookings
         </h2>
         <div>
+            <?php if (session()->get('role') !== 'tracking'): ?>
             <a href="<?= base_url('logistics') ?>" class="btn btn-secondary me-2">
                 Dashboard
             </a>
+            <?php endif; ?>
             <?php if (($permissions['can_create'] ?? 0) == 1): ?>
             <a href="<?= base_url('logistics/create') ?>" class="btn btn-success">
                 New Booking
@@ -30,11 +32,13 @@
 
     <div class="card shadow-sm border-0">
         <div class="card-body p-3">
+            <?php if (session()->get('role') !== 'tracking'): ?>
             <div class="d-flex justify-content-end mb-3">
                 <button type="button" class="btn btn-success fw-bold shadow-sm" onclick="exportSelected()">
                     <i class="fas fa-file-excel me-1"></i> Export Selected
                 </button>
             </div>
+            <?php endif; ?>
             <div class="table-responsive">
                 <table id="bookingsTable" class="table table-hover table-bordered w-100">
                     <thead class="table-light">
@@ -66,6 +70,7 @@
 <?= $this->section('scripts') ?>
 <!-- JavaScript -->
 <script>
+const USER_ROLE = '<?= session()->get('role') ?>';
 let dataTable;
 
 $(document).ready(function() {
@@ -81,6 +86,9 @@ $(document).ready(function() {
         { 
             data: 'awb_no',
             render: function(data, type, row) {
+                if (row.can_edit == 1) {
+                    return `<a href="${BASE_URL}logistics/edit/${row.id}"><strong>${data}</strong></a>`;
+                }
                 return `<strong>${data}</strong>`;
             }
         },
@@ -176,8 +184,11 @@ $(document).ready(function() {
                         <button type="button" class="btn btn-sm btn-outline-info" title="Tracking / POD" onclick="openTrackingDrawer('${row.id}', '${row.awb_no}', '${(row.customer_name || '').replace(/'/g, "\\'")}')">
                             <i class="fa-solid fa-location-dot"></i>
                         </button>
-                        <a href="${BASE_URL}logistics/view/${row.id}" class="btn btn-sm btn-outline-primary" title="View"><i class="fas fa-eye"></i></a>
                 `;
+                
+                if (USER_ROLE !== 'tracking') {
+                    actions += `<a href="${BASE_URL}logistics/view/${row.id}" class="btn btn-sm btn-outline-primary" title="View"><i class="fas fa-eye"></i></a>`;
+                }
                 
                 if (row.can_edit == 1) {
                     actions += `<a href="${BASE_URL}logistics/edit/${row.id}" class="btn btn-sm btn-outline-warning" title="Edit"><i class="fas fa-edit"></i></a>`;

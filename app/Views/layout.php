@@ -72,9 +72,11 @@
                     $seg2 = $totalSegs >= 2 ? $uri->getSegment(2) : ''; 
                 ?>
                 
+                <?php if (session()->get('role') !== 'tracking'): ?>
                 <a href="<?= base_url('logistics') ?>" class="sidebar-nav-item <?= ($seg1 == 'logistics' && $seg2 == '') ? 'active' : '' ?>">
                     <i class="fas fa-th-large"></i> Dashboard
                 </a>
+                <?php endif; ?>
                 
                 <?php if ((session()->get('permissions')['can_create'] ?? 0) == 1): ?>
                 <a href="<?= base_url('logistics/create') ?>" class="sidebar-nav-item <?= ($seg2 == 'create') ? 'active' : '' ?>">

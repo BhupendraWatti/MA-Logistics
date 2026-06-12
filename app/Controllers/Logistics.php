@@ -152,6 +152,7 @@ public function create()
     }
     
     // Master data for dropdowns
+    $data['previous_bookings'] = (new BookingModel())->select('id, awb_no')->where('company_id', $companyId)->orderBy('id', 'DESC')->findAll();
     $data['customers']    = (new CustomerModel())->getByCompany($companyId);
     $data['transporters'] = (new TransporterModel())->getByCompany($companyId);
     $data['drivers']      = (new DriverModel())->getByCompany($companyId);
@@ -179,8 +180,14 @@ public function create()
     try {
         $companyId = session()->get('selected_company_id');
         if (!$companyId) return redirect()->to('/company-selection');
-        $bookingService->createBooking($this->request->getPost(), session()->get('user_id'), $companyId);
+        $bookingId = $bookingService->createBooking($this->request->getPost(), session()->get('user_id'), $companyId);
         $awb_no = $this->request->getPost('awb_no');
+        
+        $redirectTo = $this->request->getPost('redirect_to_booking_id');
+        if (!empty($redirectTo)) {
+            return redirect()->to('/logistics/edit/' . $redirectTo)->with('success', 'Booking saved as Draft successfully.');
+        }
+        
         return redirect()->to('/logistics')->with('success', 'Booking created successfully! AWB: ' . $awb_no);
     } catch (\Throwable $e) {
         log_message('error', '[Logistics Store Error] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
@@ -258,6 +265,7 @@ public function edit($id)
         'selected_company_name'=> session()->get('selected_company_name'),
         'user'                 => session()->get(),
         // Master data for dropdowns
+        'previous_bookings' => $bookingModel->select('id, awb_no')->where('company_id', $companyId)->orderBy('id', 'DESC')->findAll(),
         'customers'    => (new CustomerModel())->getByCompany($companyId),
         'transporters' => (new TransporterModel())->getByCompany($companyId),
         'drivers'      => (new DriverModel())->getByCompany($companyId),
@@ -296,6 +304,12 @@ public function edit($id)
         
         $bookingService->updateBooking($id, $this->request->getPost(), session()->get('user_id'), $companyId);
         $awb_no = $this->request->getPost('awb_no');
+        
+        $redirectTo = $this->request->getPost('redirect_to_booking_id');
+        if (!empty($redirectTo)) {
+            return redirect()->to('/logistics/edit/' . $redirectTo)->with('success', 'Booking updated as Draft successfully.');
+        }
+        
         return redirect()->to('/logistics')->with('success', 'Booking updated successfully! AWB: ' . $awb_no);
     } catch (\Throwable $e) {
         log_message('error', '[Logistics Update Error] ' . $e->getMessage() . "\n" . $e->getTraceAsString());

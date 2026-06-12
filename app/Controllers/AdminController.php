@@ -106,8 +106,8 @@ class AdminController extends BaseController
             'password' => $this->request->getPost('password') ?? '',
             'role' => $this->request->getPost('role') ?? 'user',
             'is_active' => 1,
-            'can_create' => 1,
-            'can_edit' => 1,
+            'can_create' => $this->request->getPost('role') === 'tracking' ? 0 : 1,
+            'can_edit' => $this->request->getPost('role') === 'tracking' ? 0 : 1,
             'can_delete' => $this->request->getPost('role') === 'admin' ? 1 : 0
         ];
 

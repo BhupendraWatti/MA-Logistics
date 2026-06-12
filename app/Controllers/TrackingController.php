@@ -62,6 +62,9 @@ class TrackingController extends BaseController
                 'event_date'       => $postData['event_date'] ?? null,
                 'event_time'       => $postData['event_time'] ?? null,
                 'remarks'          => $postData['remarks'] ?? null,
+                'receiver_name'    => $postData['receiver_name'] ?? null,
+                'receiver_phone'   => $postData['receiver_phone'] ?? null,
+                'receiver_company' => $postData['receiver_company'] ?? null,
             ];
 
             if ($proofImage) {
@@ -229,7 +232,7 @@ class TrackingController extends BaseController
                 if (isset($event['status']) && stripos($event['status'], 'Delivered') !== false) {
                     $deliveryDate = $event['event_date'] ?? '-';
                     $deliveryTime = $event['event_time'] ?? '-';
-                    $receiverName = $event['remarks'] ?? '-';
+                    $receiverName = $event['receiver_name'] ?? $event['remarks'] ?? '-';
                     break;
                 }
             }
@@ -245,17 +248,27 @@ class TrackingController extends BaseController
                 ];
             }
 
+            $latestRemark = '-';
+            if (!empty($history)) {
+                $latestRemark = !empty($history[0]['remarks']) ? $history[0]['remarks'] : ($booking['status'] ?? 'Billed');
+            } else {
+                $latestRemark = $booking['status'] ?? 'Billed';
+            }
+
             $formattedBooking = [
                 'awb_no'         => $booking['awb_no'] ?? '-',
                 'current_status' => $booking['status'] ?? 'Billed',
+                'latest_remark'  => $latestRemark,
                 'booking_date'   => $booking['booking_date'] ?? '-',
+                'consignor_name' => !empty($shipDetails['customers']) ? $shipDetails['customers'] : '-',
                 'consignee_name' => !empty($shipDetails['consignees']) ? $shipDetails['consignees'] : '-',
+                'origin'         => $booking['origin'] ?? '-',
                 'destination'    => $booking['destination'] ?? '-',
                 'total_pieces'   => $booking['total_pieces'] ?? '0',
                 'delivery_date'  => $deliveryDate,
                 'delivery_time'  => $deliveryTime,
                 'receiver_name'  => $receiverName,
-                'forwarding_no'  => !empty($shipDetails['eway_bills']) ? $shipDetails['eway_bills'] : '-',
+                'forwarding_no'  => !empty($shipDetails['dockets']) ? $shipDetails['dockets'] : '-',
                 'expected_delivery_date' => $booking['expected_delivery_date'] ?? '-',
                 'expected_delivery_time' => $booking['expected_delivery_time'] ? substr($booking['expected_delivery_time'], 0, 5) : '-',
             ];

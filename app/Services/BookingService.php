@@ -257,7 +257,8 @@ class BookingService
                     'fuel_surcharge' => $jsItem['fuel_surcharge'] ?? 0,
                     'fov_charges' => $jsItem['fov_charges'] ?? 0,
                     'handling_charges' => $jsItem['handling_charges'] ?? 0,
-                    'service_charges' => $jsItem['service_charges'] ?? 0
+                    'service_charges' => $jsItem['service_charges'] ?? 0,
+                    'part_qty' => $jsItem['part_qty'] ?? 0
                 ];
             }
         } else {
@@ -297,6 +298,7 @@ class BookingService
                     'consignee' => $item['consignee'] ?? '',
                     'docket_no' => $item['docket_no'] ?? '',
                     'part_no' => $item['part_no'] ?? '',
+                    'part_qty' => intval($item['part_qty'] ?? 0),
                     'invoice_no' => $item['invoice_no'] ?? '',
                     'invoice_date' => $item['invoice_date'] ?? null,
                     'actual_weight' => $this->validateNumeric($item['actual_weight'] ?? 0),
@@ -477,7 +479,8 @@ class BookingService
                     'fuel_surcharge' => $jsItem['fuel_surcharge'] ?? 0,
                     'fov_charges' => $jsItem['fov_charges'] ?? 0,
                     'handling_charges' => $jsItem['handling_charges'] ?? 0,
-                    'service_charges' => $jsItem['service_charges'] ?? 0
+                    'service_charges' => $jsItem['service_charges'] ?? 0,
+                    'part_qty' => $jsItem['part_qty'] ?? 0
                 ];
             }
         }
@@ -517,6 +520,7 @@ class BookingService
                     'consignee' => $item['consignee'] ?? '',
                     'docket_no' => $item['docket_no'] ?? '',
                     'part_no' => $item['part_no'] ?? '',
+                    'part_qty' => intval($item['part_qty'] ?? 0),
                     'invoice_no' => $item['invoice_no'] ?? '',
                     'invoice_date' => $item['invoice_date'] ?? null,
                     'actual_weight' => $this->validateNumeric($item['actual_weight'] ?? 0),

@@ -629,15 +629,23 @@
                                 <td class="value-cell" id="val-expected-delivery">-</td>
                             </tr>
                             <tr>
+                                <td class="label-cell">Consignor Name</td>
+                                <td class="value-cell" id="val-consignor">-</td>
+                            </tr>
+                            <tr>
                                 <td class="label-cell">Consignee Name</td>
                                 <td class="value-cell" id="val-consignee">-</td>
+                            </tr>
+                            <tr>
+                                <td class="label-cell">Origin</td>
+                                <td class="value-cell" id="val-origin">-</td>
                             </tr>
                             <tr>
                                 <td class="label-cell">Destination</td>
                                 <td class="value-cell" id="val-destination">-</td>
                             </tr>
                             <tr>
-                                <td class="label-cell">No. Of Pieces</td>
+                                <td class="label-cell">No. Of Pieces / Boxes</td>
                                 <td class="value-cell" id="val-pieces">-</td>
                             </tr>
                             <tr>
@@ -657,7 +665,7 @@
                                 <td class="value-cell" id="val-receiver">-</td>
                             </tr>
                             <tr>
-                                <td class="label-cell">Forwarding No.</td>
+                                <td class="label-cell">Docket Number</td>
                                 <td class="value-cell" id="val-forwarding">-</td>
                             </tr>
                         </tbody>
@@ -803,10 +811,12 @@
             // Populate Left Side Bordered Info Table
             document.getElementById("val-awb-no").innerText = b.awb_no;
             document.getElementById("val-booking-date").innerText = b.booking_date;
+            document.getElementById("val-consignor").innerText = b.consignor_name;
             document.getElementById("val-consignee").innerText = b.consignee_name;
+            document.getElementById("val-origin").innerText = b.origin;
             document.getElementById("val-destination").innerText = b.destination;
             document.getElementById("val-pieces").innerText = b.total_pieces;
-            document.getElementById("val-status").innerText = b.current_status;
+            document.getElementById("val-status").innerText = b.latest_remark;
             document.getElementById("val-delivery-date").innerText = b.delivery_date;
             document.getElementById("val-delivery-time").innerText = b.delivery_time;
             document.getElementById("val-receiver").innerText = b.receiver_name;

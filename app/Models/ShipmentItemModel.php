@@ -11,7 +11,7 @@ class ShipmentItemModel extends Model
     
     protected $allowedFields = [
         'booking_id', 'customer_name', 'bill_to', 'consignee', 'docket_no',
-        'part_no', 'invoice_no', 'invoice_date', 'actual_weight', 'length',
+        'part_no', 'part_qty', 'invoice_no', 'invoice_date', 'actual_weight', 'length',
         'width', 'height', 'volumetric_weight', 'calculated_chargeable_weight', 'final_chargeable_weight', 'pieces', 
         'eway_bill_no', 'eway_bill_date', 'rate', 'delivery_charges',
         'docket_charges', 'pickup_charges', 'fuel_surcharge', 'fov_charges',

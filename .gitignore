@@ -8,8 +8,6 @@
 /writable/*
 !/writable/index.html
 
-    
-
 # IDE
 .vscode/
 .idea/
@@ -34,4 +32,15 @@ node_modules/
 # Local test/debug files
 test_db.php
 drop_sort_order.php
-testsprite_tests\tmp\config.json
+testsprite_tests/tmp/config.json
+
+# Graphify
+graphify-out/
+graphify_output.md
+.graphifyignore
+
+# Antigravity IDE Metadata
+.antigravitycli/
+
+# Uploaded signatures and files
+public/uploads/

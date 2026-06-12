@@ -32,7 +32,27 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
 
     <input type="hidden" name="company_id" value="<?= esc($selected_company_id ?? '') ?>" required>
     <input type="hidden" name="status" id="booking_status" value="Active">
-    
+    <input type="hidden" name="redirect_to_booking_id" id="redirect_to_booking_id" value="">
+
+    <!-- Quick Switch AWB Dropdown at top -->
+    <div class="card p-3 mb-3 border-0 bg-light rounded shadow-sm">
+        <div class="row align-items-center">
+            <div class="col-md-6 col-lg-4">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-white fw-bold text-muted border-secondary"><i class="fas fa-search me-1 text-primary"></i> Quick Switch AWB:</span>
+                    <select id="awb_select_top" class="form-select fw-bold border-secondary shadow-none">
+                        <option value="">-- Select AWB to Edit --</option>
+                        <?php foreach ($previous_bookings ?? [] as $pb): ?>
+                            <option value="<?= $pb['id'] ?>" <?= (isset($booking['id']) && $booking['id'] == $pb['id']) ? 'selected' : '' ?>>
+                                <?= esc($pb['awb_no']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ERP TABS -->
     <ul class="nav nav-tabs fw-medium" id="bookingTabs" role="tablist">
         <li class="nav-item" role="presentation">
@@ -279,14 +299,17 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     <thead class="table-light">
                         <tr>
                             <th style="width: 5%">#</th>
-                            <th>Sub-Shipper</th>
+                            <th>AWB No.</th>
                             <th>Docket No</th>
-                            <th>Contents</th>
-                            <th>Pcs</th>
+                            <th>Customer</th>
+                            <th>Invoice No</th>
+                            <th>Part NO.</th>
+                            <th>Part Qty</th>
+                            <th>Pcs/Boxes</th>
                             <th>Act Wt</th>
-                            <th>Dims</th>
                             <th>Vol Wt</th>
                             <th>Chg Wt</th>
+                            <th>Item Rate</th>
                             <th class="text-end" style="width: 100px;">Actions</th>
                         </tr>
                     </thead>
@@ -307,17 +330,17 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             
             <div class="row mb-4">
                 <div class="col-md-3">
-                    <label class="form-label text-muted fs-7 fw-semibold">Flight Number</label>
-                    <input type="text" name="flight_number" class="form-control form-control-sm shadow-none" value="<?= $booking['flight_number'] ?? '' ?>">
-                </div>
-                <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">Airlines</label>
-                    <select name="airlines" class="form-select form-select-sm shadow-none">
+                    <select name="airlines" id="airlines_select" class="form-select form-select-sm shadow-none">
                         <option value="">--Select--</option>
                         <?php foreach($airlines ?? [] as $a): ?>
-                            <option value="<?= esc($a['name']) ?>" <?= ($booking['airlines'] ?? '') == $a['name'] ? 'selected' : '' ?>><?= esc($a['name']) ?></option>
+                            <option value="<?= esc($a['name']) ?>" data-code="<?= esc($a['code'] ?? '') ?>" <?= ($booking['airlines'] ?? '') == $a['name'] ? 'selected' : '' ?>><?= esc($a['name']) ?></option>
                         <?php endforeach; ?>
                     </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-muted fs-7 fw-semibold">Flight Number</label>
+                    <input type="text" name="flight_number" class="form-control form-control-sm shadow-none" value="<?= $booking['flight_number'] ?? '' ?>">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">Global Rate (₹/KG)</label>
@@ -517,7 +540,13 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 <input type="text" id="entry_consignee" class="form-control form-control-sm" maxlength="250">
             </div>
             <div class="col-md-3">
-                <label class="fs-8 text-muted fw-semibold">Docket No / Ref</label>
+                <div class="d-flex justify-content-between align-items-center">
+                    <label class="fs-8 text-muted fw-semibold">Docket No / Ref</label>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" id="modal_auto_generate_docket" checked style="transform: scale(0.85); margin-top: 0.15rem;">
+                        <label class="form-check-label fs-8 text-muted fw-semibold" for="modal_auto_generate_docket">Auto</label>
+                    </div>
+                </div>
                 <input type="text" id="entry_docket" class="form-control form-control-sm shadow-none" placeholder="Enter Docket No manually">
             </div>
             <div class="col-md-3">
@@ -532,11 +561,15 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 <label class="fs-8 text-muted fw-semibold">Invoice Date</label>
                 <input type="date" id="entry_invoice_date" class="form-control form-control-sm">
             </div>
+            <div class="col-md-3">
+                <label class="fs-8 text-muted fw-semibold">Total Part Quantity</label>
+                <input type="number" id="entry_part_qty" class="form-control form-control-sm" value="0" min="0">
+            </div>
         </div>
 
         <h6 class="fw-bold border-bottom pb-2 mb-3 text-primary">Dimensions & Weight</h6>
         <div class="row g-3 mb-4">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <label class="fs-8 text-muted fw-semibold">Contents Description <span class="text-danger">*</span></label>
                 <input type="text" id="entry_contents" class="form-control form-control-sm" required>
             </div>
@@ -559,6 +592,10 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             <div class="col-md-2">
                 <label class="fs-8 text-muted fw-semibold">Volumetric Wt (kg)</label>
                 <input type="text" id="entry_vol_wt" class="form-control form-control-sm bg-light tabular-nums" readonly>
+            </div>
+            <div class="col-md-2">
+                <label class="fs-8 text-muted fw-semibold">Chargeable Wt (kg)</label>
+                <input type="number" step="0.01" id="entry_chg_wt" class="form-control form-control-sm tabular-nums">
             </div>
         </div>
 
@@ -597,7 +634,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     let items = [];
 
     function updateDocketInputState() {
-        const isAutoGen = $('#auto_generate_docket').is(':checked');
+        const isAutoGen = $('#modal_auto_generate_docket').is(':checked');
         const editIndex = $('#entry_edit_index').val();
         
         // Only apply auto-gen preview/manual carryover if we are adding a NEW item
@@ -613,7 +650,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     data: { exclude_dockets: previewDockets },
                     dataType: 'json',
                     success: function(res) {
-                        if (res.status === 'success' && $('#entry_edit_index').val() === '-1' && $('#auto_generate_docket').is(':checked')) {
+                        if (res.status === 'success' && $('#entry_edit_index').val() === '-1' && $('#modal_auto_generate_docket').is(':checked')) {
                             $('#entry_docket').val(res.docket_no).css('color', '#888888');
                         }
                     },
@@ -642,6 +679,48 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     let manifestDataTable;
 
     $(document).ready(function() {
+        $('#awb_select_top').on('change', function() {
+            let targetId = $(this).val();
+            if (targetId) {
+                Swal.fire({
+                    title: 'Switching Booking',
+                    text: 'Your current changes will be saved as a Draft, and you will be redirected to edit the selected booking.',
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, proceed',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $('#redirect_to_booking_id').val(targetId);
+                        saveAsDraft();
+                    } else {
+                        $(this).val('<?= $booking['id'] ?? '' ?>');
+                    }
+                });
+            }
+        });
+
+        $('#airlines_select').on('change', function() {
+            const code = $(this).find('option:selected').data('code') || '';
+            $('input[name="flight_number"]').val(code);
+        });
+
+        $('input[name="awb_no"]').on('input change', function() {
+            if (manifestDataTable) {
+                manifestDataTable.rows().invalidate().draw(false);
+            }
+        });
+
+        // Sync auto-generate docket checkboxes
+        $('#auto_generate_docket').on('change', function() {
+            $('#modal_auto_generate_docket').prop('checked', $(this).is(':checked'));
+            updateDocketInputState();
+        });
+        $('#modal_auto_generate_docket').on('change', function() {
+            $('#auto_generate_docket').prop('checked', $(this).is(':checked'));
+            updateDocketInputState();
+        });
+
         // Dynamic visual character counters for fields with maxlength attribute
         $('[maxlength]').each(function() {
             const $field = $(this);
@@ -682,20 +761,22 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     return meta.row + 1;
                 }
             },
-            { data: 'customer' },
-            { data: 'docket' },
-            { data: 'contents' },
-            { data: 'pcs', className: 'tabular-nums' },
-            { data: 'act_wt', className: 'tabular-nums', render: data => data.toFixed(2) },
-            { 
-                data: null, 
-                className: 'tabular-nums text-muted',
-                render: function(data, type, row) {
-                    return row.l ? `${row.l}x${row.w}x${row.h}` : '-';
+            {
+                data: null,
+                render: function() {
+                    return $('input[name="awb_no"]').val() || '';
                 }
             },
-            { data: 'vol_wt', className: 'tabular-nums', render: data => data.toFixed(2) },
-            { data: 'chg_wt', className: 'tabular-nums fw-bold text-primary', render: data => data.toFixed(2) },
+            { data: 'docket' },
+            { data: 'customer' },
+            { data: 'invoice_no' },
+            { data: 'part_no' },
+            { data: 'part_qty', className: 'tabular-nums' },
+            { data: 'pcs', className: 'tabular-nums' },
+            { data: 'act_wt', className: 'tabular-nums', render: data => parseFloat(data || 0).toFixed(2) },
+            { data: 'vol_wt', className: 'tabular-nums', render: data => parseFloat(data || 0).toFixed(2) },
+            { data: 'chg_wt', className: 'tabular-nums fw-bold text-primary', render: data => parseFloat(data || 0).toFixed(2) },
+            { data: 'rate', className: 'tabular-nums', render: data => data ? parseFloat(data).toFixed(2) : '0.00' },
             {
                 data: null,
                 orderable: false,
@@ -749,6 +830,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     docket: s.docket_no || '',
                     invoice_no: s.invoice_no || '',
                     part_no: s.part_no || '',
+                    part_qty: parseInt(s.part_qty) || 0,
                     invoice_date: s.invoice_date || '',
                     contents: s.part_no || 'Goods',
                     pcs: parseInt(s.pieces) || 1,
@@ -845,12 +927,20 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         const l = parseFloat($('#entry_l').val()) || 0;
         const w = parseFloat($('#entry_w').val()) || 0;
         const h = parseFloat($('#entry_h').val()) || 0;
+        const act = parseFloat($('#entry_act_wt').val()) || 0;
         const formula = parseFloat($('#volumetric_formula').val()) || 6000;
+        let vol = 0;
         if(l>0 && w>0 && h>0) {
-            const vol = (l * w * h) / formula;
+            vol = (l * w * h) / formula;
             $('#entry_vol_wt').val(vol.toFixed(2));
         } else {
             $('#entry_vol_wt').val('');
+        }
+        const chg = Math.max(act, vol);
+        if (chg > 0) {
+            $('#entry_chg_wt').val(chg.toFixed(2));
+        } else {
+            $('#entry_chg_wt').val('');
         }
     }
 
@@ -883,9 +973,11 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         const globalBillTo  = $('#global_bill_to').val() || '';
         const globalConsignee = $('#global_consignee').val() || '';
         
+        const awbVal = $('input[name="awb_no"]').val() || '';
+        
         if (index === -1) {
             // New Item
-            $('#itemModalLabel').text('Add Shipment Item');
+            $('#itemModalLabel').html('<i class="fas fa-box-open me-2"></i> Add Shipment Item' + (awbVal ? ` - AWB: <b>${awbVal}</b>` : ''));
             
             let prevPartNo = '';
             let prevInvoiceDate = '';
@@ -913,18 +1005,20 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             $('#entry_invoice').val('');
             $('#entry_part_no').val(prevPartNo);
             $('#entry_invoice_date').val(prevInvoiceDate);
+            $('#entry_part_qty').val('0');
             
             $('#entry_contents').val('');
             $('#entry_pcs').val('1');
             $('#entry_act_wt').val('');
             $('#entry_l, #entry_w, #entry_h, #entry_vol_wt').val('');
+            $('#entry_chg_wt').val('');
             
             // Clear charges
             $('#entry_eway_no, #entry_eway_date, #entry_rate, #entry_delivery, #entry_docket_chg, #entry_pickup, #entry_fuel, #entry_fov, #entry_handling, #entry_service').val('');
             
         } else {
             // Edit Item
-            $('#itemModalLabel').text('Edit Shipment Item');
+            $('#itemModalLabel').html('<i class="fas fa-box-open me-2"></i> Edit Shipment Item' + (awbVal ? ` - AWB: <b>${awbVal}</b>` : ''));
             const item = items[index];
             
             $('#entry_customer').val(item.customer);
@@ -935,6 +1029,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             $('#entry_invoice').val(item.invoice_no);
             $('#entry_part_no').val(item.part_no || '');
             $('#entry_invoice_date').val(item.invoice_date || '');
+            $('#entry_part_qty').val(item.part_qty || 0);
             
             $('#entry_contents').val(item.contents);
             $('#entry_pcs').val(item.pcs);
@@ -942,7 +1037,19 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             $('#entry_l').val(item.l || '');
             $('#entry_w').val(item.w || '');
             $('#entry_h').val(item.h || '');
-            calcEntryVol();
+            
+            // Render volumetric weight without overriding existing custom chargeable weight
+            const l = parseFloat(item.l) || 0;
+            const w = parseFloat(item.w) || 0;
+            const h = parseFloat(item.h) || 0;
+            const formula = parseFloat($('#volumetric_formula').val()) || 6000;
+            if(l>0 && w>0 && h>0) {
+                const vol = (l * w * h) / formula;
+                $('#entry_vol_wt').val(vol.toFixed(2));
+            } else {
+                $('#entry_vol_wt').val('');
+            }
+            $('#entry_chg_wt').val(item.chg_wt ? parseFloat(item.chg_wt).toFixed(2) : '');
             
             $('#entry_eway_no').val(item.eway_no);
             $('#entry_eway_date').val(item.eway_date);
@@ -1012,7 +1119,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         const h = parseFloat($('#entry_h').val()) || 0;
         const formula = parseFloat($('#volumetric_formula').val()) || 6000;
         const vol_wt = (l*w*h)/formula;
-        const chg_wt = Math.max(act_wt, vol_wt); 
+        const chg_wt = parseFloat($('#entry_chg_wt').val()) || Math.max(act_wt, vol_wt); 
 
         const itemObj = {
             id: editIndex >= 0 ? items[editIndex].id : '',
@@ -1022,6 +1129,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             docket: docket,
             invoice_no: $('#entry_invoice').val(),
             part_no: $('#entry_part_no').val(),
+            part_qty: parseInt($('#entry_part_qty').val()) || 0,
             invoice_date: $('#entry_invoice_date').val(),
             contents: contents,
             pcs: parseInt($('#entry_pcs').val()) || 1,

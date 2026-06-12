@@ -16,9 +16,9 @@
                     <th>Username</th>
                     <th>Email</th>
                     <th>Role</th>
-                    <th>Create</th>
-                    <th>Edit</th>
-                    <th>Delete</th>
+                    <th>Master Entry & Company Setting</th>
+                    <th>Tracking & POD</th>
+                    <th>User Management</th>
                     <th>Status</th>
                     <th>Actions</th>
                     <th>Password</th>
@@ -55,6 +55,7 @@
                     <select name="role" class="form-select form-select-sm shadow-none">
                         <option value="user">User</option>
                         <option value="admin">Admin</option>
+                        <option value="tracking">Tracking</option>
                     </select>
                 </div>
             </div>
@@ -103,7 +104,10 @@
             { 
                 data: 'role', 
                 render: function(data) {
-                    return `<span class="badge ${data === 'admin' ? 'bg-danger' : 'bg-info'}">${data.charAt(0).toUpperCase() + data.slice(1)}</span>`;
+                    let badgeClass = 'bg-info';
+                    if (data === 'admin') badgeClass = 'bg-danger';
+                    else if (data === 'tracking') badgeClass = 'bg-warning text-dark';
+                    return `<span class="badge ${badgeClass}">${data.charAt(0).toUpperCase() + data.slice(1)}</span>`;
                 }
             },
             {

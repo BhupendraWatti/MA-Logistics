@@ -30,9 +30,41 @@ class AuthFilter implements FilterInterface
             }
         }
 
+        $userRole = session()->get('role');
+
+        // ✅ NEW: TRACKING ROLE CHECK
+        if ($userRole === 'tracking') {
+            if ($cleanUri === '' || $cleanUri === 'logistics') {
+                return redirect()->to('/logistics/manage');
+            }
+            
+            $allowedPaths = [
+                'logistics/manage',
+                'logistics/search',
+                'logistics/searchResult',
+                'logistics/ajax-datatable',
+                'tracking/history',
+                'tracking/save',
+                'company-selection',
+                'logistics/setCompany',
+                'logistics/clearCompany',
+                'auth/logout',
+            ];
+            
+            $isAllowed = false;
+            foreach ($allowedPaths as $allowed) {
+                if ($cleanUri === $allowed || strpos($cleanUri, $allowed . '/') === 0) {
+                    $isAllowed = true;
+                    break;
+                }
+            }
+            if (!$isAllowed) {
+                return redirect()->to('/logistics/manage')->with('error', 'Access Restricted: Tracking role can only access tracking updates.');
+            }
+        }
+
         // ✅ NEW: PERMISSION CHECKS
         $permissions = session()->get('permissions') ?? [];
-        $userRole = session()->get('role');
         
         // ADMIN PANEL - Admin only
         if (strpos($uri, 'admin') === 0 && $userRole !== 'admin') {

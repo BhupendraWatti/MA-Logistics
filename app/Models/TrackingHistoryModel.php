@@ -20,7 +20,10 @@ class TrackingHistoryModel extends Model
         'event_date',
         'event_time',
         'remarks',
-        'proof_image'
+        'proof_image',
+        'receiver_name',
+        'receiver_phone',
+        'receiver_company'
     ];
 
     // Dates
