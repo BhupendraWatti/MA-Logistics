@@ -177,12 +177,12 @@ const ERPUtils = {
 // ==========================================
 $(document).ready(function() {
     let isDirty = false;
-    let allowLeave = false;
+    window.allowLeave = false;
     
     // Check both local isDirty and global window.isDirty (for page-specific script modifications)
-    function checkDirty() {
+    window.checkDirty = function() {
         return isDirty || !!window.isDirty;
-    }
+    };
     
     function resetDirty() {
         isDirty = false;
@@ -208,7 +208,7 @@ $(document).ready(function() {
                 }
             }
 
-            if (!checkDirty() && $(this).closest('.dataTables_filter').length === 0 && $(this).closest('.dataTables_length').length === 0) {
+            if (!window.checkDirty() && $(this).closest('.dataTables_filter').length === 0 && $(this).closest('.dataTables_length').length === 0) {
                 isDirty = true;
                 // Push state so we can trap back button
                 history.pushState(null, null, window.location.href);
@@ -218,7 +218,7 @@ $(document).ready(function() {
 
     // Intercept back button
     window.addEventListener('popstate', function(event) {
-        if (checkDirty() && !allowLeave) {
+        if (window.checkDirty() && !window.allowLeave) {
             history.pushState(null, null, window.location.href);
             Swal.fire({
                 title: 'Unsaved Changes!',
@@ -231,7 +231,7 @@ $(document).ready(function() {
                 cancelButtonText: 'Stay'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    allowLeave = true;
+                    window.allowLeave = true;
                     resetDirty();
                     history.go(-2);
                 }
@@ -243,7 +243,7 @@ $(document).ready(function() {
     $('a').on('click', function(e) {
         const targetUrl = $(this).attr('href');
         // Check if real internal navigation
-        if (checkDirty() && !allowLeave && targetUrl && !targetUrl.startsWith('#') && !targetUrl.startsWith('javascript:')) {
+        if (window.checkDirty() && !window.allowLeave && targetUrl && !targetUrl.startsWith('#') && !targetUrl.startsWith('javascript:')) {
             // Ignore offcanvas triggers that might use href=# (just a safeguard)
             if ($(this).attr('data-bs-toggle') === 'offcanvas') return;
             
@@ -259,7 +259,7 @@ $(document).ready(function() {
                 cancelButtonText: 'Stay'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    allowLeave = true;
+                    window.allowLeave = true;
                     resetDirty();
                     window.location.href = targetUrl;
                 }
@@ -269,7 +269,7 @@ $(document).ready(function() {
 
     // Fallback for tab closing / page refresh
     window.addEventListener("beforeunload", function(event) {
-        if (checkDirty() && !allowLeave) {
+        if (window.checkDirty() && !window.allowLeave) {
             event.preventDefault();
             event.returnValue = "You have unsaved changes. Are you sure you want to leave?";
         }
@@ -277,7 +277,7 @@ $(document).ready(function() {
 
     // Clear dirty flag when forms are submitted
     $('form').on('submit', function() {
-        allowLeave = true;
+        window.allowLeave = true;
         resetDirty();
     });
 });

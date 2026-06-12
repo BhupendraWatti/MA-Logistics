@@ -687,16 +687,18 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             if (targetId) {
                 const isNewBooking = <?= !isset($booking['id']) ? 'true' : 'false' ?>;
                 const hasItems = items.length > 0;
-                const dirty = !!window.isDirty;
+                const dirty = typeof window.checkDirty === 'function' ? window.checkDirty() : (!!window.isDirty);
                 
                 if (isNewBooking && !hasItems) {
                     window.isDirty = false;
+                    window.allowLeave = true;
                     window.location.href = BASE_URL + 'logistics/edit/' + targetId;
                     return;
                 }
                 
                 if (!dirty) {
                     window.isDirty = false;
+                    window.allowLeave = true;
                     window.location.href = BASE_URL + 'logistics/edit/' + targetId;
                     return;
                 }
@@ -710,6 +712,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     cancelButtonText: 'Cancel'
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        window.allowLeave = true;
                         $('#redirect_to_booking_id').val(targetId);
                         saveAsDraft();
                     } else {
