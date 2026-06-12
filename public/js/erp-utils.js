@@ -195,8 +195,8 @@ $(document).ready(function() {
             // Ignore programmatic jQuery triggers
             if (e.isTrigger) return;
             
-            // Ignore non-form action inputs like permission switches, select-all, or row checkboxes
-            if ($(this).hasClass('toggle-permission') || $(this).hasClass('booking-check') || $(this).attr('id') === 'selectAll') {
+            // Ignore non-form action inputs like permission switches, select-all, row checkboxes, or no-track items
+            if ($(this).hasClass('toggle-permission') || $(this).hasClass('booking-check') || $(this).attr('id') === 'selectAll' || $(this).hasClass('no-track') || $(this).attr('data-no-track') === 'true') {
                 return;
             }
             

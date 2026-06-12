@@ -78,7 +78,9 @@ class Filters extends BaseFilters
                 'logistics/ajax-datatable', 
                 'masters/ajax-datatable/*', 
                 'admin/ajax-datatable',
-                'api/track/*'
+                'api/track/*',
+                'masters/dockets/preview',
+                'masters/dockets/generate'
             ]],
             // 'invalidchars',
         ],

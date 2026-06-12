@@ -40,7 +40,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             <div class="col-md-6 col-lg-4">
                 <div class="input-group input-group-sm">
                     <span class="input-group-text bg-white fw-bold text-muted border-secondary"><i class="fas fa-search me-1 text-primary"></i> Quick Switch AWB:</span>
-                    <select id="awb_select_top" class="form-select fw-bold border-secondary shadow-none">
+                    <select id="awb_select_top" class="form-select fw-bold border-secondary shadow-none no-track">
                         <option value="">-- Select AWB to Edit --</option>
                         <?php foreach ($previous_bookings ?? [] as $pb): ?>
                             <option value="<?= $pb['id'] ?>" <?= (isset($booking['id']) && $booking['id'] == $pb['id']) ? 'selected' : '' ?>>
@@ -179,24 +179,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                         <i class="fas fa-exclamation-triangle me-1"></i> Customer GST number is not filled.
                     </small>
                 </div>
-                <div class="col-md-3 d-flex align-items-end" id="auto_docket_container">
-                    <div class="form-check mb-1">
-                        <?php
-                        $autoGenChecked = true;
-                        if (isset($booking['id']) && !empty($shipments)) {
-                            foreach ($shipments as $s) {
-                                $docketNo = $s['docket_no'] ?? '';
-                                if ($docketNo !== '' && strpos($docketNo, 'DCK-') !== 0) {
-                                    $autoGenChecked = false;
-                                    break;
-                                }
-                            }
-                        }
-                        ?>
-                        <input class="form-check-input" type="checkbox" id="auto_generate_docket" name="auto_generate_docket" value="1" <?= $autoGenChecked ? 'checked' : '' ?>>
-                        <label class="form-check-label fw-bold text-dark" for="auto_generate_docket">Auto-Gen Dockets</label>
-                    </div>
-                </div>
+
                 <div class="col-md-12">
                     <label class="form-label text-muted fs-7 fw-semibold">MATERIAL DETAILS</label>
                     <textarea name="material_details" class="form-control form-control-sm shadow-none" rows="2" placeholder="Enter material details..."><?= esc($booking['material_details'] ?? '') ?></textarea>
@@ -542,8 +525,20 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             <div class="col-md-3">
                 <div class="d-flex justify-content-between align-items-center">
                     <label class="fs-8 text-muted fw-semibold">Docket No / Ref</label>
-                    <div class="form-check form-switch mb-0">
-                        <input class="form-check-input" type="checkbox" id="modal_auto_generate_docket" checked style="transform: scale(0.85); margin-top: 0.15rem;">
+                    <div class="form-check mb-0">
+                        <?php
+                        $autoGenChecked = true;
+                        if (isset($booking['id']) && !empty($shipments)) {
+                            foreach ($shipments as $s) {
+                                $docketNo = $s['docket_no'] ?? '';
+                                if ($docketNo !== '' && strpos($docketNo, 'DCK-') !== 0) {
+                                    $autoGenChecked = false;
+                                    break;
+                                }
+                            }
+                        }
+                        ?>
+                        <input class="form-check-input" type="checkbox" id="modal_auto_generate_docket" value="1" <?= $autoGenChecked ? 'checked' : '' ?> style="transform: scale(0.85); margin-top: 0.15rem;">
                         <label class="form-check-label fs-8 text-muted fw-semibold" for="modal_auto_generate_docket">Auto</label>
                     </div>
                 </div>
@@ -632,6 +627,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
 
 <script>
     let items = [];
+    window.isDirty = false;
 
     function updateDocketInputState() {
         const isAutoGen = $('#modal_auto_generate_docket').is(':checked');
@@ -652,9 +648,16 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     success: function(res) {
                         if (res.status === 'success' && $('#entry_edit_index').val() === '-1' && $('#modal_auto_generate_docket').is(':checked')) {
                             $('#entry_docket').val(res.docket_no).css('color', '#888888');
+                        } else if (res.status !== 'success') {
+                            console.error("Docket preview error status returned:", res.message);
                         }
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
+                        console.error("Docket preview AJAX call failed details:", {
+                            status: status,
+                            error: error,
+                            response: xhr.responseText
+                        });
                         $('#entry_docket').val('DCK-XXXXX').css('color', '#888888');
                     }
                 });
@@ -682,6 +685,22 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         $('#awb_select_top').on('change', function() {
             let targetId = $(this).val();
             if (targetId) {
+                const isNewBooking = <?= !isset($booking['id']) ? 'true' : 'false' ?>;
+                const hasItems = items.length > 0;
+                const dirty = !!window.isDirty;
+                
+                if (isNewBooking && !hasItems) {
+                    window.isDirty = false;
+                    window.location.href = BASE_URL + 'logistics/edit/' + targetId;
+                    return;
+                }
+                
+                if (!dirty) {
+                    window.isDirty = false;
+                    window.location.href = BASE_URL + 'logistics/edit/' + targetId;
+                    return;
+                }
+                
                 Swal.fire({
                     title: 'Switching Booking',
                     text: 'Your current changes will be saved as a Draft, and you will be redirected to edit the selected booking.',
@@ -711,13 +730,8 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             }
         });
 
-        // Sync auto-generate docket checkboxes
-        $('#auto_generate_docket').on('change', function() {
-            $('#modal_auto_generate_docket').prop('checked', $(this).is(':checked'));
-            updateDocketInputState();
-        });
+        // Handle auto-generate docket checkbox change
         $('#modal_auto_generate_docket').on('change', function() {
-            $('#auto_generate_docket').prop('checked', $(this).is(':checked'));
             updateDocketInputState();
         });
 
@@ -855,10 +869,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             renderGrid();
         }
         
-        // Listen for change in auto-generate checkbox to update docket field if modal is open
-        $(document).on('change', '#auto_generate_docket', function() {
-            updateDocketInputState();
-        });
+
         
         // Global docket generation listeners removed as auto-generation is now handled automatically
 
@@ -1086,7 +1097,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         const editIndex = parseInt($('#entry_edit_index').val());
         
         // Auto generate if checked and it's a new item
-        const isAutoGen = $('#auto_generate_docket').is(':checked');
+        const isAutoGen = $('#modal_auto_generate_docket').is(':checked');
         if (isAutoGen && editIndex === -1) {
             Swal.fire({
                 title: 'Generating Docket...',
@@ -1156,7 +1167,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             items.push(itemObj);
         }
         
-        isDirty = true;
+        window.isDirty = true;
         renderGrid();
         
         // Hide modal
@@ -1185,7 +1196,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         }).then((result) => {
             if (result.isConfirmed) {
                 items.splice(index, 1);
-                isDirty = true;
+                window.isDirty = true;
                 renderGrid();
                 Swal.fire({
                     title: 'Deleted!',
@@ -1232,7 +1243,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             item.vol_wt = (item.l * item.w * item.h) / formula;
             item.chg_wt = Math.max(item.act_wt, item.vol_wt);
         });
-        isDirty = true;
+        window.isDirty = true;
         renderGrid();
     }
 
@@ -1459,7 +1470,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         // Re-render to ensure hidden inputs are fresh/current
         renderGrid();
         
-        isDirty = false; // allow navigation without prompt
+        window.isDirty = false; // allow navigation without prompt
         $('#mainSubmitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
     });
 

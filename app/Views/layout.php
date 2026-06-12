@@ -197,7 +197,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <!-- Global ERP Utilities -->
-    <script>const BASE_URL = '<?= base_url() ?>';</script>
+    <script>const BASE_URL = '<?= base_url() ?>'.replace(/^https?:/, '');</script>
     <script src="<?= base_url('js/erp-utils.js') ?>"></script>
     
     <!-- Global Error Handler -->
