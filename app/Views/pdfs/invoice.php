@@ -287,7 +287,7 @@ foreach ($shipmentRows as $row) {
                 <?php foreach ($gstRows as $r): ?>
                 <tr>
                     <td style="width:70%; border-bottom:1px solid #000; border-right:1px solid #000; font-weight:bold;"><?= esc($r['label']) ?></td>
-                    <td style="width:30%; border-bottom:1px solid #000; text-align:center; font-weight:bold;"><?= $r['amount'] ?></td>
+                    <td style="width:30%; border-bottom:1px solid #000; text-align:center; font-weight:bold;"><?= number_format($r['amount'], 2) ?></td>
                 </tr>
                 <?php endforeach; ?>
                 <tr>

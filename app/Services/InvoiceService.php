@@ -240,9 +240,9 @@ class InvoiceService
         $sgstRate = $isIgst ? 0 : (float) ($ratesFromCompany['sgst_rate'] ?? 9);
         $igstRate = $isIgst ? (float) ($ratesFromCompany['igst_rate'] ?? 18) : 0;
 
-        $cgst = round($taxable * $cgstRate / 100);
-        $sgst = round($taxable * $sgstRate / 100);
-        $igst = round($taxable * $igstRate / 100);
+        $cgst = $isIgst ? 0.0 : round($taxable * $cgstRate / 100, 2);
+        $sgst = $isIgst ? 0.0 : round($taxable * $sgstRate / 100, 2);
+        $igst = $isIgst ? round($taxable * $igstRate / 100, 2) : 0.0;
 
         return [
             'cgstRate'   => $cgstRate,
