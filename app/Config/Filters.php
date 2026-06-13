@@ -81,6 +81,8 @@ class Filters extends BaseFilters
                 'api/track/*',
                 'masters/dockets/preview',
                 'masters/dockets/generate',
+                'logistics/all-invoices/search',
+                'logistics/all-invoices/generate',
                 'run-migrations',
                 'view-latest-log'
             ]],
