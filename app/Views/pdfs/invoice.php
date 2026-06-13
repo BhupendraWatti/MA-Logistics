@@ -276,7 +276,8 @@ foreach ($shipmentRows as $row) {
     </tr>
 </table>
 
-<table nobr="true" cellpadding="2" cellspacing="0" style="width:100%; font-size:8px; border-collapse:collapse; font-family:helvetica; border: 1px solid #000; border-top: none;">
+<div nobr="true">
+<table cellpadding="2" cellspacing="0" style="width:100%; font-size:8px; border-collapse:collapse; font-family:helvetica; border: 1px solid #000; border-top: none;">
     <?php 
     $gstRows = [];
     if ($gstApplied) {
@@ -309,7 +310,7 @@ foreach ($shipmentRows as $row) {
     </tr>
 </table>
 
-<table nobr="true" cellpadding="2" cellspacing="0" style="width:100%; font-size:8px; border-collapse:collapse; font-family:helvetica; border: 1px solid #000; border-top: none;">
+<table cellpadding="2" cellspacing="0" style="width:100%; font-size:8px; border-collapse:collapse; font-family:helvetica; border: 1px solid #000; border-top: none;">
     <tr>
         <td colspan="2" style="font-size:9px; font-weight:bold; padding: 5px; border-bottom:1px solid #000;">
             Rs. (In Word) : <?= strtoupper($amountInWords) ?> ONLY
@@ -359,4 +360,5 @@ foreach ($shipmentRows as $row) {
         </td>
     </tr>
 </table>
+</div>
 <?php endif; ?>
