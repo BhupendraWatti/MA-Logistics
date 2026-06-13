@@ -103,7 +103,7 @@ class PdfInvoiceGenerator
         $dueDate     = $viewData['dueDate'] ?? '';
         $address     = $viewData['recipientAddress'] ?? '';
 
-        $margin = 61;
+        $margin = 56;
 
         $showGstRow = ($gstApplied && !empty($customerGst) && ($cgstRate > 0 || $sgstRate > 0 || $igstRate > 0));
         if ($showGstRow) {
