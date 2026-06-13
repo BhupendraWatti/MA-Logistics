@@ -37,6 +37,10 @@ $routes->post('logistics/delete/(:num)', 'Logistics::delete/$1');
 $routes->get('logistics/deleteSignature/(:num)', 'Logistics::deleteSignature/$1');
 $routes->get('logistics/consolidation', 'Logistics::consolidation');
 
+$routes->get('logistics/all-invoices', 'Logistics::allInvoices');
+$routes->post('logistics/all-invoices/search', 'Logistics::ajaxSearchShipmentRecords');
+$routes->post('logistics/all-invoices/generate', 'Logistics::generateConsolidatedInvoice');
+
 $routes->get('logistics/clearCompany', 'Logistics::clearCompany');
 
 // COMPANY SELECTION (CRITICAL - MUST BE BEFORE FALLBACK)
@@ -46,8 +50,8 @@ $routes->post('logistics/createCompany', 'Logistics::createCompany');
 $routes->post('logistics/deleteCompany/(:num)', 'Logistics::deleteCompany/$1');
 
 // ====== MASTER MODULE ======
-$routes->get('masters/company',                       'MasterController::editCompany');
-$routes->post('masters/company/update',               'MasterController::updateCompany');
+$routes->get('masters/company',                       'CompanyController::settings');
+$routes->post('masters/company/update',               'CompanyController::updateSettings');
 $routes->post('masters/dockets/generate',             'MasterController::generateDocket');
 $routes->post('masters/dockets/preview',              'MasterController::previewDocket');
 
@@ -71,6 +75,11 @@ $routes->get('masters/airlines',                      'MasterController::airline
 $routes->post('masters/airlines/create',              'MasterController::createAirline');
 $routes->post('masters/airlines/update/(:num)',        'MasterController::updateAirline/$1');
 $routes->post('masters/airlines/delete/(:num)',        'MasterController::deleteAirline/$1');
+
+$routes->get('masters/bank-accounts',                     'MasterController::bankAccounts');
+$routes->post('masters/bank-accounts/create',             'MasterController::createBankAccount');
+$routes->post('masters/bank-accounts/update/(:num)',       'MasterController::updateBankAccount/$1');
+$routes->post('masters/bank-accounts/delete/(:num)',       'MasterController::deleteBankAccount/$1');
 
 $routes->get('masters/lookups/(:segment)',              'MasterController::lookups/$1');
 $routes->post('masters/lookups/(:segment)/create',      'MasterController::createLookup/$1');

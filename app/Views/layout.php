@@ -87,6 +87,10 @@
                 <a href="<?= base_url('logistics/manage') ?>" class="sidebar-nav-item <?= ($seg2 == 'manage') ? 'active' : '' ?> mt-2">
                     <i class="fas fa-list-ul"></i> All Bookings
                 </a>
+
+                <a href="<?= base_url('logistics/all-invoices') ?>" class="sidebar-nav-item <?= ($seg2 == 'all-invoices') ? 'active' : '' ?> mt-2">
+                    <i class="fas fa-file-invoice"></i> All Invoices
+                </a>
                 
                 <?php if (session()->get('role') === 'admin'): ?>
                 <!-- Masters Collapse -->
@@ -102,6 +106,7 @@
                             <a class="sidebar-nav-item py-2 px-3 rounded <?= ($seg1 == 'masters' && $seg2 == 'transporters') ? 'bg-primary text-white' : '' ?>" href="<?= base_url('masters/transporters') ?>"><i class="fas fa-truck-moving me-2 <?= ($seg1 == 'masters' && $seg2 == 'transporters') ? 'text-white' : 'text-muted' ?>"></i> Transporters</a>
                             <a class="sidebar-nav-item py-2 px-3 rounded <?= ($seg1 == 'masters' && $seg2 == 'drivers') ? 'bg-primary text-white' : '' ?>" href="<?= base_url('masters/drivers') ?>"><i class="fas fa-id-card me-2 <?= ($seg1 == 'masters' && $seg2 == 'drivers') ? 'text-white' : 'text-muted' ?>"></i> Drivers</a>
                             <a class="sidebar-nav-item py-2 px-3 rounded <?= ($seg1 == 'masters' && $seg2 == 'airlines') ? 'bg-primary text-white' : '' ?>" href="<?= base_url('masters/airlines') ?>"><i class="fas fa-plane me-2 <?= ($seg1 == 'masters' && $seg2 == 'airlines') ? 'text-white' : 'text-muted' ?>"></i> Airlines</a>
+                            <a class="sidebar-nav-item py-2 px-3 rounded <?= ($seg1 == 'masters' && $seg2 == 'bank-accounts') ? 'bg-primary text-white' : '' ?>" href="<?= base_url('masters/bank-accounts') ?>"><i class="fas fa-university me-2 <?= ($seg1 == 'masters' && $seg2 == 'bank-accounts') ? 'text-white' : 'text-muted' ?>"></i> Bank Accounts</a>
                             <hr class="my-1">
                             <a class="sidebar-nav-item py-2 px-3 rounded <?= ($seg1 == 'masters' && $seg2 == 'lookups') ? 'bg-primary text-white' : '' ?>" href="<?= base_url('masters/lookups/origin') ?>"><i class="fas fa-list me-2 <?= ($seg1 == 'masters' && $seg2 == 'lookups') ? 'text-white' : 'text-muted' ?>"></i> Lookup Values</a>
                         </div>

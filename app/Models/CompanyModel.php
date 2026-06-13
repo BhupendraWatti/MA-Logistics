@@ -12,5 +12,6 @@ class CompanyModel extends Model
     protected $allowedFields = [
         'name', 'address', 'email', 'mobile', 'gstin', 'pan', 'sac_code',
         'cgst_rate', 'sgst_rate', 'igst_rate', 'terms_conditions', 'signature_path',
+        'bank_name', 'branch_name', 'branch_address', 'ifsc_code', 'account_number', 'misc_code',
     ];
 }

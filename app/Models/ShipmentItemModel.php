@@ -15,7 +15,7 @@ class ShipmentItemModel extends Model
         'width', 'height', 'volumetric_weight', 'calculated_chargeable_weight', 'final_chargeable_weight', 'pieces', 
         'eway_bill_no', 'eway_bill_date', 'rate', 'delivery_charges',
         'docket_charges', 'pickup_charges', 'fuel_surcharge', 'fov_charges',
-        'handling_charges', 'service_charges', 'created_at', 'updated_at'
+        'handling_charges', 'service_charges', 'misc_charges', 'misc_charges_name', 'created_at', 'updated_at'
     ];
 
     protected $validationRules = [

@@ -42,6 +42,7 @@ class CompanyController extends BaseController
         $companyModel = new CompanyModel();
         
         $data = [
+            'name' => $this->request->getPost('name'),
             'address' => $this->request->getPost('address'),
             'email' => $this->request->getPost('email'),
             'mobile' => $this->request->getPost('mobile'),
@@ -52,6 +53,12 @@ class CompanyController extends BaseController
             'sgst_rate' => $this->request->getPost('sgst_rate') ?: 0,
             'igst_rate' => $this->request->getPost('igst_rate') ?: 0,
             'terms_conditions' => $this->request->getPost('terms_conditions'),
+            'bank_name' => $this->request->getPost('bank_name'),
+            'branch_name' => $this->request->getPost('branch_name'),
+            'branch_address' => $this->request->getPost('branch_address'),
+            'ifsc_code' => $this->request->getPost('ifsc_code'),
+            'account_number' => $this->request->getPost('account_number'),
+            'misc_code' => $this->request->getPost('misc_code'),
         ];
 
         // 1. Handle Base64 Signature Canvas

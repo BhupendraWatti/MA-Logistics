@@ -606,6 +606,10 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">FOV Charge</label><input type="number" step="0.01" id="entry_fov" class="form-control form-control-sm tabular-nums"></div>
             <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Handling Charge</label><input type="number" step="0.01" id="entry_handling" class="form-control form-control-sm tabular-nums"></div>
             <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Service Charge</label><input type="number" step="0.01" id="entry_service" class="form-control form-control-sm tabular-nums"></div>
+            <div class="col-md-2">
+                <input type="text" id="entry_misc_name" class="form-control form-control-sm border-0 bg-transparent fw-semibold text-muted p-0 fs-8 shadow-none text-truncate" value="Misc Charges" style="cursor: text;" title="Click to rename this charge field">
+                <input type="number" step="0.01" id="entry_misc" class="form-control form-control-sm tabular-nums">
+            </div>
         </div>
       </div>
     </div>
@@ -866,7 +870,9 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     fuel_surcharge: s.fuel_surcharge || '',
                     fov_charges: s.fov_charges || '',
                     handling_charges: s.handling_charges || '',
-                    service_charges: s.service_charges || ''
+                    service_charges: s.service_charges || '',
+                    misc_charges: s.misc_charges || '',
+                    misc_charges_name: s.misc_charges_name || 'Misc Charges'
                 });
             });
             renderGrid();
@@ -1029,6 +1035,8 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             
             // Clear charges
             $('#entry_eway_no, #entry_eway_date, #entry_rate, #entry_delivery, #entry_docket_chg, #entry_pickup, #entry_fuel, #entry_fov, #entry_handling, #entry_service').val('');
+            $('#entry_misc').val('');
+            $('#entry_misc_name').val('Misc Charges');
             
         } else {
             // Edit Item
@@ -1075,6 +1083,8 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             $('#entry_fov').val(item.fov_charges);
             $('#entry_handling').val(item.handling_charges);
             $('#entry_service').val(item.service_charges);
+            $('#entry_misc').val(item.misc_charges || '');
+            $('#entry_misc_name').val(item.misc_charges_name || 'Misc Charges');
         }
         $('[maxlength]').trigger('sync-counter');
         
@@ -1162,6 +1172,8 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             fov_charges: $('#entry_fov').val(),
             handling_charges: $('#entry_handling').val(),
             service_charges: $('#entry_service').val(),
+            misc_charges: $('#entry_misc').val(),
+            misc_charges_name: $('#entry_misc_name').val() || 'Misc Charges',
         };
 
         if(editIndex >= 0) {
@@ -1261,11 +1273,21 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         });
 
         const isGstApplied = $('#gst_applied').is(':checked');
+        const gstType = $('#gst_type').val();
         
-        // Custom GST rates from the booking form input fields
-        const cgstRate = parseFloat($('#cgst_rate').val()) || 0;
-        const sgstRate = parseFloat($('#sgst_rate').val()) || 0;
-        const igstRate = parseFloat($('#igst_rate').val()) || 0;
+        let cgstRate = 0;
+        let sgstRate = 0;
+        let igstRate = 0;
+
+        if (gstType === 'intra') {
+            cgstRate = parseFloat($('#cgst_rate').val()) || 0;
+            sgstRate = parseFloat($('#sgst_rate').val()) || 0;
+            $('#igst_rate').val('0.00');
+        } else {
+            igstRate = parseFloat($('#igst_rate').val()) || 0;
+            $('#cgst_rate').val('0.00');
+            $('#sgst_rate').val('0.00');
+        }
         
         // Show live total percentage calculations applied to the booking
         const totalGstPercent = cgstRate + sgstRate + igstRate;

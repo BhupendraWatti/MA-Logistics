@@ -258,6 +258,8 @@ class BookingService
                     'fov_charges' => $jsItem['fov_charges'] ?? 0,
                     'handling_charges' => $jsItem['handling_charges'] ?? 0,
                     'service_charges' => $jsItem['service_charges'] ?? 0,
+                    'misc_charges' => $jsItem['misc_charges'] ?? 0,
+                    'misc_charges_name' => $jsItem['misc_charges_name'] ?? 'Misc Charges',
                     'part_qty' => $jsItem['part_qty'] ?? 0
                 ];
             }
@@ -318,7 +320,9 @@ class BookingService
                     'fuel_surcharge' => $this->validateNumeric($item['fuel_surcharge'] ?? 0),
                     'fov_charges' => $this->validateNumeric($item['fov_charges'] ?? 0),
                     'handling_charges' => $this->validateNumeric($item['handling_charges'] ?? 0),
-                    'service_charges' => $this->validateNumeric($item['service_charges'] ?? 0)
+                    'service_charges' => $this->validateNumeric($item['service_charges'] ?? 0),
+                    'misc_charges' => $this->validateNumeric($item['misc_charges'] ?? 0),
+                    'misc_charges_name' => $item['misc_charges_name'] ?? 'Misc Charges'
                 ];
 
                 if (!empty($item['id']) && in_array((int)$item['id'], $existingIds)) {
@@ -480,6 +484,8 @@ class BookingService
                     'fov_charges' => $jsItem['fov_charges'] ?? 0,
                     'handling_charges' => $jsItem['handling_charges'] ?? 0,
                     'service_charges' => $jsItem['service_charges'] ?? 0,
+                    'misc_charges' => $jsItem['misc_charges'] ?? 0,
+                    'misc_charges_name' => $jsItem['misc_charges_name'] ?? 'Misc Charges',
                     'part_qty' => $jsItem['part_qty'] ?? 0
                 ];
             }
@@ -540,7 +546,9 @@ class BookingService
                     'fuel_surcharge' => $this->validateNumeric($item['fuel_surcharge'] ?? 0),
                     'fov_charges' => $this->validateNumeric($item['fov_charges'] ?? 0),
                     'handling_charges' => $this->validateNumeric($item['handling_charges'] ?? 0),
-                    'service_charges' => $this->validateNumeric($item['service_charges'] ?? 0)
+                    'service_charges' => $this->validateNumeric($item['service_charges'] ?? 0),
+                    'misc_charges' => $this->validateNumeric($item['misc_charges'] ?? 0),
+                    'misc_charges_name' => $item['misc_charges_name'] ?? 'Misc Charges'
                 ];
                 
                 if (!$this->shipmentModel->insert($shipmentData)) {

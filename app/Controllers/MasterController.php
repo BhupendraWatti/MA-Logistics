@@ -296,6 +296,75 @@ class MasterController extends BaseController
     }
 
     // ============================================================
+    // BANK ACCOUNTS
+    // ============================================================
+
+    public function bankAccounts()
+    {
+        if ($r = $this->requireAdmin()) return $r;
+        return view('masters/bank_accounts', [
+            'user'    => session()->get(),
+        ]);
+    }
+
+    public function createBankAccount()
+    {
+        if ($r = $this->requireAdmin()) return $r;
+        $post = $this->request->getPost();
+        
+        $post['company_id'] = $this->companyId();
+        
+        $isDefault = isset($post['is_default']) ? 1 : 0;
+        $post['is_default'] = $isDefault;
+
+        $model = new \App\Models\BankAccountModel();
+        
+        if ($isDefault) {
+            $model->where('company_id', $post['company_id'])->set(['is_default' => 0])->update();
+        }
+
+        if (!$model->insert($post)) {
+            return redirect()->back()->with('error', implode(', ', $model->errors()));
+        }
+        return redirect()->to('/masters/bank-accounts')->with('success', 'Bank account added!');
+    }
+
+    public function updateBankAccount(int $id)
+    {
+        if ($r = $this->requireAdmin()) return $r;
+        $post = $this->request->getPost();
+        
+        $post['company_id'] = $this->companyId();
+        
+        $isDefault = isset($post['is_default']) ? 1 : 0;
+        $post['is_default'] = $isDefault;
+
+        $model = new \App\Models\BankAccountModel();
+
+        // Check if bank account exists and belongs to the company
+        $exists = $model->where('id', $id)->where('company_id', $post['company_id'])->first();
+        if (!$exists) {
+            return redirect()->back()->with('error', 'Bank account not found!');
+        }
+
+        if ($isDefault) {
+            $model->where('company_id', $post['company_id'])->set(['is_default' => 0])->update();
+        }
+
+        if (!$model->where('id', $id)->where('company_id', $post['company_id'])->set($post)->update()) {
+            return redirect()->back()->with('error', implode(', ', $model->errors()));
+        }
+        return redirect()->to('/masters/bank-accounts')->with('success', 'Bank account updated!');
+    }
+
+    public function deleteBankAccount(int $id)
+    {
+        if ($r = $this->requireAdmin()) return $r;
+        (new \App\Models\BankAccountModel())->where('id', $id)->where('company_id', $this->companyId())->delete();
+        return $this->response->setJSON(['success' => true]);
+    }
+
+    // ============================================================
     // LOOKUP VALUES
     // ============================================================
 
@@ -393,6 +462,10 @@ class MasterController extends BaseController
             case 'airlines':
                 $model = new AirlineModel();
                 $searchFields = ['name', 'code'];
+                break;
+            case 'bank-accounts':
+                $model = new \App\Models\BankAccountModel();
+                $searchFields = ['account_name', 'bank_name', 'account_number', 'branch_name', 'ifsc_code'];
                 break;
             default:
                 return $this->response->setJSON(['error' => 'Invalid type']);

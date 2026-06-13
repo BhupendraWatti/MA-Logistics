@@ -639,255 +639,130 @@ public function companySelection()
 
 
 
-// Export PDF
+
+
+// Export PDF — thin controller; all business logic delegated to InvoiceService + PdfInvoiceGenerator
 public function exportPdf($id)
 {
-    $bookingModel = new BookingModel();
-    $shipmentModel = new ShipmentItemModel();
-    $salesModel = new SalesChargeModel();
-    
-    $booking = $bookingModel->getFullBooking($id);
+    $bookingModel   = new BookingModel();
+    $shipmentModel  = new ShipmentItemModel();
+    $invoiceService = new \App\Services\InvoiceService();
+    $pdfGenerator   = new \App\Services\PdfInvoiceGenerator();
+
+    $booking   = $bookingModel->getFullBooking($id);
     $shipments = $shipmentModel->where('booking_id', $id)->findAll();
-    $sales = $salesModel->where('booking_id', $id)->first();
-    
+
+    // ── Authorization checks ─────────────────────────────────────────────────
     if (!$booking || $booking['company_id'] != session()->get('selected_company_id')) {
         return redirect()->back()->with('error', 'Booking not found or access denied!');
     }
-    
     if (empty($shipments)) {
         return redirect()->back()->with('error', 'No shipment items found!');
     }
 
-    $invoiceNo = $shipments[0]['invoice_no'] ?? 'AWB-' . $booking['awb_no'];
-    $invoiceDates = array_filter(array_column($shipments, 'invoice_date'));
-    sort($invoiceDates);
-    $invoiceStart = !empty($invoiceDates) ? date('d.m.Y', strtotime(reset($invoiceDates))) : date('d.m.Y', strtotime($booking['booking_date']));
-    $invoiceEnd = !empty($invoiceDates) ? date('d.m.Y', strtotime(end($invoiceDates))) : date('d.m.Y', strtotime($booking['booking_date']));
-    $invoicePeriod = $invoiceStart . ' TO ' . $invoiceEnd;
-    $invoiceDate = !empty($invoiceDates) ? date('d.m.Y', strtotime(end($invoiceDates))) : date('d.m.Y');
-    $billingBranch = $booking['origin'] ?: 'Pune';
-    $modeTransport = strtoupper($booking['mode_transport'] ?: 'AIR');
-    
-    // Fetch customer details from customer master to show recipient name and GSTIN
-    $customerModel = new \App\Models\CustomerModel();
-    $customerNameClean = trim($shipments[0]['customer_name'] ?? '');
-    $customerObj = null;
-    if (!empty($customerNameClean)) {
-        $customerObj = $customerModel->where('name', $customerNameClean)->first();
-        if (!$customerObj) {
-            $customerObj = $customerModel->where('LOWER(name)', strtolower($customerNameClean))->first();
-        }
-    }
-    $customerGst = $customerObj ? ($customerObj['gst_number'] ?? '') : '';
-
-    $recipientName = $shipments[0]['customer_name'] ?? 'NA';
-    $recipientAddress = $shipments[0]['bill_to'] ?? $shipments[0]['consignee'] ?? '';
-    $recipientAddress = $recipientAddress ?: 'Address not available';
-
-
-
     try {
-        $pdf = new \TCPDF('L', 'mm', 'A4');
-        $pdf->SetCreator('Malogistics');
-        $pdf->SetAuthor('Malogistics');
-        $pdf->SetPrintHeader(false);
-        $pdf->SetPrintFooter(false);
-        $pdf->SetMargins(8, 8, 8);
-        $pdf->AddPage();
-        $pdf->SetFont('helvetica', '', 8);
+        $companyId = (int) $booking['company_id'];
 
-    $serial = 1;
-    $totalBoxes = 0;
-    $totalWt = 0;
-    $totalTaxable = 0;
-    $shipmentRows = [];
+        // ── Master data lookups ──────────────────────────────────────────────
+        $companyData   = $invoiceService->loadCompany($companyId);
+        $customerName  = trim($shipments[0]['customer_name'] ?? '');
+        $customerInfo  = $invoiceService->resolveCustomerGstDetails($customerName, $companyId);
+        $bankDetails   = $invoiceService->resolveBankDetails($companyId, $companyData);
 
-    foreach ($shipments as $item) {
-        $date = !empty($item['invoice_date']) ? date('d.m.y', strtotime($item['invoice_date'])) : '-';
-        $lrNo = $item['docket_no'] ?: '-';
-        $invoiceNumber = $item['invoice_no'] ?: '-';
-        $origin = $booking['origin'];
-        $destination = $booking['destination'];
-        $boxes = intval($item['pieces'] ?? 1);
-        $wt = floatval($item['actual_weight'] ?? 0);
-        $rate = floatval($item['rate'] ?? 0);
-        $fuelSur = floatval($item['fuel_surcharge'] ?? 0);
-        $freight = $wt * $rate;
-        $fuelAmt = $wt * $fuelSur;
-        $docket = floatval($item['docket_charges'] ?? 0);
-        $pickup = floatval($item['pickup_charges'] ?? 0);
-        $delivery = floatval($item['delivery_charges'] ?? 0);
-        $taxable = $freight + $fuelAmt + $docket + $pickup + $delivery;
+        // ── Invoice header metadata ──────────────────────────────────────────
+        $invoiceNo    = $shipments[0]['invoice_no'] ?? 'AWB-' . $booking['awb_no'];
+        $invoiceDates = array_filter(array_column($shipments, 'invoice_date'));
+        sort($invoiceDates);
+        $invoiceStart  = !empty($invoiceDates) ? date('d.m.Y', strtotime(reset($invoiceDates))) : date('d.m.Y', strtotime($booking['booking_date']));
+        $invoiceEnd    = !empty($invoiceDates) ? date('d.m.Y', strtotime(end($invoiceDates)))   : date('d.m.Y', strtotime($booking['booking_date']));
+        $invoicePeriod = $invoiceStart . ' TO ' . $invoiceEnd;
+        $invoiceDate   = !empty($invoiceDates) ? date('d.m.Y', strtotime(end($invoiceDates)))   : date('d.m.Y');
 
-        $totalBoxes += $boxes;
-        $totalWt += $wt;
-        $totalTaxable += $taxable;
+        $billingBranch = trim(explode(',', $booking['origin'] ?: 'Pune')[0]);
+        $modeTransport = strtoupper($booking['mode_transport'] ?: 'AIR');
 
-        $shipmentRows[] = [
-            'serial' => $serial,
-            'date' => $date,
-            'lrNo' => $lrNo,
-            'invoiceNumber' => $invoiceNumber,
-            'origin' => $origin,
-            'destination' => $destination,
-            'boxes' => $boxes,
-            'wt' => $wt,
-            'rate' => $rate,
-            'fuelSur' => $fuelSur,
-            'freight' => $freight,
-            'fuelAmt' => $fuelAmt,
-            'docket' => $docket,
-            'pickup' => $pickup,
-            'delivery' => $delivery,
-            'taxable' => $taxable
+        $recipientName    = $customerName ?: 'NA';
+        $recipientAddress = $shipments[0]['bill_to'] ?? $shipments[0]['consignee'] ?? 'Address not available';
+
+        // ── Business logic — delegated to InvoiceService ────────────────────
+        $chargeAgg     = $invoiceService->aggregateCharges($shipments);
+        $activeCharges = $invoiceService->resolveActiveCharges($chargeAgg['totals'], $chargeAgg['miscLabel']);
+
+        $rowData = $invoiceService->buildShipmentRows(
+            $shipments,
+            $booking['origin']      ?? 'Pune',
+            $booking['destination'] ?? ''
+        );
+
+        $gstApplied = (bool) ($booking['gst_applied'] ?? false);
+        // Per-booking rate overrides; fallback to company-level rates
+        $rateSource = [
+            'cgst_rate' => (float) ($booking['cgst_rate'] ?? $companyData['cgst_rate'] ?? 9),
+            'sgst_rate' => (float) ($booking['sgst_rate'] ?? $companyData['sgst_rate'] ?? 9),
+            'igst_rate' => (float) ($booking['igst_rate'] ?? $companyData['igst_rate'] ?? 18),
         ];
-        $serial++;
-    }
+        $isIgst  = ($gstApplied && $rateSource['igst_rate'] > 0);
+        $gstData = $invoiceService->calculateGst($rowData['totalTaxable'], $gstApplied, $isIgst, $rateSource);
 
-    // Load GST rates from company master (not hardcoded)
-    $companyData = (new CompanyModel())->select('name, address, email, mobile, gstin, pan, sac_code, cgst_rate, sgst_rate, igst_rate, terms_conditions, signature_path')
-                                       ->find($booking['company_id']);
+        $signaturePath = !empty($booking['signature_path']) ? $booking['signature_path'] : ($companyData['signature_path'] ?? '');
 
-    // Dynamic settings from booking with fallbacks to company settings
-    $gstin = !empty($booking['gstin']) ? $booking['gstin'] : ($companyData['gstin'] ?? '');
-    $pan = !empty($booking['pan']) ? $booking['pan'] : ($companyData['pan'] ?? '');
-    $sacCode = !empty($booking['sac_code']) ? $booking['sac_code'] : ($companyData['sac_code'] ?? '');
-    
-    $cgstRate = isset($booking['cgst_rate']) ? (float)$booking['cgst_rate'] : (float)($companyData['cgst_rate'] ?? 9);
-    $sgstRate = isset($booking['sgst_rate']) ? (float)$booking['sgst_rate'] : (float)($companyData['sgst_rate'] ?? 9);
-    $igstRate = isset($booking['igst_rate']) ? (float)$booking['igst_rate'] : (float)($companyData['igst_rate'] ?? 9);
-    
-    $signaturePath = !empty($booking['signature_path']) ? $booking['signature_path'] : ($companyData['signature_path'] ?? '');
-                                       
-    // BUG FIX: Only apply GST if the booking has gst_applied checked
-    if (isset($booking['gst_applied']) && $booking['gst_applied'] == 1) {
-        $cgst = round($totalTaxable * $cgstRate / 100);
-        $sgst = round($totalTaxable * $sgstRate / 100);
-        $igst = round($totalTaxable * $igstRate / 100);
-    } else {
-        $cgst = 0;
-        $sgst = 0;
-        $igst = 0;
-    }
-    
-    $netPayable = round($totalTaxable + $cgst + $sgst + $igst);
+        $viewData = $invoiceService->assembleViewData([
+            'company'              => $companyData,
+            'recipientName'        => $recipientName,
+            'recipientAddress'     => $recipientAddress,
+            'customerGst'          => $customerInfo['gst'],
+            'customerPan'          => $customerInfo['pan'],
+            'invoiceNo'            => $invoiceNo,
+            'invoicePeriod'        => $invoicePeriod,
+            'invoiceDate'          => $invoiceDate,
+            'billingBranch'        => $billingBranch,
+            'modeTransport'        => $modeTransport,
+            'shipmentRows'         => $rowData['rows'],
+            'totalBoxes'           => $rowData['totalBoxes'],
+            'totalWt'              => $rowData['totalWt'],
+            'totalTaxable'         => $rowData['totalTaxable'],
+            'gstData'              => $gstData,
+            'bankDetails'          => $bankDetails,
+            'bookingGstin'         => !empty($booking['gstin'])    ? $booking['gstin']    : ($companyData['gstin']    ?? ''),
+            'bookingPan'           => !empty($booking['pan'])      ? $booking['pan']      : ($companyData['pan']      ?? ''),
+            'bookingSacCode'       => !empty($booking['sac_code']) ? $booking['sac_code'] : ($companyData['sac_code'] ?? ''),
+            'bookingSignaturePath' => $signaturePath,
+            'activeCharges'        => $activeCharges,
+            'dueDate'              => '',
+            'booking'              => $booking,
+        ]);
 
-    $viewData = [
-        'company' => $companyData,
-        'recipientName' => $recipientName,
-        'recipientAddress' => $recipientAddress,
-        'customerGst' => $customerGst,
-        'invoiceNo' => $invoiceNo,
-        'invoicePeriod' => $invoicePeriod,
-        'invoiceDate' => $invoiceDate,
-        'billingBranch' => $billingBranch,
-        'modeTransport' => $modeTransport,
-        'shipmentRows' => $shipmentRows,
-        'totalBoxes' => $totalBoxes,
-        'totalWt' => $totalWt,
-        'totalTaxable' => $totalTaxable,
-        'cgst' => $cgst,
-        'sgst' => $sgst,
-        'igst' => $igst,
-        'cgstRate' => $cgstRate,
-        'sgstRate' => $sgstRate,
-        'igstRate' => $igstRate,
-        'netPayable' => $netPayable,
-        'amountInWords' => $this->formatAmountInWords($netPayable),
-        // Dynamic overrides per booking
-        'booking' => $booking,
-        'bookingGstin' => $gstin,
-        'bookingPan' => $pan,
-        'bookingSacCode' => $sacCode,
-        'bookingSignaturePath' => $signaturePath
-    ];
-
-    $html = view('pdfs/invoice', $viewData);
-
-        $pdf->writeHTML($html, true, false, true, false, '');
-        
-        // BUG FIX: Prevent CI4 from corrupting PDF headers/output
-        if (ob_get_length()) {
-            ob_end_clean();
-        }
-        $this->response->setContentType('application/pdf'); // Force header just in case
         $pdfFileName = 'AWB_' . ($booking['awb_no'] ?: $invoiceNo) . '.pdf';
-        $pdf->Output($pdfFileName, 'D');
-        exit;
+        $pdfGenerator->stream($viewData, $pdfFileName);
+
     } catch (\Exception $e) {
         log_message('error', '[PDF Export Error] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+
         if (strpos($e->getMessage(), 'alpha channel') !== false || strpos($e->getMessage(), 'Imagick or GD') !== false) {
             return redirect()->back()->with('error', 'Your server does not support transparent PNG signatures. Please go to Company Settings and upload a JPG image or draw your signature manually.');
         }
-        
-        $msg = $e->getMessage();
-        $isSystemError = ($e instanceof \CodeIgniter\Database\Exceptions\DatabaseException) ||
-                         ($e instanceof \mysqli_sql_exception) ||
-                         (strpos($msg, 'SQL') !== false) ||
-                         (strpos($msg, 'database') !== false) ||
-                         (strpos($msg, 'query') !== false) ||
-                         (strpos($msg, 'Connection') !== false);
-                         
-        $userMessage = $isSystemError ? 'A secure database or system error occurred. Technical logs have been updated safely.' : 'PDF Generation failed: ' . $msg;
+
+        $msg           = $e->getMessage();
+        $isSystemError = ($e instanceof \CodeIgniter\Database\Exceptions\DatabaseException)
+                      || ($e instanceof \mysqli_sql_exception)
+                      || str_contains($msg, 'SQL')
+                      || str_contains($msg, 'database')
+                      || str_contains($msg, 'query')
+                      || str_contains($msg, 'Connection');
+
+        $userMessage = $isSystemError
+            ? 'A secure database or system error occurred. Technical logs have been updated safely.'
+            : 'PDF Generation failed: ' . $msg;
+
         return redirect()->back()->with('error', $userMessage);
     }
 }
 
-private function formatAmountInWords($amount)
-{
-    $whole = floor($amount);
-    $fraction = round(($amount - $whole) * 100);
-    $words = $this->numberToWords($whole) . ' Rupees';
-    if ($fraction > 0) {
-        $words .= ' and ' . $this->numberToWords($fraction) . ' Paise';
-    }
-    return $words;
-}
-
-private function numberToWords($number)
-{
-    $words = [
-        0 => 'zero', 1 => 'one', 2 => 'two', 3 => 'three', 4 => 'four',
-        5 => 'five', 6 => 'six', 7 => 'seven', 8 => 'eight', 9 => 'nine',
-        10 => 'ten', 11 => 'eleven', 12 => 'twelve', 13 => 'thirteen',
-        14 => 'fourteen', 15 => 'fifteen', 16 => 'sixteen', 17 => 'seventeen',
-        18 => 'eighteen', 19 => 'nineteen', 20 => 'twenty', 30 => 'thirty',
-        40 => 'forty', 50 => 'fifty', 60 => 'sixty', 70 => 'seventy',
-        80 => 'eighty', 90 => 'ninety'
-    ];
-
-    if ($number < 21) {
-        return $words[$number];
-    }
-    if ($number < 100) {
-        $tens = intval($number / 10) * 10;
-        $units = $number % 10;
-        return $words[$tens] . ($units ? ' ' . $words[$units] : '');
-    }
-    if ($number < 1000) {
-        $hundreds = intval($number / 100);
-        $remainder = $number % 100;
-        return $words[$hundreds] . ' hundred' . ($remainder ? ' ' . $this->numberToWords($remainder) : '');
-    }
-    if ($number < 100000) {
-        $thousands = intval($number / 1000);
-        $remainder = $number % 1000;
-        return $this->numberToWords($thousands) . ' thousand' . ($remainder ? ' ' . $this->numberToWords($remainder) : '');
-    }
-    if ($number < 10000000) {
-        $lakhs = intval($number / 100000);
-        $remainder = $number % 100000;
-        return $this->numberToWords($lakhs) . ' lakh' . ($remainder ? ' ' . $this->numberToWords($remainder) : '');
-    }
-    $crores = intval($number / 10000000);
-    $remainder = $number % 10000000;
-    return $this->numberToWords($crores) . ' crore' . ($remainder ? ' ' . $this->numberToWords($remainder) : '');
-}
 
 
 
-// ========== Export Excel Start ===========
-// public function exportExcel()
+
+// ========== Export Excel Start ===========// public function exportExcel()
 // {
 //     $bookingModel = new BookingModel();
 //     $shipmentModel = new ShipmentItemModel();
@@ -1247,11 +1122,177 @@ public function exportExcel()
         return redirect()->to('/logistics/edit/' . $bookingId)->with('success', 'Booking signature deleted successfully!');
     }
 
+    public function allInvoices()
+    {
+        $companyId = session()->get('selected_company_id');
+        if (!$companyId) {
+            return redirect()->to('/company-selection');
+        }
 
-// =========== Export Excel End ============
+        $customers = (new CustomerModel())->getByCompany($companyId);
+        $banks = (new \App\Models\BankAccountModel())->getByCompany($companyId);
 
+        return view('logistics/all_invoices', [
+            'user'         => session()->get(),
+            'company_name' => session()->get('selected_company_name'),
+            'customers'    => $customers,
+            'banks'        => $banks,
+        ]);
+    }
 
+    public function ajaxSearchShipmentRecords()
+    {
+        $companyId = session()->get('selected_company_id');
+        if (!$companyId) {
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Unauthorized']);
+        }
 
+        $customerName = $this->request->getPost('customer_name');
+        $fromDate = $this->request->getPost('from_date');
+        $toDate = $this->request->getPost('to_date');
 
+        if (empty($customerName) || empty($fromDate) || empty($toDate)) {
+            return $this->response->setJSON([]);
+        }
 
+        $db = \Config\Database::connect();
+        $builder = $db->table('shipment_items si')
+                      ->select('si.id, si.docket_no, si.invoice_no, si.invoice_date, si.actual_weight, si.final_chargeable_weight, si.pieces, si.rate, b.booking_date, b.origin as booking_origin, b.destination as booking_destination')
+                      ->join('bookings b', 'b.id = si.booking_id')
+                      ->where('b.company_id', $companyId)
+                      ->where('si.customer_name', $customerName);
+
+        $builder->groupStart()
+                    ->groupStart()
+                        ->where("si.invoice_date >= ", $fromDate)
+                        ->where("si.invoice_date <= ", $toDate)
+                    ->groupEnd()
+                    ->orGroupStart()
+                        ->where("si.invoice_date IS NULL")
+                        ->where("b.booking_date >= ", $fromDate)
+                        ->where("b.booking_date <= ", $toDate)
+                    ->groupEnd()
+                ->groupEnd();
+
+        $records = $builder->orderBy('si.invoice_date', 'ASC')
+                           ->orderBy('b.booking_date', 'ASC')
+                           ->get()
+                           ->getResultArray();
+
+        // Format dates for UI
+        foreach ($records as &$r) {
+            $dateVal = !empty($r['invoice_date']) ? $r['invoice_date'] : $r['booking_date'];
+            $r['display_date'] = date('d-M-Y', strtotime($dateVal));
+        }
+
+        return $this->response->setJSON($records);
+    }
+
+    // generateConsolidatedInvoice — thin controller; all business logic delegated to InvoiceService + PdfInvoiceGenerator
+    public function generateConsolidatedInvoice()
+    {
+        $companyId = session()->get('selected_company_id');
+        if (!$companyId) {
+            return redirect()->to('/company-selection');
+        }
+
+        $post         = $this->request->getPost();
+        $customerName = trim($post['customer_name'] ?? '');
+        $bankId       = (int) ($post['bank_id'] ?? 0);
+        $fromDate     = $post['from_date']     ?? '';
+        $toDate       = $post['to_date']       ?? '';
+        $invoiceNo    = $post['invoice_no']    ?? '';
+        $invoiceDate  = $post['invoice_date']  ?? date('Y-m-d');
+        $dueDate      = $post['due_date']      ?? '';
+        $remark       = $post['remark']        ?? '';
+        $itemIds      = $post['item_ids']      ?? [];
+
+        if (empty($customerName) || empty($itemIds)) {
+            return redirect()->back()->with('error', 'Please select a customer and at least one shipment record!');
+        }
+
+        $invoiceService = new \App\Services\InvoiceService();
+        $pdfGenerator   = new \App\Services\PdfInvoiceGenerator();
+
+        try {
+            // ── Master data lookups ──────────────────────────────────────────
+            $companyData  = $invoiceService->loadCompany((int) $companyId);
+            $customerInfo = $invoiceService->resolveCustomerGstDetails($customerName, (int) $companyId);
+            $bankDetails  = $invoiceService->resolveBankDetails((int) $companyId, $companyData, $bankId);
+
+            // ── Fetch selected, tenant-scoped shipment items ────────────────
+            $db        = \Config\Database::connect();
+            $shipments = $db->table('shipment_items si')
+                ->select('si.*, b.booking_date, b.origin as booking_origin, b.destination as booking_destination, b.mode_transport as booking_mode')
+                ->join('bookings b', 'b.id = si.booking_id')
+                ->whereIn('si.id', $itemIds)
+                ->where('b.company_id', (int) $companyId)
+                ->where('si.customer_name', $customerName)
+                ->orderBy('si.invoice_date', 'ASC')
+                ->orderBy('b.booking_date', 'ASC')
+                ->get()
+                ->getResultArray();
+
+            if (empty($shipments)) {
+                return redirect()->back()->with('error', 'Selected shipment items not found or access denied!');
+            }
+
+            // ── Recipient ───────────────────────────────────────────────────
+            $recipientName    = $customerName;
+            $recipientAddress = $shipments[0]['bill_to'] ?? $shipments[0]['consignee'] ?? 'Address not available';
+
+            // ── Business logic — delegated to InvoiceService ────────────────
+            $chargeAgg     = $invoiceService->aggregateCharges($shipments);
+            $activeCharges = $invoiceService->resolveActiveCharges($chargeAgg['totals'], $chargeAgg['miscLabel']);
+
+            $rowData = $invoiceService->buildShipmentRows($shipments);
+
+            $gstApplied = isset($post['gst_applied']) ? true : false;
+            $isIgst     = isset($post['is_igst'])     ? true : false;
+            $gstData    = $invoiceService->calculateGst(
+                $rowData['totalTaxable'],
+                $gstApplied,
+                $isIgst,
+                $companyData
+            );
+
+            // ── Period ──────────────────────────────────────────────────────
+            $invoicePeriod = date('d/m/Y', strtotime($fromDate)) . ' TO ' . date('d/m/Y', strtotime($toDate));
+
+            $viewData = $invoiceService->assembleViewData([
+                'company'              => $companyData,
+                'recipientName'        => $recipientName,
+                'recipientAddress'     => $recipientAddress,
+                'customerGst'          => $customerInfo['gst'],
+                'customerPan'          => $customerInfo['pan'],
+                'invoiceNo'            => $invoiceNo,
+                'invoicePeriod'        => $invoicePeriod,
+                'invoiceDate'          => date('d/m/Y', strtotime($invoiceDate)),
+                'billingBranch'        => trim(explode(',', $shipments[0]['booking_origin'] ?? 'PUNE')[0]),
+                'modeTransport'        => strtoupper($shipments[0]['booking_mode'] ?? 'AIR'),
+                'shipmentRows'         => $rowData['rows'],
+                'totalBoxes'           => $rowData['totalBoxes'],
+                'totalWt'              => $rowData['totalWt'],
+                'totalTaxable'         => $rowData['totalTaxable'],
+                'gstData'              => $gstData,
+                'bankDetails'          => $bankDetails,
+                'bookingGstin'         => $companyData['gstin']          ?? '',
+                'bookingPan'           => $companyData['pan']            ?? '',
+                'bookingSacCode'       => $companyData['sac_code']       ?? '',
+                'bookingSignaturePath' => $companyData['signature_path'] ?? '',
+                'activeCharges'        => $activeCharges,
+                'dueDate'              => !empty($dueDate) ? date('d/m/Y', strtotime($dueDate)) : '',
+                'booking'              => [
+                    'gst_applied' => $gstApplied ? 1 : 0,
+                    'narration'   => $remark,
+                ],
+            ]);
+
+            $pdfGenerator->stream($viewData, $invoiceNo . '.pdf');
+
+        } catch (\Throwable $e) {
+            log_message('error', '[Consolidated PDF Error] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+            return redirect()->back()->with('error', 'PDF Generation failed: ' . $e->getMessage());
+        }
+    }
 }
