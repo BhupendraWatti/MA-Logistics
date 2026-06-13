@@ -276,26 +276,26 @@ foreach ($shipmentRows as $row) {
     </tr>
 </table>
 
-<div nobr="true">
-<table cellpadding="2" cellspacing="0" style="width:100%; font-size:8px; border-collapse:collapse; font-family:helvetica; border: 1px solid #000; border-top: none;">
-    <?php 
-    $gstRows = [];
-    if ($gstApplied) {
-        if ($cgstRate > 0) $gstRows[] = ['label' => "C.GST - {$cgstRate}%", 'amount' => $cgst];
-        if ($sgstRate > 0) $gstRows[] = ['label' => "S.GST - {$sgstRate}%", 'amount' => $sgst];
-        if ($igstRate > 0) $gstRows[] = ['label' => "I.GST - {$igstRate}%", 'amount' => $igst];
-    }
-    ?>
+<table nobr="true" cellpadding="2" cellspacing="0" style="width:100%; font-size:8px; border-collapse:collapse; font-family:helvetica; border: 1px solid #000; border-top: none;">
+    <!-- Row 1: Remarks (colspan 12) & Net Payable (colspan 8) -->
     <tr>
-        <td style="width: 60%; vertical-align:top; border-right: 1px solid #000; padding: 5px;">
+        <td colspan="12" style="width:60%; vertical-align:top; border-right:1px solid #000; padding: 5px;">
             <?php if (!empty($booking['narration'])): ?>
                 <strong>Remarks / Narration:</strong><br>
                 <?= nl2br(htmlspecialchars($booking['narration'], ENT_QUOTES, 'UTF-8')) ?>
             <?php endif; ?>
         </td>
-        <td style="width: 40%; padding: 0; vertical-align: top;">
+        <td colspan="8" style="width:40%; padding:0; vertical-align:top;">
             <table cellpadding="2" cellspacing="0" style="width:100%; border:none;">
-                <?php foreach ($gstRows as $r): ?>
+                <?php 
+                $gstRows = [];
+                if ($gstApplied) {
+                    if ($cgstRate > 0) $gstRows[] = ['label' => "C.GST - {$cgstRate}%", 'amount' => $cgst];
+                    if ($sgstRate > 0) $gstRows[] = ['label' => "S.GST - {$sgstRate}%", 'amount' => $sgst];
+                    if ($igstRate > 0) $gstRows[] = ['label' => "I.GST - {$igstRate}%", 'amount' => $igst];
+                }
+                foreach ($gstRows as $r): 
+                ?>
                 <tr>
                     <td style="width:70%; border-bottom:1px solid #000; border-right:1px solid #000; font-weight:bold;"><?= esc($r['label']) ?></td>
                     <td style="width:30%; border-bottom:1px solid #000; text-align:center; font-weight:bold;"><?= number_format($r['amount'], 2) ?></td>
@@ -308,45 +308,39 @@ foreach ($shipmentRows as $row) {
             </table>
         </td>
     </tr>
-</table>
 
-<table cellpadding="2" cellspacing="0" style="width:100%; font-size:8px; border-collapse:collapse; font-family:helvetica; border: 1px solid #000; border-top: none;">
+    <!-- Row 2: Rs. in Words (colspan 20) -->
     <tr>
-        <td colspan="2" style="font-size:9px; font-weight:bold; padding: 5px; border-bottom:1px solid #000;">
+        <td colspan="20" style="font-size:9px; font-weight:bold; padding: 5px; border-top:1px solid #000; border-bottom:1px solid #000;">
             Rs. (In Word) : <?= strtoupper($amountInWords) ?> ONLY
         </td>
     </tr>
+
+    <!-- Row 3: Bank Details (colspan 6), Terms & Conditions (colspan 7), Signature (colspan 7) -->
     <tr>
-        <td style="width:65%; vertical-align:top; padding: 8px; line-height: 1.5;">
-            <table cellpadding="2" cellspacing="0" style="width:100%; border:none;">
-                <tr>
-                    <td style="width:45%; vertical-align:top; border:none; padding-right:10px;">
-                        <strong>Bank Details:</strong><br>
-                        Account Name : <?= esc($bankDetails['name'] ?? '') ?><br>
-                        Bank Name : <?= esc($bankDetails['bank_name'] ?? '') ?><br>
-                        Account No. : <?= esc($bankDetails['ac_no'] ?? '') ?><br>
-                        IFSC Code : <?= esc($bankDetails['ifsc'] ?? '') ?><br>
-                        Branch : <?= esc($bankDetails['branch'] ?? '') ?>
-                    </td>
-                    <td style="width:55%; vertical-align:top; border:none;">
-                        <strong>Terms &amp; Conditions :</strong><br>
-                        <?php 
-                        $tcText = $company['terms_conditions'] ?? 'No terms specified.';
-                        $tcLines = explode("\n", str_replace("\r", "", $tcText));
-                        foreach ($tcLines as $line) {
-                            $trimmed = trim($line);
-                            if ($trimmed !== '') {
-                                echo esc($trimmed) . '<br>';
-                            }
-                        }
-                        ?>
-                    </td>
-                </tr>
-            </table>
-            <br>
+        <td colspan="6" style="width:30%; vertical-align:top; padding:8px; line-height:1.4;">
+            <strong>Bank Details:</strong><br>
+            Account Name : <?= esc($bankDetails['name'] ?? '') ?><br>
+            Bank Name : <?= esc($bankDetails['bank_name'] ?? '') ?><br>
+            Account No. : <?= esc($bankDetails['ac_no'] ?? '') ?><br>
+            IFSC Code : <?= esc($bankDetails['ifsc'] ?? '') ?><br>
+            Branch : <?= esc($bankDetails['branch'] ?? '') ?><br><br>
             <strong>Service Category : Courier &amp; Cargo</strong>
         </td>
-        <td style="width:35%; vertical-align:bottom; text-align:center; font-size:9px; font-weight:bold; padding: 8px; border-left:1px solid #000;">
+        <td colspan="7" style="width:35%; vertical-align:top; padding:8px; line-height:1.4; border-left:1px solid #000;">
+            <strong>Terms &amp; Conditions :</strong><br>
+            <?php 
+            $tcText = $company['terms_conditions'] ?? 'No terms specified.';
+            $tcLines = explode("\n", str_replace("\r", "", $tcText));
+            foreach ($tcLines as $line) {
+                $trimmed = trim($line);
+                if ($trimmed !== '') {
+                    echo esc($trimmed) . '<br>';
+                }
+            }
+            ?>
+        </td>
+        <td colspan="7" style="width:35%; vertical-align:bottom; text-align:center; font-size:9px; font-weight:bold; padding:8px; border-left:1px solid #000;">
             For <?= esc($company['name'] ?? 'M.A LOGISTICS') ?><br><br>
             <?php 
             $sigPath = !empty($bookingSignaturePath) ? $bookingSignaturePath : ($company['signature_path'] ?? '');
@@ -360,5 +354,4 @@ foreach ($shipmentRows as $row) {
         </td>
     </tr>
 </table>
-</div>
 <?php endif; ?>
