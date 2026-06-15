@@ -33,7 +33,7 @@ class Database extends Config
         'DBDriver'     => 'MySQLi',
         'DBPrefix'     => '',
         'pConnect'     => false,
-        'DBDebug'      => true,
+        'DBDebug'      => (ENVIRONMENT !== 'production'),
         'charset'      => 'utf8mb4',
         'DBCollat'     => 'utf8mb4_general_ci',
         'swapPre'      => '',
@@ -193,6 +193,27 @@ class Database extends Config
     public function __construct()
     {
         parent::__construct();
+
+        // Prefer credentials supplied via the environment (.env) so that
+        // secrets do not have to live in version control. Falls back to the
+        // values defined above when the variables are not set.
+        $envHost = getenv('MARL_DB_HOSTNAME');
+        $envUser = getenv('MARL_DB_USERNAME');
+        $envPass = getenv('MARL_DB_PASSWORD');
+        $envName = getenv('MARL_DB_DATABASE');
+
+        if ($envHost !== false && $envHost !== '') {
+            $this->default['hostname'] = $envHost;
+        }
+        if ($envUser !== false && $envUser !== '') {
+            $this->default['username'] = $envUser;
+        }
+        if ($envPass !== false) {
+            $this->default['password'] = $envPass;
+        }
+        if ($envName !== false && $envName !== '') {
+            $this->default['database'] = $envName;
+        }
 
         // Ensure that we always set the database group to 'tests' if
         // we are currently running an automated test suite, so that

@@ -88,9 +88,7 @@ class AuthFilter implements FilterInterface
                 return redirect()->to('/logistics')->with('error', 'Delete permission denied!');
             }
 
-            // Perform branch-level row isolation checks for non-admins (TEMPORARILY SUSPENDED)
-            /*
-            $userRole = session()->get('role');
+            // Perform branch-level row isolation checks for non-admins
             if ($userRole !== 'admin') {
                 $db = \Config\Database::connect();
                 $booking = $db->table('bookings')->where('id', $bookingId)->select('branch_id')->get()->getRowArray();
@@ -102,7 +100,6 @@ class AuthFilter implements FilterInterface
                     }
                 }
             }
-            */
         }
     }
 

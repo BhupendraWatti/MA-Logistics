@@ -161,10 +161,10 @@ class TrackingController extends BaseController
 
     public function trackByAwb($searchVal)
     {
-        // Set standard CORS headers dynamically to prevent any cross-origin blocks
+        // Public read-only tracking endpoint: allow cross-origin GET only.
         header("Access-Control-Allow-Origin: *");
-        header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE");
-        header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+        header("Access-Control-Allow-Methods: GET, OPTIONS");
+        header("Access-Control-Allow-Headers: Content-Type, X-Requested-With");
 
         if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
             exit(0);
@@ -287,7 +287,7 @@ class TrackingController extends BaseController
             session_write_close();
             return $this->response->setJSON([
                 'status' => 'error',
-                'message' => 'An unexpected server error occurred: ' . $e->getMessage()
+                'message' => 'An unexpected server error occurred. Please try again later.'
             ]);
         }
     }

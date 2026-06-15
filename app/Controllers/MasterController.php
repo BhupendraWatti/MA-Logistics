@@ -675,7 +675,7 @@ class MasterController extends BaseController
         } catch (\Throwable $e) {
             log_message('error', '[Generate Docket Error] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
             session_write_close();
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Failed to generate docket: ' . $e->getMessage()]);
+            return $this->response->setJSON(['status' => 'error', 'message' => 'Failed to generate docket. Please try again.']);
         }
     }
 
