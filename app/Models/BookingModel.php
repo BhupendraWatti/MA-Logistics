@@ -27,12 +27,10 @@ class BookingModel extends Model
         ->where('bookings.company_id', $companyId);
 
         $userRole = session()->get('role');
-        /* Branch filter temporarily suspended
         if ($userRole !== 'admin') {
             $branchId = session()->get('branch_id') ?? 1;
             $query = $query->where('bookings.branch_id', $branchId);
         }
-        */
 
         return $query->groupStart()
         ->like('bookings.awb_no', $searchValue)
@@ -82,12 +80,10 @@ class BookingModel extends Model
        $query = $this->where('company_id', $companyId);
 
        $userRole = session()->get('role');
-       /* Branch filter temporarily suspended
        if ($userRole !== 'admin') {
            $branchId = session()->get('branch_id') ?? 1;
            $query = $query->where('branch_id', $branchId);
        }
-       */
 
        return $query->orderBy('id', 'DESC')
                     ->limit($limit)
