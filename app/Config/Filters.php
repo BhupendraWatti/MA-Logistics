@@ -72,7 +72,7 @@ class Filters extends BaseFilters
      */
     public array $globals = [
         'before' => [
-            'auth' => ['except' => ['login', 'auth/*', 'register', 'api/track/*', 'run-migrations', 'view-latest-log']],   // Auth Added Here
+            'auth' => ['except' => ['login', 'auth/*', 'register', 'api/track/*']],   // Auth Added Here
             // 'honeypot',
             'csrf' => ['except' => [
                 'logistics/ajax-datatable', 
