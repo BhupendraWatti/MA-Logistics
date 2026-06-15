@@ -61,12 +61,12 @@ class InvoiceService
         $miscLabel = 'Misc Charges';
 
         foreach ($shipments as $item) {
-            $wt      = (float) ($item['actual_weight']  ?? 0);
+            $wt      = (float) ($item['final_chargeable_weight']  ?? 0);
             $fuelSur = (float) ($item['fuel_surcharge'] ?? 0);
             $rate    = (float) ($item['rate']           ?? 0);
 
             $totals['freight']  += $wt * $rate;
-            $totals['fuel']     += $wt * $fuelSur;
+            $totals['fuel']     += $fuelSur;
             $totals['docket']   += (float) ($item['docket_charges']   ?? 0);
             $totals['pickup']   += (float) ($item['pickup_charges']   ?? 0);
             $totals['delivery'] += (float) ($item['delivery_charges'] ?? 0);
@@ -156,11 +156,11 @@ class InvoiceService
             $origin    = trim(explode(',', $originRaw ?: 'Pune')[0]);
             $dest      = trim(explode(',', $destRaw   ?: '')[0]);
 
-            $wt       = (float) ($item['actual_weight']  ?? 0);
+            $wt       = (float) ($item['final_chargeable_weight']  ?? 0);
             $rate     = (float) ($item['rate']           ?? 0);
             $fuelSur  = (float) ($item['fuel_surcharge'] ?? 0);
             $freight  = $wt * $rate;
-            $fuelAmt  = $wt * $fuelSur;
+            $fuelAmt  = $fuelSur;
 
             $docket   = (float) ($item['docket_charges']   ?? 0);
             $pickup   = (float) ($item['pickup_charges']   ?? 0);

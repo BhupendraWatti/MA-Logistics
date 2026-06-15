@@ -798,6 +798,11 @@ public function exportExcel()
     $companyModel = new CompanyModel();
     $salesModel = new \App\Models\SalesChargeModel();
     
+    $companyId = session()->get('selected_company_id');
+    if (!$companyId) {
+        return redirect()->to('/company-selection');
+    }
+    
     $ids = $this->request->getGet('ids');
     
     if (empty($ids)) {
@@ -813,7 +818,7 @@ public function exportExcel()
         'EXPECTED DELIVERY DATE', 'EXPECTED DELIVERY TIME', 'INVOICE DATE', 'BILL TO',
         'ACTUAL WEIGHT', 'LENGTH', 'WIDTH', 'HEIGHT', 'VOLUMETRIC WEIGHT', 'CALCULATED WEIGHT', 'FINAL CHARGEABLE WEIGHT', 'ITEM PIECES',
         'E-WAY BILL NO', 'E-WAY BILL DATE',
-        'ITEM RATE', 'ITEM FREIGHT', 'ITEM FUEL SURCHARGE RATE', 'ITEM FUEL SURCHARGE AMOUNT', 'ITEM DOCKET CHARGES', 'ITEM PICKUP CHARGES', 'ITEM DELIVERY CHARGES', 'ITEM FOV CHARGES', 'ITEM HANDLING CHARGES', 'ITEM SERVICE CHARGES', 'ITEM TAXABLE AMOUNT',
+        'ITEM RATE', 'ITEM FREIGHT', 'ITEM FUEL SURCHARGE RATE', 'ITEM FUEL SURCHARGE AMOUNT', 'ITEM DOCKET CHARGES', 'ITEM PICKUP CHARGES', 'ITEM DELIVERY CHARGES', 'ITEM FOV CHARGES', 'ITEM HANDLING CHARGES', 'ITEM SERVICE CHARGES', 'ITEM MISC CHARGES', 'ITEM TAXABLE AMOUNT',
         'AIRLINES / CARRIER', 'FLIGHT NUMBER', 'VEHICLE NO', 'DRIVER NAME', 'DRIVER MOBILE', 'DRIVER LICENSE', 'TRANSPORTER NAME', 'TRANSPORTER MOBILE',
         'PAYMENT TYPE', 'GST APPLIED', 'GSTIN', 'PAN', 'SAC CODE', 'CGST RATE (%)', 'SGST RATE (%)', 'IGST RATE (%)', 'NARRATION',
         'SALES RATE', 'SALES WEIGHT', 'SALES DDC', 'SALES SSC', 'SALES BTC', 'SALES FLC', 'SALES DOC', 'SALES INBOUND TSP', 'SALES OUTBOUND TSP', 'SALES TCP', 'SALES UTILITY CHARGES', 'SALES XRAY CHARGES', 'SALES ADO', 'SALES AWB FEES AGENT', 'SALES AWB FEES CARRIER', 'SALES ADMIN CHARGES', 'SALES DELIVERY ORDER CHARGES', 'SALES INBOUND HANDLING', 'SALES INBOUND STORAGE', 'SALES OUTBOUND STORAGE', 'SALES MISC CHARGES', 'TOTAL BILLING AMOUNT'
@@ -824,7 +829,7 @@ public function exportExcel()
     
     foreach ($idArray as $bookingId) {
         $booking = $bookingModel->find($bookingId);
-        if (!$booking) continue;
+        if (!$booking || $booking['company_id'] != $companyId) continue;
         
         $company = $companyModel->find($booking['company_id']);
         $companyName = $company['name'] ?? 'N/A';
@@ -834,7 +839,8 @@ public function exportExcel()
         $shipments = $shipmentModel->where('booking_id', $bookingId)->findAll();
         
         foreach ($shipments as $item) {
-            $wt = floatval($item['actual_weight'] ?? 0);
+            $actualWt = floatval($item['actual_weight'] ?? 0);
+            $wt = floatval($item['final_chargeable_weight'] ?? 0);
             $rate = floatval($item['rate'] ?? 0);
             $fuelSur = floatval($item['fuel_surcharge'] ?? 0);
             $dock = floatval($item['docket_charges'] ?? 0);
@@ -843,10 +849,11 @@ public function exportExcel()
             $fov = floatval($item['fov_charges'] ?? 0);
             $handling = floatval($item['handling_charges'] ?? 0);
             $service = floatval($item['service_charges'] ?? 0);
+            $misc = floatval($item['misc_charges'] ?? 0);
             
             $freight = $wt * $rate;
-            $fuelAmt = $wt * $fuelSur;
-            $taxable = $freight + $fuelAmt + $dock + $pickup + $delivery + $fov + $handling + $service;
+            $fuelAmt = $fuelSur;
+            $taxable = $freight + $fuelAmt + $dock + $pickup + $delivery + $fov + $handling + $service + $misc;
             
             $rows[] = [
                 $srNo,
@@ -869,7 +876,7 @@ public function exportExcel()
                 !empty($item['invoice_date']) ? date('d-m-Y', strtotime($item['invoice_date'])) : '',
                 $item['bill_to'] ?? '',
                 
-                $wt,
+                $actualWt,
                 floatval($item['length'] ?? 0),
                 floatval($item['width'] ?? 0),
                 floatval($item['height'] ?? 0),
@@ -890,6 +897,7 @@ public function exportExcel()
                 $fov,
                 $handling,
                 $service,
+                $misc,
                 $taxable,
                 
                 $booking['airlines'] ?? '',

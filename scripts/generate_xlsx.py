@@ -71,7 +71,8 @@ def generate_xlsx(input_json_path, output_xlsx_path):
             header_name = headers[col_idx - 1] if col_idx - 1 < len(headers) else ""
             
             # Determine alignment/style index
-            is_numeric = any(term in header_name for term in ["WEIGHT", "LENGTH", "WIDTH", "HEIGHT", "PIECES", "RATE", "FREIGHT", "SURCHARGE", "AMOUNT", "CHARGES", "TAXABLE", "DDC", "SSC", "BTC", "FLC", "DOC", "TSP", "TCP", "ADO", "FEES", "STORAGE", "HANDLING"])
+            is_docket = "DOCKET NO" in header_name
+            is_numeric = not is_docket and any(term in header_name for term in ["WEIGHT", "LENGTH", "WIDTH", "HEIGHT", "PIECES", "RATE", "FREIGHT", "SURCHARGE", "AMOUNT", "CHARGES", "TAXABLE", "DDC", "SSC", "BTC", "FLC", "DOC", "TSP", "TCP", "ADO", "FEES", "STORAGE", "HANDLING"])
             
             if val is None or val == "":
                 rows_xml += f'<c r="{ref}" s="0"/>'
@@ -82,7 +83,7 @@ def generate_xlsx(input_json_path, output_xlsx_path):
                     if num_val.is_integer() and "PIECES" in header_name:
                         # Pieces (style 6)
                         rows_xml += f'<c r="{ref}" s="6" t="n"><v>{int(num_val)}</v></c>'
-                    elif any(term in header_name for term in ["RATE", "FREIGHT", "AMOUNT", "CHARGES", "TAXABLE", "DDC", "SSC", "BTC", "FLC", "DOC", "TSP", "TCP", "ADO", "FEES", "STORAGE", "HANDLING"]):
+                    elif any(term in header_name for term in ["RATE", "FREIGHT", "AMOUNT", "CHARGES", "TAXABLE", "DDC", "SSC", "BTC", "FLC", "DOC", "TSP", "TCP", "ADO", "FEES", "STORAGE", "HANDLING"]) and not any(gst_term in header_name for gst_term in ["CGST", "SGST", "IGST"]):
                         # Currency (style 5)
                         rows_xml += f'<c r="{ref}" s="5" t="n"><v>{num_val}</v></c>'
                     elif "PIECES" in header_name:
@@ -135,7 +136,7 @@ def generate_xlsx(input_json_path, output_xlsx_path):
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
   <numFmts count="2">
     <numFmt numFmtId="164" formatCode="[$₹-380A] #,##0.00"/>
-    <numFmt numFmtId="165" formatCode="#,##0.0"/>
+    <numFmt numFmtId="165" formatCode="#,##0.00"/>
   </numFmts>
   <fonts count="2">
     <font>

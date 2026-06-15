@@ -103,7 +103,7 @@ foreach ($shipmentRows as $row) {
         border-bottom: 1px solid #000;
     }
 </style>
-<table class="invoice-body-table" cellpadding="2" cellspacing="0" style="width:100%; font-size:8px; border-collapse:collapse; font-family:helvetica;">
+<table class="invoice-body-table" cellpadding="2" cellspacing="0" style="width:100%; font-size:8px; border-collapse:collapse; font-family:helvetica; border-top:1px solid #000;">
     <thead>
         <tr style="text-align:center; font-weight:bold; font-size:8px; line-height:1.4;">
             <?php if ($isNx): ?>
