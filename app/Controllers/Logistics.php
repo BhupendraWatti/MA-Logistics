@@ -34,31 +34,6 @@ class Logistics extends BaseController
 
 
 
-private function enforcePermissions($action)
-{
-    $permissions = session()->get('permissions') ?? [];
-    
-    switch($action) {
-        case 'create':
-            if (!($permissions['can_create'] ?? 0)) {
-                return redirect()->to('/logistics')->with('error', 'Create permission denied!');
-            }
-            break;
-        case 'edit':
-            if (!($permissions['can_edit'] ?? 0)) {
-                return redirect()->to('/logistics')->with('error', 'Edit permission denied!');
-            }
-            break;
-        case 'delete':
-            if (!($permissions['can_delete'] ?? 0)) {
-                return redirect()->to('/logistics')->with('error', 'Delete permission denied!');
-            }
-            break;
-    }
-    return true;
-}
-
-
 public function index()
 {
     $companyId = session()->get('selected_company_id');
@@ -104,6 +79,7 @@ public function index()
 
         $b['total_weight'] = $wgtRow['total_weight'] ?? 0;
     }
+    unset($b);
     
     $data['recent_bookings'] = $recent_bookings;
 
@@ -173,7 +149,10 @@ public function create()
 
   public function store()
   {
-    $this->checkPermission('can_create');
+    $perm = $this->checkPermission('can_create');
+    if ($perm !== true) {
+        return $perm;
+    }
     
     $bookingService = new \App\Services\BookingService();
     
@@ -243,7 +222,10 @@ public function create()
 
 public function edit($id)
 {
-    $this->checkPermission('can_edit');
+    $perm = $this->checkPermission('can_edit');
+    if ($perm !== true) {
+        return $perm;
+    }
     
     $bookingModel  = new BookingModel();
     $shipmentModel = new ShipmentItemModel();
@@ -442,13 +424,7 @@ public function companySelection()
 
   public function createCompany()
   {
-    //   $permissions = session()->get('permissions') ?? [];
-    //   $role = session()->get('role');
-    //   if ($role !== 'admin' && !($permissions['can_create'] ?? 0)) {
-    //       return redirect()->back()->with('error', '❌ You do not have permission to create companies!');
-    //   }
-
-    // ✅ FIXED: ONLY Admin can create companies (ignores can_create permission)
+    // ONLY Admin can create companies (ignores can_create permission)
     if (session()->get('role') !== 'admin') {
         return redirect()->to('/logistics')->with('error', 'Admin access required!');
     }
@@ -470,13 +446,7 @@ public function companySelection()
 
   public function deleteCompany($id)
   {
-    //   $permissions = session()->get('permissions') ?? [];
-    //   $role = session()->get('role');
-    //   if ($role !== 'admin' && !($permissions['can_delete'] ?? 0)) {
-    //       return redirect()->back()->with('error', '❌ You do not have permission to delete companies!');
-    //   }
-
-    // ✅ FIXED: ONLY Admin can delete companies (ignores can_delete permission)
+    // ONLY Admin can delete companies (ignores can_delete permission)
     if (session()->get('role') !== 'admin') {
         return redirect()->to('/logistics')->with('error', 'Admin access required!');
     }
@@ -762,84 +732,6 @@ public function exportPdf($id)
 
 
 
-// ========== Export Excel Start ===========// public function exportExcel()
-// {
-//     $bookingModel = new BookingModel();
-//     $shipmentModel = new ShipmentItemModel();
-    
-//     $ids = $this->request->getGet('ids');
-    
-//     if (empty($ids)) {
-//         return redirect()->back()->with('error', 'Please select at least one booking!');
-//     }
-    
-//     $idArray = explode(',', $ids);
-    
-//     // CSV Headers
-//     $headers = ['SR NO', 'AWB NO', 'DATE', 'COMPANY', 'ORIGIN', 'DESTINATION', 'STATUS', 'PIECES', 
-//                'INVOICE NO', 'CUSTOMER', 'BILL TO', 'CONSIGNEE', 'WEIGHT', 'RATE', 
-//                'FREIGHT', 'FUEL SUR', 'FUEL AMT', 'DOCKET', 'PICKUP', 'DELIVERY', 'TAXABLE'];
-    
-//     // Output buffer
-//     $output = implode(',', $headers) . "\n";
-    
-//     $srNo = 1;
-    
-//     foreach ($idArray as $bookingId) {
-//         $booking = $bookingModel->find($bookingId);
-//         if (!$booking) continue;
-        
-//         $shipments = $shipmentModel->where('booking_id', $bookingId)->findAll();
-        
-//         foreach ($shipments as $item) {
-//             $wt = floatval($item['actual_weight'] ?? 0);
-//             $rate = floatval($item['rate'] ?? 0);
-//             $fuelSur = floatval($item['fuel_surcharge'] ?? 0);
-//             $dock = floatval($item['docket_charges'] ?? 0);
-//             $pickup = floatval($item['pickup_charges'] ?? 0);
-//             $delivery = floatval($item['delivery_charges'] ?? 0);
-            
-//             $freight = $wt * $rate;
-//             $fuelAmt = $wt * $fuelSur;
-//             $taxable = $freight + $fuelAmt + $dock + $pickup + $delivery;
-            
-//             $row = [
-//                 $srNo,
-//                 $booking['awb_no'],
-//                 date('d-m-Y', strtotime($booking['booking_date'])),
-//                 $booking['company_id'],
-//                 $booking['origin'],
-//                 $booking['destination'],
-//                 $booking['status'],
-//                 $booking['total_pieces'],
-//                 $item['invoice_no'] ?? '',
-//                 $item['customer_name'] ?? '',
-//                 $item['bill_to'] ?? '',
-//                 $item['consignee'] ?? '',
-//                 $wt,
-//                 $rate,
-//                 $freight,
-//                 $fuelSur,
-//                 $fuelAmt,
-//                 $dock,
-//                 $pickup,
-//                 $delivery,
-//                 $taxable
-//             ];
-            
-//             // Escape CSV values
-//             $output .= '"' . implode('","', $row) . '"' . "\n";
-//             $srNo++;
-//         }
-//     }
-    
-//     // Download CSV
-//     header('Content-Type: application/csv');
-//     header('Content-Disposition: attachment; filename="AWB_Export_' . date('Y-m-d') . '.csv"');
-//     echo $output;
-//     exit;
-// }
-
 public function export()
 {
     $db = \Config\Database::connect();
@@ -1104,7 +996,10 @@ public function exportExcel()
 
     public function deleteSignature($bookingId)
     {
-        $this->checkPermission('can_edit');
+        $perm = $this->checkPermission('can_edit');
+        if ($perm !== true) {
+            return $perm;
+        }
         
         $bookingModel = new BookingModel();
         $booking = $bookingModel->find($bookingId);

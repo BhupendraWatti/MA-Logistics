@@ -105,17 +105,8 @@ $routes->get('api/track/(:any)', 'TrackingController::trackByAwb/$1');
 // DEFAULT FALLBACK (LAST!)
 $routes->get('(:segment)', 'Logistics::index');
 
-// Manage Bookings
-$routes->get('logistics/manage', 'Logistics::manageBookings');
-
 // ExportPDF:
 $routes->get('logistics/exportPdf/(:num)', 'Logistics::exportPdf/$1');
-
-// Deactivate Button
-$routes->post('admin/toggleStatus', 'AdminController::toggleStatus');
-
-// Change Password Route
-$routes->post('admin/changePassword', 'AdminController::changePassword');
 
 // Export CSV Full
 $routes->get('logistics/export', 'Logistics::export');
