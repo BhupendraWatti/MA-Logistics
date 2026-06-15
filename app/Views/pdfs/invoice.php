@@ -102,64 +102,57 @@ foreach ($shipmentRows as $row) {
         border-right: 1px solid #000;
         border-bottom: 1px solid #000;
     }
-    .invoice-body-table thead td {
-        border-top: 1px solid #000;
-        border-bottom: 1px solid #000;
-        font-weight: bold;
-        text-align: center;
-        background-color: #f5f5f5;
-    }
 </style>
 <table class="invoice-body-table" cellpadding="2" cellspacing="0" style="width:100%; font-size:8px; border-collapse:collapse; font-family:helvetica;">
     <thead>
         <tr style="text-align:center; font-weight:bold; font-size:8px; line-height:1.4;">
             <?php if ($isNx): ?>
-                <td style="width:3%;">SR<br>NO</td>
-                <td style="width:6%;">DATE</td>
-                <td style="width:8%;">DOC NO.</td>
-                <td style="width:6%;">ORIGIN</td>
-                <td style="width:6%;">DEST</td>
-                <td style="width:4%;">PCS</td>
-                <td style="width:5%;">WT</td>
-                <td style="width:5%;">RATE</td>
-                <td style="width:6%;">FREIGHT</td>
-                <td style="width:5%;">DOC</td>
-                <td style="width:5%;">FSC</td>
-                <td style="width:7%;">GROSS</td>
-                <td style="width:6%;">C.GST <?= (float)$cgstRate ?> %</td>
-                <td style="width:6%;">S.GST <?= (float)$sgstRate ?> %</td>
-                <td style="width:6%;">I.GST <?= (float)$igstRate ?> %</td>
-                <td style="width:12%;">TOTAL Amt.</td>
+                <td style="width:3%; border-top:1px solid #000; border-bottom:1px solid #000;">SR<br>NO</td>
+                <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">DATE</td>
+                <td style="width:8%; border-top:1px solid #000; border-bottom:1px solid #000;">DOC NO.</td>
+                <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">ORIGIN</td>
+                <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">DEST</td>
+                <td style="width:4%; border-top:1px solid #000; border-bottom:1px solid #000;">PCS</td>
+                <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">WT</td>
+                <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">RATE</td>
+                <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">FREIGHT</td>
+                <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">DOC</td>
+                <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">FSC</td>
+                <td style="width:7%; border-top:1px solid #000; border-bottom:1px solid #000;">GROSS</td>
+                <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">C.GST <?= (float)$cgstRate ?> %</td>
+                <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">S.GST <?= (float)$sgstRate ?> %</td>
+                <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">I.GST <?= (float)$igstRate ?> %</td>
+                <td style="width:12%; border-top:1px solid #000; border-bottom:1px solid #000;">TOTAL Amt.</td>
             <?php elseif ($isBrembo): ?>
-                <td style="width:3%;">SR NO</td>
-                <td style="width:6%;">DATE</td>
-                <td style="width:8%;">MA LR NO.</td>
-                <td style="width:11%;">BREMBO INV NO.</td>
-                <td style="width:6%;">ORIGIN</td>
-                <td style="width:6%;">DEST</td>
-                <td style="width:5%;">PCS</td>
-                <td style="width:5%;">WT</td>
-                <td style="width:5%;">RATE</td>
-                <td style="width:7%;">FREIGHT</td>
-                <td style="width:8%;">DOCKET CHG</td>
-                <td style="width:7%;">PICKUP</td>
-                <td style="width:8%;">DELIVERY</td>
-                <td style="width:15%;">TOTAL Amt.</td>
+                <td style="width:3%; border-top:1px solid #000; border-bottom:1px solid #000;">SR NO</td>
+                <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">DATE</td>
+                <td style="width:8%; border-top:1px solid #000; border-bottom:1px solid #000;">MA LR NO.</td>
+                <td style="width:11%; border-top:1px solid #000; border-bottom:1px solid #000;">BREMBO INV NO.</td>
+                <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">ORIGIN</td>
+                <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">DEST</td>
+                <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">PCS</td>
+                <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">WT</td>
+                <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">RATE</td>
+                <td style="width:7%; border-top:1px solid #000; border-bottom:1px solid #000;">FREIGHT</td>
+                <td style="width:8%; border-top:1px solid #000; border-bottom:1px solid #000;">DOCKET CHG</td>
+                <td style="width:7%; border-top:1px solid #000; border-bottom:1px solid #000;">PICKUP</td>
+                <td style="width:8%; border-top:1px solid #000; border-bottom:1px solid #000;">DELIVERY</td>
+                <td style="width:15%; border-top:1px solid #000; border-bottom:1px solid #000;">TOTAL Amt.</td>
             <?php else: ?>
-                <td style="width:3%;">SR NO</td>
-                <td style="width:6%;">DATE</td>
-                <td style="width:8%;">LR NO.</td>
-                <td style="width:11%;">INVOICE NUMBER</td>
-                <td style="width:6%;">ORIGIN</td>
-                <td style="width:6%;">DEST</td>
-                <td style="width:5%;">PCS</td>
-                <td style="width:5%;">WT</td>
-                <td style="width:5%;">RATE</td>
-                <td style="width:7%;">FREIGHT</td>
-                <td style="width:7%;">DOCKET</td>
-                <td style="width:7%;">FUEL AMT</td>
-                <td style="width:9%;">OTHER CHG</td>
-                <td style="width:15%;">TOTAL Amt.</td>
+                <td style="width:3%; border-top:1px solid #000; border-bottom:1px solid #000;">SR NO</td>
+                <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">DATE</td>
+                <td style="width:8%; border-top:1px solid #000; border-bottom:1px solid #000;">LR NO.</td>
+                <td style="width:11%; border-top:1px solid #000; border-bottom:1px solid #000;">INVOICE NUMBER</td>
+                <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">ORIGIN</td>
+                <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">DEST</td>
+                <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">PCS</td>
+                <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">WT</td>
+                <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">RATE</td>
+                <td style="width:7%; border-top:1px solid #000; border-bottom:1px solid #000;">FREIGHT</td>
+                <td style="width:7%; border-top:1px solid #000; border-bottom:1px solid #000;">DOCKET</td>
+                <td style="width:7%; border-top:1px solid #000; border-bottom:1px solid #000;">FUEL AMT</td>
+                <td style="width:9%; border-top:1px solid #000; border-bottom:1px solid #000;">OTHER CHG</td>
+                <td style="width:15%; border-top:1px solid #000; border-bottom:1px solid #000;">TOTAL Amt.</td>
             <?php endif; ?>
         </tr>
     </thead>
