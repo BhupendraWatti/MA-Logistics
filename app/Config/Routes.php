@@ -102,33 +102,6 @@ $routes->get('api/masters/company-gst',               'MasterController::apiComp
 // ====== PUBLIC API ENDPOINTS ======
 $routes->get('api/track/(:any)', 'TrackingController::trackByAwb/$1');
 
-// TEMPORARY DIAGNOSTIC ROUTES
-$routes->get('run-migrations', function() {
-    $migrations = \Config\Services::migrations();
-    try {
-        $migrations->latest();
-        return "Migrations ran successfully!";
-    } catch (\Throwable $e) {
-        return "Migration error: " . $e->getMessage() . "<br><pre>" . $e->getTraceAsString() . "</pre>";
-    }
-});
-
-$routes->get('view-latest-log', function() {
-    $logPath = WRITEPATH . 'logs/';
-    $files = glob($logPath . 'log-*.log');
-    if (empty($files)) {
-        return "No log files found in " . $logPath;
-    }
-    usort($files, function($a, $b) {
-        return filemtime($b) - filemtime($a);
-    });
-    $latestFile = $files[0];
-    $content = file_get_contents($latestFile);
-    $len = strlen($content);
-    $start = max(0, $len - 10000);
-    return "<pre>File: " . esc($latestFile) . "\n\n" . esc(substr($content, $start)) . "</pre>";
-});
-
 // DEFAULT FALLBACK (LAST!)
 $routes->get('(:segment)', 'Logistics::index');
 
