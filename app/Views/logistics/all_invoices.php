@@ -88,16 +88,7 @@
                                 <textarea name="remark" id="fRemark" class="form-control form-control-sm shadow-none" rows="3" placeholder="Any internal reference or notes..."></textarea>
                             </div>
 
-                            <div class="col-12" id="gstOptionsContainer">
-                                <div class="form-check form-switch pt-2">
-                                    <input class="form-check-input shadow-none" type="checkbox" name="gst_applied" id="fGstApplied" value="1" checked>
-                                    <label class="form-check-label fw-bold text-secondary fs-7" for="fGstApplied">Apply GST</label>
-                                </div>
-                                <div class="form-check form-switch mt-2">
-                                    <input class="form-check-input shadow-none" type="checkbox" name="is_igst" id="fIsIgst" value="1">
-                                    <label class="form-check-label fw-bold text-secondary fs-7" for="fIsIgst">IGST (Inter-state 18%)</label>
-                                </div>
-                            </div>
+                            <!-- GST Options removed in favor of automated settings per booking -->
                         </div>
                     </div>
                 </div>
@@ -154,9 +145,15 @@
                                     Total Weight: <span id="sumWeight" class="text-dark fw-bold">0.00</span> KG | 
                                     Total Boxes: <span id="sumBoxes" class="text-dark fw-bold">0</span>
                                 </div>
-                                <button type="submit" class="btn btn-success fw-bold shadow-sm px-4">
-                                    <i class="fas fa-file-pdf me-2"></i> Generate Consolidated Invoice
-                                </button>
+                                <div>
+                                    <input type="hidden" name="export_type" id="export_type" value="pdf">
+                                    <button type="submit" value="excel" class="btn btn-outline-success fw-bold shadow-sm px-4 me-2">
+                                        <i class="fas fa-file-excel me-2"></i> Export Excel
+                                    </button>
+                                    <button type="submit" value="pdf" class="btn btn-success fw-bold shadow-sm px-4">
+                                        <i class="fas fa-file-pdf me-2"></i> Generate Consolidated Invoice
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -177,6 +174,7 @@
 <?= $this->section('scripts') ?>
 <script>
 const _customers = <?= json_encode($customers) ?>;
+let isSubmitting = false;
 
 $(document).ready(function() {
     // Sync GST visibility when customer changes
@@ -194,21 +192,17 @@ $(document).ready(function() {
         if (customerName) {
             if (hasGst) {
                 $('#fGstWarning').addClass('d-none');
-                $('#gstOptionsContainer').removeClass('d-none');
-                $('#fGstApplied').prop('checked', true).prop('disabled', false);
-                $('#fIsIgst').prop('disabled', false);
             } else {
                 $('#fGstWarning').removeClass('d-none');
-                $('#fGstApplied').prop('checked', false).prop('disabled', true);
-                $('#fIsIgst').prop('checked', false).prop('disabled', true);
-                $('#gstOptionsContainer').addClass('d-none');
             }
         } else {
             $('#fGstWarning').addClass('d-none');
-            $('#gstOptionsContainer').removeClass('d-none');
-            $('#fGstApplied').prop('checked', true).prop('disabled', false);
-            $('#fIsIgst').prop('disabled', false);
         }
+    });
+
+    // Track which submit button was clicked
+    $('button[type="submit"]').on('click', function() {
+        $('#export_type').val($(this).val());
     });
 
     // Event listeners to fetch shipments
@@ -234,11 +228,115 @@ $(document).ready(function() {
 
     // Form submit validation
     $('#invoiceForm').on('submit', function(e) {
-        if ($('.shipment-checkbox:checked').length === 0) {
+        if (isSubmitting) {
+            return true;
+        }
+
+        const checkedBoxes = $('.shipment-checkbox:checked');
+        if (checkedBoxes.length === 0) {
             e.preventDefault();
             alert('Please select at least one shipment record to generate the invoice.');
             return false;
         }
+
+        // Check for GST mismatches among selected records
+        let igstRecords = [];
+        let cgstSgstRecords = [];
+        let noGstRecords = [];
+
+        checkedBoxes.each(function() {
+            const checkbox = $(this);
+            const gstApplied = parseInt(checkbox.data('gst-applied') || 0) === 1;
+            const cgstRate = parseFloat(checkbox.data('cgst-rate') || 0);
+            const sgstRate = parseFloat(checkbox.data('sgst-rate') || 0);
+            const igstRate = parseFloat(checkbox.data('igst-rate') || 0);
+            const awbNo = checkbox.data('awb-no') || '';
+            const docketNo = checkbox.data('docket-no') || '';
+            
+            const recordInfo = { awb: awbNo, docket: docketNo };
+
+            if (!gstApplied) {
+                noGstRecords.push(recordInfo);
+            } else if (igstRate > 0) {
+                igstRecords.push(recordInfo);
+            } else if (cgstRate > 0 || sgstRate > 0) {
+                cgstSgstRecords.push(recordInfo);
+            } else {
+                noGstRecords.push(recordInfo);
+            }
+        });
+
+        // Determine if we have a mismatch
+        const activeTypes = [];
+        if (igstRecords.length > 0) activeTypes.push('IGST');
+        if (cgstSgstRecords.length > 0) activeTypes.push('CGST/SGST');
+        if (noGstRecords.length > 0) activeTypes.push('No GST');
+
+        if (activeTypes.length > 1) {
+            e.preventDefault();
+
+            // Find majority type
+            let majorityType = 'IGST';
+            const counts = {
+                'IGST': igstRecords.length,
+                'CGST/SGST': cgstSgstRecords.length,
+                'No GST': noGstRecords.length
+            };
+
+            let maxCount = -1;
+            for (const type in counts) {
+                if (counts[type] > maxCount) {
+                    maxCount = counts[type];
+                    majorityType = type;
+                }
+            }
+
+            // Prepare list of mismatched records (those not matching the majorityType)
+            let mismatchDetails = '<div class="mt-2" style="max-height: 200px; overflow-y: auto;">';
+            if (majorityType !== 'IGST' && igstRecords.length > 0) {
+                mismatchDetails += '<strong class="text-primary">IGST Records:</strong><br>';
+                igstRecords.forEach(r => {
+                    mismatchDetails += `- AWB: ${r.awb} (Docket: ${r.docket})<br>`;
+                });
+            }
+            if (majorityType !== 'CGST/SGST' && cgstSgstRecords.length > 0) {
+                mismatchDetails += '<strong class="text-primary">CGST/SGST Records:</strong><br>';
+                cgstSgstRecords.forEach(r => {
+                    mismatchDetails += `- AWB: ${r.awb} (Docket: ${r.docket})<br>`;
+                });
+            }
+            if (majorityType !== 'No GST' && noGstRecords.length > 0) {
+                mismatchDetails += '<strong class="text-primary">No GST Records:</strong><br>';
+                noGstRecords.forEach(r => {
+                    mismatchDetails += `- AWB: ${r.awb} (Docket: ${r.docket})<br>`;
+                });
+            }
+            mismatchDetails += '</div>';
+
+            Swal.fire({
+                title: 'GST Mismatch Warning',
+                html: `<div class="text-start fs-7">
+                        <p class="text-danger fw-bold"><i class="fas fa-exclamation-triangle"></i> Mismatched GST configurations detected among selected records!</p>
+                        <p>Majority configuration is: <span class="badge bg-secondary">${majorityType}</span></p>
+                        ${mismatchDetails}
+                        <p class="mt-3">Would you like to proceed with generating the consolidated report under the majority's settings?</p>
+                       </div>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, Proceed',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    isSubmitting = true;
+                    $('#invoiceForm').submit();
+                    isSubmitting = false;
+                }
+            });
+            return false;
+        }
+        return true;
     });
 });
 
@@ -280,7 +378,16 @@ function loadShipments() {
                     const tr = `
                         <tr>
                             <td class="ps-3">
-                                <input class="form-check-input shadow-none shipment-checkbox" type="checkbox" name="item_ids[]" value="${row.id}" data-weight="${parseFloat(row.final_chargeable_weight || 0)}" data-boxes="${parseInt(row.pieces || 0)}" checked>
+                                <input class="form-check-input shadow-none shipment-checkbox" type="checkbox" name="item_ids[]" value="${row.id}" 
+                                    data-weight="${parseFloat(row.final_chargeable_weight || 0)}" 
+                                    data-boxes="${parseInt(row.pieces || 0)}"
+                                    data-gst-applied="${row.gst_applied}"
+                                    data-cgst-rate="${parseFloat(row.cgst_rate || 0)}"
+                                    data-sgst-rate="${parseFloat(row.sgst_rate || 0)}"
+                                    data-igst-rate="${parseFloat(row.igst_rate || 0)}"
+                                    data-awb-no="${row.awb_no || ''}"
+                                    data-docket-no="${row.docket_no || ''}"
+                                    checked>
                             </td>
                             <td>${row.display_date}</td>
                             <td class="fw-semibold text-primary">${row.docket_no || '-'}</td>

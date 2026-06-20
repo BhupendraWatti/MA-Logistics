@@ -24,7 +24,7 @@ class AuthFilter implements FilterInterface
         }
 
         // COMPANY REQUIRED
-        if (strpos($uri, 'logistics') === 0 || strpos($uri, 'admin') === 0) {
+        if ((strpos($cleanUri, 'logistics') === 0 || strpos($cleanUri, 'admin') === 0) && $cleanUri !== 'logistics/setCompany') {
             if (! session()->get('selected_company_id')) {
                 return redirect()->to('/company-selection');
             }
@@ -67,17 +67,17 @@ class AuthFilter implements FilterInterface
         $permissions = session()->get('permissions') ?? [];
         
         // ADMIN PANEL - Admin only
-        if (strpos($uri, 'admin') === 0 && $userRole !== 'admin') {
+        if (strpos($cleanUri, 'admin') === 0 && $userRole !== 'admin') {
             return redirect()->to('/logistics')->with('error', 'Admin access denied!');
         }
         
         // CREATE - Check can_create
-        if ($uri === 'logistics/create' && !($permissions['can_create'] ?? 0)) {
+        if ($cleanUri === 'logistics/create' && !($permissions['can_create'] ?? 0)) {
             return redirect()->to('/logistics')->with('error', 'Create permission denied!');
         }
         
         // EDIT/DELETE - Check can_edit/can_delete
-        if (preg_match('/logistics\/(view|edit|delete)\/(\d+)/', $uri, $matches)) {
+        if (preg_match('/logistics\/(view|edit|delete)\/(\d+)/', $cleanUri, $matches)) {
             $bookingId = intval($matches[2]);
             $action = $matches[1];
 

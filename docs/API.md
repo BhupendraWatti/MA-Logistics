@@ -46,14 +46,16 @@ Retrieve the current status and tracking logs of a shipment by its AWB number or
           "time": "17:30:00",
           "location": "Delhi Hub",
           "activity": "Out for Delivery",
-          "remarks": "Assigned to delivery agent"
+          "remarks": "Assigned to delivery agent",
+          "receiver_name": "John Doe"
         },
         {
           "date": "2026-06-03",
           "time": "08:00:00",
           "location": "Mumbai Airport",
           "activity": "In Transit",
-          "remarks": "In flight to Delhi"
+          "remarks": "In flight to Delhi",
+          "receiver_name": ""
         }
       ]
     }

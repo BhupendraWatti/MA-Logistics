@@ -13,10 +13,17 @@ class MasterController extends BaseController
 {
     /**
      * Guard: admin only. Returns redirect response or null.
+     * For AJAX callers (Quick Master modal etc.) returns JSON error instead of a redirect.
      */
     private function requireAdmin()
     {
         if (session()->get('role') !== 'admin') {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Admin access is required to create master records. Please contact your administrator.'
+                ]);
+            }
             return redirect()->to('/logistics')->with('error', 'Admin access required!');
         }
         return null;
@@ -99,7 +106,27 @@ class MasterController extends BaseController
 
         $model = new CustomerModel();
         if (!$model->insert($post)) {
-            return redirect()->back()->with('error', implode(', ', $model->errors()));
+            $errors = implode(', ', $model->errors());
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['status' => 'error', 'message' => $errors]);
+            }
+            return redirect()->back()->with('error', $errors);
+        }
+        
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'status'      => 'success',
+                'message'     => 'Customer created!',
+                'id'          => $model->getInsertID(),
+                'name'        => $post['name'],
+                'code'        => $post['code'] ?? '',
+                'bill_to'     => $post['bill_to'] ?? '',
+                'consignee'   => $post['consignee'] ?? '',
+                'payment_type'=> $post['payment_type'] ?? '',
+                'gst_number'  => $post['gst_number'] ?? '',
+                'gst_state'   => $post['gst_state'] ?? '',
+                'csrf_hash'   => csrf_hash(),
+            ]);
         }
         return redirect()->to('/masters/customers')->with('success', 'Customer created!');
     }
@@ -168,7 +195,21 @@ class MasterController extends BaseController
 
         $model = new TransporterModel();
         if (!$model->insert($post)) {
-            return redirect()->back()->with('error', implode(', ', $model->errors()));
+            $errors = implode(', ', $model->errors());
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['status' => 'error', 'message' => $errors]);
+            }
+            return redirect()->back()->with('error', $errors);
+        }
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'status'    => 'success',
+                'message'   => 'Transporter created!',
+                'id'        => $model->getInsertID(),
+                'name'      => $post['name'],
+                'mobile'    => $post['mobile'] ?? '',
+                'csrf_hash' => csrf_hash(),
+            ]);
         }
         return redirect()->to('/masters/transporters')->with('success', 'Transporter created!');
     }
@@ -218,7 +259,23 @@ class MasterController extends BaseController
 
         $model = new DriverModel();
         if (!$model->insert($post)) {
-            return redirect()->back()->with('error', implode(', ', $model->errors()));
+            $errors = implode(', ', $model->errors());
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['status' => 'error', 'message' => $errors]);
+            }
+            return redirect()->back()->with('error', $errors);
+        }
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'status'     => 'success',
+                'message'    => 'Driver created!',
+                'id'         => $model->getInsertID(),
+                'name'       => $post['name'],
+                'mobile'     => $post['mobile'] ?? '',
+                'vehicle_no' => $post['vehicle_no'] ?? '',
+                'license_no' => $post['license_no'] ?? '',
+                'csrf_hash'  => csrf_hash(),
+            ]);
         }
         return redirect()->to('/masters/drivers')->with('success', 'Driver created!');
     }
@@ -268,7 +325,21 @@ class MasterController extends BaseController
 
         $model = new AirlineModel();
         if (!$model->insert($post)) {
-            return redirect()->back()->with('error', implode(', ', $model->errors()));
+            $errors = implode(', ', $model->errors());
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['status' => 'error', 'message' => $errors]);
+            }
+            return redirect()->back()->with('error', $errors);
+        }
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'status'    => 'success',
+                'message'   => 'Airline created!',
+                'id'        => $model->getInsertID(),
+                'name'      => $post['name'],
+                'code'      => $post['code'] ?? '',
+                'csrf_hash' => csrf_hash(),
+            ]);
         }
         return redirect()->to('/masters/airlines')->with('success', 'Airline created!');
     }
@@ -387,6 +458,9 @@ class MasterController extends BaseController
     {
         if ($r = $this->requireAdmin()) return $r;
         if (!array_key_exists($type, LookupValueModel::TYPES)) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['status' => 'error', 'message' => 'Invalid lookup type!']);
+            }
             return redirect()->back()->with('error', 'Invalid lookup type!');
         }
         $post = $this->request->getPost();
@@ -408,10 +482,26 @@ class MasterController extends BaseController
             $data['value'] = trim(($post['city'] ?? '') . ', ' . ($post['state'] ?? ''), ', ');
             if (empty($data['value'])) $data['value'] = 'Unknown Location';
         } else {
-            $data['value'] = $post['value'];
+            $data['value'] = $post['value'] ?? '';
         }
 
-        (new LookupValueModel())->insert($data);
+        $model = new LookupValueModel();
+        if (!$model->insert($data)) {
+            $errors = implode(', ', $model->errors());
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['status' => 'error', 'message' => $errors]);
+            }
+            return redirect()->back()->with('error', $errors);
+        }
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'status'    => 'success',
+                'message'   => 'Value added!',
+                'id'        => $model->getInsertID(),
+                'value'     => $data['value'],
+                'csrf_hash' => csrf_hash(),
+            ]);
+        }
         return redirect()->to('/masters/lookups/' . $type)->with('success', 'Value added!');
     }
 
@@ -768,4 +858,36 @@ class MasterController extends BaseController
             return $this->response->setJSON(['status' => 'error', 'message' => 'Preview failed']);
         }
     }
+
+    public function checkDocketUnique()
+    {
+        $companyId = $this->companyId();
+        $docketNo = trim($this->request->getPost('docket_no') ?? '');
+        $bookingId = (int) ($this->request->getPost('booking_id') ?? 0);
+        
+        if (empty($docketNo)) {
+            return $this->response->setJSON(['status' => 'success', 'unique' => true]);
+        }
+        
+        $shipmentModel = new \App\Models\ShipmentItemModel();
+        
+        $existing = $shipmentModel
+            ->select('shipment_items.docket_no, bookings.awb_no')
+            ->join('bookings', 'bookings.id = shipment_items.booking_id')
+            ->where('bookings.company_id', $companyId)
+            ->where('shipment_items.docket_no', $docketNo)
+            ->where('bookings.id !=', $bookingId)
+            ->first();
+            
+        if ($existing) {
+            return $this->response->setJSON([
+                'status' => 'success',
+                'unique' => false,
+                'message' => 'Docket number ' . $docketNo . ' is already registered under AWB: ' . ($existing['awb_no'] ?? 'N/A')
+            ]);
+        }
+        
+        return $this->response->setJSON(['status' => 'success', 'unique' => true]);
+    }
 }
+

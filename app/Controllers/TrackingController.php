@@ -232,7 +232,17 @@ class TrackingController extends BaseController
                 if (isset($event['status']) && stripos($event['status'], 'Delivered') !== false) {
                     $deliveryDate = $event['event_date'] ?? '-';
                     $deliveryTime = $event['event_time'] ?? '-';
-                    $receiverName = $event['receiver_name'] ?? $event['remarks'] ?? '-';
+                    break;
+                }
+            }
+
+            foreach ($history as $event) {
+                if (!empty($event['receiver_name']) && trim($event['receiver_name']) !== '-') {
+                    $receiverName = trim($event['receiver_name']);
+                    break;
+                }
+                if (isset($event['status']) && stripos($event['status'], 'Delivered') !== false && !empty($event['remarks']) && trim($event['remarks']) !== '-') {
+                    $receiverName = trim($event['remarks']);
                     break;
                 }
             }
@@ -240,11 +250,12 @@ class TrackingController extends BaseController
             $formattedHistory = [];
             foreach ($history as $event) {
                 $formattedHistory[] = [
-                    'date'     => $event['event_date'] ?? '-',
-                    'time'     => $event['event_time'] ?? '-',
-                    'location' => $event['current_location'] ?? '-',
-                    'activity' => $event['status'] ?? '-',
-                    'remarks'  => $event['remarks'] ?? '-',
+                    'date'          => $event['event_date'] ?? '-',
+                    'time'          => $event['event_time'] ?? '-',
+                    'location'      => $event['current_location'] ?? '-',
+                    'activity'      => $event['status'] ?? '-',
+                    'remarks'       => $event['remarks'] ?? '-',
+                    'receiver_name' => $event['receiver_name'] ?? '',
                 ];
             }
 

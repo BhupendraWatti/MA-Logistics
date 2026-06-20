@@ -62,6 +62,7 @@
             <button type="submit" class="btn btn-primary fw-bold px-4 shadow-sm"><i class="fas fa-check me-2"></i> Save</button>
         </div>
     </form>
+</div>
 <?= $this->endSection() ?>
 <?= $this->section('scripts') ?>
 <script>

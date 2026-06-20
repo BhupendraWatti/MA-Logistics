@@ -848,6 +848,11 @@
                 const tr = document.createElement("tr");
                 const rowDelivered = row.activity.includes('DELIVERED');
                 
+                let remarksText = row.remarks || '-';
+                if (row.receiver_name) {
+                    remarksText += ` (Received by: ${row.receiver_name})`;
+                }
+                
                 tr.innerHTML = `
                     <td style="font-weight: 500;">${row.date}</td>
                     <td style="color: #475569;">${row.time}</td>
@@ -859,7 +864,7 @@
                             border: 1px solid ${rowDelivered ? '#bbf7d0' : '#cbd5e1'};
                         ">${row.activity}</span>
                     </td>
-                    <td style="color: #64748b; font-style: italic;">${row.remarks || '-'}</td>
+                    <td style="color: #64748b; font-style: italic;">${remarksText}</td>
                 `;
                 tbody.appendChild(tr);
             });

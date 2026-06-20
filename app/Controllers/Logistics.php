@@ -162,6 +162,9 @@ public function create()
         $bookingId = $bookingService->createBooking($this->request->getPost(), session()->get('user_id'), $companyId);
         $awb_no = $this->request->getPost('awb_no');
         
+        session()->setFlashdata('export_pdf_booking_id', $bookingId);
+        session()->setFlashdata('export_pdf_action', 'create');
+
         $redirectTo = $this->request->getPost('redirect_to_booking_id');
         if (!empty($redirectTo)) {
             return redirect()->to('/logistics/edit/' . $redirectTo)->with('success', 'Booking saved as Draft successfully.');
@@ -181,7 +184,7 @@ public function create()
                          (strpos($msg, 'Connection') !== false);
                          
         $userMessage = $isSystemError ? 'A secure database or system error occurred. Technical logs have been updated safely.' : $msg;
-        return redirect()->back()->with('error', $userMessage);
+        return redirect()->back()->withInput()->with('error', $userMessage);
     }
   }
 
@@ -287,6 +290,9 @@ public function edit($id)
         $bookingService->updateBooking($id, $this->request->getPost(), session()->get('user_id'), $companyId);
         $awb_no = $this->request->getPost('awb_no');
         
+        session()->setFlashdata('export_pdf_booking_id', $id);
+        session()->setFlashdata('export_pdf_action', 'update');
+
         $redirectTo = $this->request->getPost('redirect_to_booking_id');
         if (!empty($redirectTo)) {
             return redirect()->to('/logistics/edit/' . $redirectTo)->with('success', 'Booking updated as Draft successfully.');
@@ -306,7 +312,7 @@ public function edit($id)
                          (strpos($msg, 'Connection') !== false);
                          
         $userMessage = $isSystemError ? 'A secure database or system error occurred. Technical logs have been updated safely.' : $msg;
-        return redirect()->back()->with('error', $userMessage);
+        return redirect()->back()->withInput()->with('error', $userMessage);
     }
   }
 
@@ -1060,7 +1066,7 @@ public function exportExcel()
 
         $db = \Config\Database::connect();
         $builder = $db->table('shipment_items si')
-                      ->select('si.id, si.docket_no, si.invoice_no, si.invoice_date, si.actual_weight, si.final_chargeable_weight, si.pieces, si.rate, b.booking_date, b.origin as booking_origin, b.destination as booking_destination')
+                      ->select('si.id, si.docket_no, si.invoice_no, si.invoice_date, si.actual_weight, si.final_chargeable_weight, si.pieces, si.rate, b.booking_date, b.origin as booking_origin, b.destination as booking_destination, b.gst_applied, b.cgst_rate, b.sgst_rate, b.igst_rate, b.awb_no')
                       ->join('bookings b', 'b.id = si.booking_id')
                       ->where('b.company_id', $companyId)
                       ->where('si.customer_name', $customerName);
@@ -1150,8 +1156,229 @@ public function exportExcel()
 
             $rowData = $invoiceService->buildShipmentRows($shipments);
 
-            $gstApplied = isset($post['gst_applied']) ? true : false;
-            $isIgst     = isset($post['is_igst'])     ? true : false;
+            // Determine GST application and IGST status from selected shipments' bookings (automated settings per booking)
+            $gstApplied = false;
+            $igstCount  = 0;
+            $cgstCount  = 0;
+            
+            $bookingIds = array_unique(array_column($shipments, 'booking_id'));
+            if (!empty($bookingIds)) {
+                $bookingsData = $db->table('bookings')
+                    ->whereIn('id', $bookingIds)
+                    ->get()
+                    ->getResultArray();
+                foreach ($bookingsData as $b) {
+                    if ((int)($b['gst_applied'] ?? 0) === 1) {
+                        $gstApplied = true;
+                        if ((float)($b['igst_rate'] ?? 0) > 0) {
+                            $igstCount++;
+                        } else if ((float)($b['cgst_rate'] ?? 0) > 0 || (float)($b['sgst_rate'] ?? 0) > 0) {
+                            $cgstCount++;
+                        }
+                    }
+                }
+            }
+            $isIgst = ($igstCount >= $cgstCount) && ($igstCount > 0);
+
+            // ── Excel Export option ──────────────────────────────────────────
+            $exportType = $post['export_type'] ?? 'pdf';
+            if ($exportType === 'excel') {
+                $bookingModel = new \App\Models\BookingModel();
+                $companyModel = new \App\Models\CompanyModel();
+                $salesModel   = new \App\Models\SalesChargeModel();
+                
+                $headers = [
+                    'SR NO', 'AWB NO', 'DOCKET NO', 'COMPANY', 'CUSTOMER NAME', 'CONSIGNEE', 'INVOICE NO', 'PART NO',
+                    'BOOKING DATE', 'ORIGIN', 'DESTINATION', 'MODE OF TRANSPORT', 'STATUS',
+                    'EXPECTED DELIVERY DATE', 'EXPECTED DELIVERY TIME', 'INVOICE DATE', 'BILL TO',
+                    'ACTUAL WEIGHT', 'LENGTH', 'WIDTH', 'HEIGHT', 'VOLUMETRIC WEIGHT', 'CALCULATED WEIGHT', 'FINAL CHARGEABLE WEIGHT', 'ITEM PIECES',
+                    'E-WAY BILL NO', 'E-WAY BILL DATE',
+                    'ITEM RATE', 'ITEM FREIGHT', 'ITEM FUEL SURCHARGE RATE', 'ITEM FUEL SURCHARGE AMOUNT', 'ITEM DOCKET CHARGES', 'ITEM PICKUP CHARGES', 'ITEM DELIVERY CHARGES', 'ITEM FOV CHARGES', 'ITEM HANDLING CHARGES', 'ITEM SERVICE CHARGES', 'ITEM MISC CHARGES', 'ITEM TAXABLE AMOUNT',
+                    'AIRLINES / CARRIER', 'FLIGHT NUMBER', 'VEHICLE NO', 'DRIVER NAME', 'DRIVER MOBILE', 'DRIVER LICENSE', 'TRANSPORTER NAME', 'TRANSPORTER MOBILE',
+                    'PAYMENT TYPE', 'GST APPLIED', 'GSTIN', 'PAN', 'SAC CODE', 'CGST RATE (%)', 'SGST RATE (%)', 'IGST RATE (%)', 'NARRATION',
+                    'SALES RATE', 'SALES WEIGHT', 'SALES DDC', 'SALES SSC', 'SALES BTC', 'SALES FLC', 'SALES DOC', 'SALES INBOUND TSP', 'SALES OUTBOUND TSP', 'SALES TCP', 'SALES UTILITY CHARGES', 'SALES XRAY CHARGES', 'SALES ADO', 'SALES AWB FEES AGENT', 'SALES AWB FEES CARRIER', 'SALES ADMIN CHARGES', 'SALES DELIVERY ORDER CHARGES', 'SALES INBOUND HANDLING', 'SALES INBOUND STORAGE', 'SALES OUTBOUND STORAGE', 'SALES MISC CHARGES', 'TOTAL BILLING AMOUNT'
+                ];
+                
+                $rows = [];
+                $srNo = 1;
+                
+                $bookingCache = [];
+                $companyCache = [];
+                $salesCache   = [];
+                
+                foreach ($shipments as $item) {
+                    $bId = $item['booking_id'];
+                    
+                    if (!isset($bookingCache[$bId])) {
+                        $bookingCache[$bId] = $bookingModel->find($bId);
+                    }
+                    $booking = $bookingCache[$bId];
+                    if (!$booking || $booking['company_id'] != $companyId) continue;
+                    
+                    if (!isset($companyCache[$booking['company_id']])) {
+                        $comp = $companyModel->find($booking['company_id']);
+                        $companyCache[$booking['company_id']] = $comp['name'] ?? 'N/A';
+                    }
+                    $companyName = $companyCache[$booking['company_id']];
+                    
+                    if (!isset($salesCache[$bId])) {
+                        $salesCache[$bId] = $salesModel->where('booking_id', $bId)->first() ?: [];
+                    }
+                    $sales = $salesCache[$bId];
+                    
+                    $actualWt = floatval($item['actual_weight'] ?? 0);
+                    $wt = floatval($item['final_chargeable_weight'] ?? 0);
+                    $rate = floatval($item['rate'] ?? 0);
+                    $fuelSur = floatval($item['fuel_surcharge'] ?? 0);
+                    $dock = floatval($item['docket_charges'] ?? 0);
+                    $pickup = floatval($item['pickup_charges'] ?? 0);
+                    $delivery = floatval($item['delivery_charges'] ?? 0);
+                    $fov = floatval($item['fov_charges'] ?? 0);
+                    $handling = floatval($item['handling_charges'] ?? 0);
+                    $service = floatval($item['service_charges'] ?? 0);
+                    $misc = floatval($item['misc_charges'] ?? 0);
+                    
+                    $freight = $wt * $rate;
+                    $fuelAmt = $fuelSur;
+                    $taxable = $freight + $fuelAmt + $dock + $pickup + $delivery + $fov + $handling + $service + $misc;
+                    
+                    $rows[] = [
+                        $srNo,
+                        $booking['awb_no'] ?? '',
+                        $item['docket_no'] ?? '',
+                        $companyName,
+                        $item['customer_name'] ?? '',
+                        $item['consignee'] ?? '',
+                        $item['invoice_no'] ?? '',
+                        $item['part_no'] ?? '',
+                        
+                        !empty($booking['booking_date']) ? date('d-m-Y', strtotime($booking['booking_date'])) : '',
+                        $booking['origin'] ?? '',
+                        $booking['destination'] ?? '',
+                        $booking['mode_transport'] ?? '',
+                        $booking['status'] ?? '',
+                        
+                        !empty($booking['expected_delivery_date']) ? date('d-m-Y', strtotime($booking['expected_delivery_date'])) : '',
+                        !empty($booking['expected_delivery_time']) ? substr($booking['expected_delivery_time'], 0, 5) : '',
+                        !empty($item['invoice_date']) ? date('d-m-Y', strtotime($item['invoice_date'])) : '',
+                        $item['bill_to'] ?? '',
+                        
+                        $actualWt,
+                        floatval($item['length'] ?? 0),
+                        floatval($item['width'] ?? 0),
+                        floatval($item['height'] ?? 0),
+                        floatval($item['volumetric_weight'] ?? 0),
+                        floatval($item['calculated_chargeable_weight'] ?? 0),
+                        floatval($item['final_chargeable_weight'] ?? 0),
+                        intval($item['pieces'] ?? 0),
+                        $item['eway_bill_no'] ?? '',
+                        !empty($item['eway_bill_date']) ? date('d-m-Y', strtotime($item['eway_bill_date'])) : '',
+                        
+                        $rate,
+                        $freight,
+                        $fuelSur,
+                        $fuelAmt,
+                        $dock,
+                        $pickup,
+                        $delivery,
+                        $fov,
+                        $handling,
+                        $service,
+                        $misc,
+                        $taxable,
+                        
+                        $booking['airlines'] ?? '',
+                        $booking['flight_number'] ?? '',
+                        $booking['vehicle_no'] ?? '',
+                        $booking['driver_name'] ?? '',
+                        $booking['driver_mobile'] ?? '',
+                        $booking['driver_license_no'] ?? '',
+                        $booking['transporter_name'] ?? '',
+                        $booking['transporter_mobile'] ?? '',
+                        
+                        $booking['payment_type'] ?? '',
+                        ($booking['gst_applied'] ?? 0) == 1 ? 'Yes' : 'No',
+                        $booking['gstin'] ?? '',
+                        $booking['pan'] ?? '',
+                        $booking['sac_code'] ?? '',
+                        $booking['cgst_rate'] ?? 0,
+                        $booking['sgst_rate'] ?? 0,
+                        $booking['igst_rate'] ?? 0,
+                        $booking['narration'] ?? '',
+                        
+                        floatval($sales['rate'] ?? 0),
+                        floatval($sales['weight'] ?? 0),
+                        floatval($sales['ddc'] ?? 0),
+                        floatval($sales['ssc'] ?? 0),
+                        floatval($sales['btc'] ?? 0),
+                        floatval($sales['flc'] ?? 0),
+                        floatval($sales['doc'] ?? 0),
+                        floatval($sales['inbound_tsp'] ?? 0),
+                        floatval($sales['outbound_tsp'] ?? 0),
+                        floatval($sales['tcp'] ?? 0),
+                        floatval($sales['utility_charges'] ?? 0),
+                        floatval($sales['xray_charges'] ?? 0),
+                        floatval($sales['ado'] ?? 0),
+                        floatval($sales['awb_fees_agent'] ?? 0),
+                        floatval($sales['awb_fees_carrier'] ?? 0),
+                        floatval($sales['admin_charges'] ?? 0),
+                        floatval($sales['delivery_order_charges'] ?? 0),
+                        floatval($sales['inbound_handling'] ?? 0),
+                        floatval($sales['inbound_storage'] ?? 0),
+                        floatval($sales['outbound_storage'] ?? 0),
+                        floatval($sales['misc_charges'] ?? 0),
+                        floatval($sales['total_amount'] ?? 0)
+                    ];
+                    $srNo++;
+                }
+                
+                $tempJson = WRITEPATH . 'export_' . uniqid() . '.json';
+                $tempXlsx = WRITEPATH . 'export_' . uniqid() . '.xlsx';
+                
+                file_put_contents($tempJson, json_encode([
+                    'headers' => $headers,
+                    'rows' => $rows
+                ], JSON_UNESCAPED_UNICODE));
+                
+                $scriptPath = ROOTPATH . 'scripts/generate_xlsx.py';
+                $cmd = 'python ' . escapeshellarg($scriptPath) . ' ' . escapeshellarg($tempJson) . ' ' . escapeshellarg($tempXlsx);
+                
+                exec($cmd, $outputCmd, $returnVar);
+                
+                if ($returnVar !== 0 || !file_exists($tempXlsx)) {
+                    @unlink($tempJson);
+                    log_message('error', '[Consolidated Excel Error] Python cmd failed: ' . $cmd . ' | Code: ' . $returnVar);
+                    
+                    // Fallback to CSV
+                    $filename = 'Purchase_Record_Export_' . date('Y-m-d') . '.csv';
+                    header('Content-Type: text/csv; charset=utf-8');
+                    header('Content-Disposition: attachment; filename="' . $filename . '"');
+                    header('Pragma: no-cache');
+                    header('Expires: 0');
+                    
+                    $out = fopen('php://output', 'w');
+                    fwrite($out, "\xEF\xBB\xBF");
+                    fputcsv($out, $headers);
+                    foreach ($rows as $row) {
+                        fputcsv($out, $row);
+                    }
+                    fclose($out);
+                    exit;
+                }
+                
+                header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                header('Content-Disposition: attachment; filename="Purchase_Record_Export_' . date('Y-m-d') . '.xlsx"');
+                header('Content-Length: ' . filesize($tempXlsx));
+                header('Pragma: no-cache');
+                header('Expires: 0');
+                
+                readfile($tempXlsx);
+                
+                @unlink($tempJson);
+                @unlink($tempXlsx);
+                exit;
+            }
+
             $gstData    = $invoiceService->calculateGst(
                 $rowData['totalTaxable'],
                 $gstApplied,

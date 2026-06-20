@@ -88,9 +88,11 @@
                     <i class="fas fa-list-ul"></i> All Bookings
                 </a>
 
+                <?php if (session()->get('role') !== 'tracking'): ?>
                 <a href="<?= base_url('logistics/all-invoices') ?>" class="sidebar-nav-item <?= ($seg2 == 'all-invoices') ? 'active' : '' ?> mt-2">
                     <i class="fas fa-file-invoice"></i> All Invoices
                 </a>
+                <?php endif; ?>
                 
                 <?php if (session()->get('role') === 'admin'): ?>
                 <!-- Masters Collapse -->
@@ -232,6 +234,32 @@
         <?php endif; ?>
         <?php if ($info): ?>
             Swal.fire({icon: 'info', title: 'Information', html: <?= json_encode($info) ?>, toast: true, position: 'top-end', showConfirmButton: false, timer: 3000});
+        <?php endif; ?>
+
+        // Export PDF prompt if flashed
+        <?php if (session()->getFlashdata('export_pdf_booking_id')): ?>
+            (function() {
+                const bookingId = <?= json_encode(session()->getFlashdata('export_pdf_booking_id')) ?>;
+                const action = <?= json_encode(session()->getFlashdata('export_pdf_action')) ?>;
+                const message = action === 'create' 
+                    ? 'Would Like to Export PDF of the booking?' 
+                    : 'Would like to export pdf after the changes?';
+                
+                Swal.fire({
+                    title: 'Export PDF',
+                    text: message,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes',
+                    cancelButtonText: 'No'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.open(BASE_URL + 'logistics/exportPdf/' + bookingId, '_blank');
+                    }
+                });
+            })();
         <?php endif; ?>
     </script>
     

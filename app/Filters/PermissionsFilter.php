@@ -10,10 +10,11 @@ class PermissionsFilter implements FilterInterface
     public function before(RequestInterface $request, $arguments = null)
     {
         $uri = $request->getUri()->getPath();
+        $cleanUri = ltrim($uri, '/');
         $permissions = session()->get('permissions') ?? [];
         
         // Logistics permissions
-        if (strpos($uri, 'logistics') === 0) {
+        if (strpos($cleanUri, 'logistics') === 0) {
             if (strpos($uri, 'create') !== false || strpos($uri, 'store') !== false) {
                 if (!($permissions['can_create'] ?? 0)) {
                     return redirect()->to('/logistics')->with('error', '❌ No permission to create!');

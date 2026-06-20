@@ -54,6 +54,7 @@ $routes->get('masters/company',                       'CompanyController::settin
 $routes->post('masters/company/update',               'CompanyController::updateSettings');
 $routes->post('masters/dockets/generate',             'MasterController::generateDocket');
 $routes->post('masters/dockets/preview',              'MasterController::previewDocket');
+$routes->post('masters/dockets/check-unique',         'MasterController::checkDocketUnique');
 
 $routes->get('masters/customers',                     'MasterController::customers');
 $routes->post('masters/customers/create',             'MasterController::createCustomer');

@@ -345,13 +345,19 @@ function loadTrackingHistory(bookingId) {
                         </button>
                     `;
 
+                    let remarksHtml = item.remarks || '-';
+                    if (item.receiver_name) {
+                        remarksHtml += `<br><small class="text-success"><i class="fa-solid fa-user me-1"></i>Receiver: ${item.receiver_name}</small>`;
+                    }
+                    remarksHtml += proofLink;
+
                     rows.push([
                         `<span class="text-muted">${index + 1}</span>`,
                         `<span class="fw-medium">${item.event_date}</span>`,
                         displayTime,
                         `<span class="fw-bold text-dark"><i class="fa-solid fa-location-dot me-1 text-primary"></i>${item.current_location}</span>`,
                         badge,
-                        (item.remarks || '-') + proofLink,
+                        remarksHtml,
                         actionBtns
                     ]);
                 });

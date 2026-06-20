@@ -79,6 +79,7 @@ $(document).ready(function() {
             data: null, 
             orderable: false,
             searchable: false,
+            visible: USER_ROLE !== 'tracking',
             render: function(data, type, row) {
                 return `<input type="checkbox" class="booking-check" value="${row.id}">`;
             }
@@ -170,6 +171,7 @@ $(document).ready(function() {
         },
         { 
             data: 'total_amount',
+            visible: USER_ROLE !== 'tracking',
             render: function(data) {
                 return `<strong class="text-success">₹${data}</strong>`;
             }
