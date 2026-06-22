@@ -883,7 +883,7 @@ class MasterController extends BaseController
             return $this->response->setJSON([
                 'status' => 'success',
                 'unique' => false,
-                'message' => 'Docket number ' . $docketNo . ' is already registered under AWB: ' . ($existing['awb_no'] ?? 'N/A')
+                'message' => 'This docket number is already assigned to another AWB and cannot be used here.'
             ]);
         }
         

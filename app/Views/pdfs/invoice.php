@@ -321,8 +321,7 @@ foreach ($shipmentRows as $row) {
             <strong>Service Category : Courier &amp; Cargo</strong>
         </td>
         <td colspan="7" style="width:35%; vertical-align:top; padding:8px; line-height:1.4; border-left:1px solid #000;">
-            <strong>Terms &amp; Conditions :</strong><br>
-            <?php 
+            <strong>Terms &amp; Conditions :</strong><br><?php 
             $tcText = $company['terms_conditions'] ?? 'No terms specified.';
             $tcLines = explode("\n", str_replace("\r", "", $tcText));
             foreach ($tcLines as $line) {
@@ -331,8 +330,7 @@ foreach ($shipmentRows as $row) {
                     echo esc($trimmed) . '<br>';
                 }
             }
-            ?>
-        </td>
+            ?></td>
         <td colspan="7" style="width:35%; vertical-align:bottom; text-align:center; font-size:9px; font-weight:bold; padding:8px; border-left:1px solid #000;">
             For <?= esc($company['name'] ?? 'M.A LOGISTICS') ?><br><br>
             <?php 

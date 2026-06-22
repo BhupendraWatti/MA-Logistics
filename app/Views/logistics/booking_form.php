@@ -1199,9 +1199,9 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             ERPUtils.showWarning("Missing Data", "Actual Weight is required.");
             return;
         }
-        // BUG FIX #6: Block save if docket is flagged as duplicate
+        // Block save if docket is flagged as duplicate (exists in another AWB)
         if ($('#entry_docket').hasClass('is-invalid')) {
-            ERPUtils.showWarning("Duplicate Docket", "The docket number entered already exists in another AWB. Please use a unique docket number.");
+            ERPUtils.showWarning("Duplicate Docket", "This docket number is already assigned to another AWB and cannot be used here.");
             return;
         }
 
@@ -1926,19 +1926,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         const bookingId = <?= isset($bookingId) ? $bookingId : 0 ?>;
         
         if (docketNo) {
-            // Check if it is duplicate within the local items grid
-            let localDup = false;
-            items.forEach((item, idx) => {
-                if (idx !== parseInt(editIndex) && item.docket && item.docket.trim().toLowerCase() === docketNo.toLowerCase()) {
-                    localDup = true;
-                }
-            });
-            
-            if (localDup) {
-                return;
-            }
-            
-            // Check against database for other bookings
+            // Check against database for other bookings (allow duplicate within same AWB)
             $.ajax({
                 url: BASE_URL + 'masters/dockets/check-unique',
                 type: 'POST',
@@ -1948,7 +1936,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     if (res.status === 'success' && !res.unique) {
                         Swal.fire({
                             title: 'Duplicate Docket Warning',
-                            html: res.message,
+                            text: 'This docket number is already assigned to another AWB and cannot be used here.',
                             icon: 'warning',
                             confirmButtonText: 'OK'
                         });

@@ -282,7 +282,7 @@ class BookingService
                     ->first();
                 
                 if ($existingDocket) {
-                    throw new Exception("Duplicate Docket Number: Docket <b>{$docketNo}</b> is already registered under another booking.");
+                    throw new Exception("This docket number is already assigned to another AWB and cannot be used here.");
                 }
             }
         }
@@ -510,7 +510,7 @@ class BookingService
                     ->first();
                 
                 if ($existingDocket) {
-                    throw new Exception("Duplicate Docket Number: Docket <b>{$docketNo}</b> is already registered under another booking.");
+                    throw new Exception("This docket number is already assigned to another AWB and cannot be used here.");
                 }
             }
         }
