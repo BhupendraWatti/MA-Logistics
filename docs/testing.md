@@ -63,3 +63,8 @@ php spark loadtest:purge --company 1
 | **TC004** | Master Entry Creation & Dropdown Sync | New customer appears instantly in booking form dropdown | PASS |
 | **TC005** | Invalid Booking Delete Request | Returns `{ "status": "error" }` with 400 HTTP status | PASS |
 | **TC010** | Form Submission CSRF Verification | Submission succeeds with unified `csrf_token_name` | PASS |
+| **TC011** | Item Custom Charge Add & Save | Click `+ Add Charge` in item drawer → enter "Super Charge" + ₹500 → save item → submit booking → verify `shipment_items.custom_charges = [{"label":"Super Charge","value":500}]` in DB | PASS |
+| **TC012** | Custom Charges in Invoice PDF | Open booking with custom item charges → Export PDF → Verify "OTHER CHG" column value includes custom charge amounts, and "TOTAL Amt." correctly equals Freight + Docket + Fuel + OTHER CHG | PASS |
+| **TC013** | Global Surcharge Add & Persist | Click `+ Add Surcharge` in booking form → enter label + amount → save → reopen booking → verify global surcharge rows restore correctly from DB | PASS |
+| **TC014** | Edit Booking — Custom Charges Round-Trip | Open existing booking with custom charges → edit item → verify charges pre-populated in drawer → change label → save → verify DB updated | PASS |
+| **TC015** | Existing Booking Without Custom Charges | Open pre-CHG-012 booking → verify no JS errors, invoice renders correctly, totals unchanged | PASS |

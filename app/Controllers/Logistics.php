@@ -662,7 +662,7 @@ public function exportPdf($id)
 
         // ── Business logic — delegated to InvoiceService ────────────────────
         $chargeAgg     = $invoiceService->aggregateCharges($shipments);
-        $activeCharges = $invoiceService->resolveActiveCharges($chargeAgg['totals'], $chargeAgg['miscLabel']);
+        $activeCharges = $invoiceService->resolveActiveCharges($chargeAgg['totals'], $chargeAgg['miscLabel'], $chargeAgg['customTotals'] ?? []);
 
         $rowData = $invoiceService->buildShipmentRows(
             $shipments,
@@ -817,18 +817,66 @@ public function exportExcel()
     
     $idArray = explode(',', $ids);
     
-    // CSV Headers covering all filled fields - shifted to put important logistics info at the start
+    $allItemCustomLabels = [];
+    $allGlobalCustomLabels = [];
+    
+    foreach ($idArray as $bookingId) {
+        $booking = $bookingModel->find($bookingId);
+        if (!$booking || $booking['company_id'] != $companyId) continue;
+        
+        $sales = $salesModel->where('booking_id', $bookingId)->first() ?: [];
+        if (!empty($sales['custom_charges'])) {
+            $gList = is_string($sales['custom_charges']) ? json_decode($sales['custom_charges'], true) : $sales['custom_charges'];
+            if (is_array($gList)) {
+                foreach ($gList as $gc) {
+                    $lbl = strtoupper(trim($gc['label'] ?? 'SURCHARGE'));
+                    if ($lbl !== '' && !in_array($lbl, $allGlobalCustomLabels)) {
+                        $allGlobalCustomLabels[] = $lbl;
+                    }
+                }
+            }
+        }
+        
+        $shipments = $shipmentModel->where('booking_id', $bookingId)->findAll();
+        foreach ($shipments as $item) {
+            if (!empty($item['custom_charges'])) {
+                $iList = is_string($item['custom_charges']) ? json_decode($item['custom_charges'], true) : $item['custom_charges'];
+                if (is_array($iList)) {
+                    foreach ($iList as $ic) {
+                        $lbl = strtoupper(trim($ic['label'] ?? 'CHARGE'));
+                        if ($lbl !== '' && !in_array($lbl, $allItemCustomLabels)) {
+                            $allItemCustomLabels[] = $lbl;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
     $headers = [
         'SR NO', 'AWB NO', 'DOCKET NO', 'COMPANY', 'CUSTOMER NAME', 'CONSIGNEE', 'INVOICE NO', 'PART NO',
         'BOOKING DATE', 'ORIGIN', 'DESTINATION', 'MODE OF TRANSPORT', 'STATUS',
         'EXPECTED DELIVERY DATE', 'EXPECTED DELIVERY TIME', 'INVOICE DATE', 'BILL TO',
         'ACTUAL WEIGHT', 'LENGTH', 'WIDTH', 'HEIGHT', 'VOLUMETRIC WEIGHT', 'CALCULATED WEIGHT', 'FINAL CHARGEABLE WEIGHT', 'ITEM PIECES',
         'E-WAY BILL NO', 'E-WAY BILL DATE',
-        'ITEM RATE', 'ITEM FREIGHT', 'ITEM FUEL SURCHARGE RATE', 'ITEM FUEL SURCHARGE AMOUNT', 'ITEM DOCKET CHARGES', 'ITEM PICKUP CHARGES', 'ITEM DELIVERY CHARGES', 'ITEM FOV CHARGES', 'ITEM HANDLING CHARGES', 'ITEM SERVICE CHARGES', 'ITEM MISC CHARGES', 'ITEM TAXABLE AMOUNT',
+        'ITEM RATE', 'ITEM FREIGHT', 'ITEM FUEL SURCHARGE RATE', 'ITEM FUEL SURCHARGE AMOUNT', 'ITEM DOCKET CHARGES', 'ITEM PICKUP CHARGES', 'ITEM DELIVERY CHARGES', 'ITEM FOV CHARGES', 'ITEM HANDLING CHARGES', 'ITEM SERVICE CHARGES', 'ITEM MISC CHARGES'
+    ];
+
+    foreach ($allItemCustomLabels as $lbl) {
+        $headers[] = 'ITEM: ' . $lbl;
+    }
+    $headers[] = 'ITEM TAXABLE AMOUNT';
+
+    array_push($headers, 
         'AIRLINES / CARRIER', 'FLIGHT NUMBER', 'VEHICLE NO', 'DRIVER NAME', 'DRIVER MOBILE', 'DRIVER LICENSE', 'TRANSPORTER NAME', 'TRANSPORTER MOBILE',
         'PAYMENT TYPE', 'GST APPLIED', 'GSTIN', 'PAN', 'SAC CODE', 'CGST RATE (%)', 'SGST RATE (%)', 'IGST RATE (%)', 'NARRATION',
-        'SALES RATE', 'SALES WEIGHT', 'SALES DDC', 'SALES SSC', 'SALES BTC', 'SALES FLC', 'SALES DOC', 'SALES INBOUND TSP', 'SALES OUTBOUND TSP', 'SALES TCP', 'SALES UTILITY CHARGES', 'SALES XRAY CHARGES', 'SALES ADO', 'SALES AWB FEES AGENT', 'SALES AWB FEES CARRIER', 'SALES ADMIN CHARGES', 'SALES DELIVERY ORDER CHARGES', 'SALES INBOUND HANDLING', 'SALES INBOUND STORAGE', 'SALES OUTBOUND STORAGE', 'SALES MISC CHARGES', 'TOTAL BILLING AMOUNT'
-    ];
+        'SALES RATE', 'SALES WEIGHT', 'SALES DDC', 'SALES SSC', 'SALES BTC', 'SALES FLC', 'SALES DOC', 'SALES INBOUND TSP', 'SALES OUTBOUND TSP', 'SALES TCP', 'SALES UTILITY CHARGES', 'SALES XRAY CHARGES', 'SALES ADO', 'SALES AWB FEES AGENT', 'SALES AWB FEES CARRIER', 'SALES ADMIN CHARGES', 'SALES DELIVERY ORDER CHARGES', 'SALES INBOUND HANDLING', 'SALES INBOUND STORAGE', 'SALES OUTBOUND STORAGE', 'SALES MISC CHARGES'
+    );
+
+    foreach ($allGlobalCustomLabels as $lbl) {
+        $headers[] = 'GLOBAL: ' . $lbl;
+    }
+    $headers[] = 'TOTAL BILLING AMOUNT';
     
     $rows = [];
     $srNo = 1;
@@ -841,7 +889,18 @@ public function exportExcel()
         $companyName = $company['name'] ?? 'N/A';
         
         $sales = $salesModel->where('booking_id', $bookingId)->first() ?: [];
-        
+        $salesCustomMap = [];
+        if (!empty($sales['custom_charges'])) {
+            $gList = is_string($sales['custom_charges']) ? json_decode($sales['custom_charges'], true) : $sales['custom_charges'];
+            if (is_array($gList)) {
+                foreach ($gList as $gc) {
+                    $lbl = strtoupper(trim($gc['label'] ?? 'SURCHARGE'));
+                    $val = floatval($gc['value'] ?? 0);
+                    $salesCustomMap[$lbl] = $val;
+                }
+            }
+        }
+
         $shipments = $shipmentModel->where('booking_id', $bookingId)->findAll();
         
         foreach ($shipments as $item) {
@@ -859,9 +918,24 @@ public function exportExcel()
             
             $freight = $wt * $rate;
             $fuelAmt = $fuelSur;
-            $taxable = $freight + $fuelAmt + $dock + $pickup + $delivery + $fov + $handling + $service + $misc;
             
-            $rows[] = [
+            $itemCustomMap = [];
+            $itemCustomSum = 0;
+            if (!empty($item['custom_charges'])) {
+                $iList = is_string($item['custom_charges']) ? json_decode($item['custom_charges'], true) : $item['custom_charges'];
+                if (is_array($iList)) {
+                    foreach ($iList as $ic) {
+                        $lbl = strtoupper(trim($ic['label'] ?? 'CHARGE'));
+                        $val = floatval($ic['value'] ?? 0);
+                        $itemCustomMap[$lbl] = $val;
+                        $itemCustomSum += $val;
+                    }
+                }
+            }
+
+            $taxable = $freight + $fuelAmt + $dock + $pickup + $delivery + $fov + $handling + $service + $misc + $itemCustomSum;
+            
+            $row = [
                 $srNo,
                 $booking['awb_no'] ?? '',
                 $item['docket_no'] ?? '',
@@ -903,9 +977,16 @@ public function exportExcel()
                 $fov,
                 $handling,
                 $service,
-                $misc,
-                $taxable,
-                
+                $misc
+            ];
+
+            foreach ($allItemCustomLabels as $lbl) {
+                $row[] = floatval($itemCustomMap[$lbl] ?? 0);
+            }
+
+            $row[] = $taxable;
+
+            array_push($row,
                 $booking['airlines'] ?? '',
                 $booking['flight_number'] ?? '',
                 $booking['vehicle_no'] ?? '',
@@ -945,9 +1026,16 @@ public function exportExcel()
                 floatval($sales['inbound_handling'] ?? 0),
                 floatval($sales['inbound_storage'] ?? 0),
                 floatval($sales['outbound_storage'] ?? 0),
-                floatval($sales['misc_charges'] ?? 0),
-                floatval($sales['total_amount'] ?? 0)
-            ];
+                floatval($sales['misc_charges'] ?? 0)
+            );
+
+            foreach ($allGlobalCustomLabels as $lbl) {
+                $row[] = floatval($salesCustomMap[$lbl] ?? 0);
+            }
+
+            $row[] = floatval($sales['total_amount'] ?? 0);
+
+            $rows[] = $row;
             $srNo++;
         }
     }
@@ -1152,7 +1240,7 @@ public function exportExcel()
 
             // ── Business logic — delegated to InvoiceService ────────────────
             $chargeAgg     = $invoiceService->aggregateCharges($shipments);
-            $activeCharges = $invoiceService->resolveActiveCharges($chargeAgg['totals'], $chargeAgg['miscLabel']);
+            $activeCharges = $invoiceService->resolveActiveCharges($chargeAgg['totals'], $chargeAgg['miscLabel'], $chargeAgg['customTotals'] ?? []);
 
             $rowData = $invoiceService->buildShipmentRows($shipments);
 

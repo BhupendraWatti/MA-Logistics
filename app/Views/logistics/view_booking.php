@@ -114,6 +114,19 @@
                                 $sumActWt += $item['actual_weight'];
                                 $sumChgWt += $item['final_chargeable_weight'];
                                 
+                                $itemCustomSum = 0;
+                                $itemCustomList = [];
+                                if (!empty($item['custom_charges'])) {
+                                    $itemCustomList = is_string($item['custom_charges']) ? json_decode($item['custom_charges'], true) : $item['custom_charges'];
+                                    if (is_array($itemCustomList)) {
+                                        foreach ($itemCustomList as $cc) {
+                                            $itemCustomSum += (float)($cc['value'] ?? 0);
+                                        }
+                                    } else {
+                                        $itemCustomList = [];
+                                    }
+                                }
+
                                 $itemChgs = ($item['rate'] * $item['final_chargeable_weight']) + 
                                             ($item['delivery_charges'] ?? 0) + 
                                             ($item['docket_charges'] ?? 0) + 
@@ -121,7 +134,9 @@
                                             ($item['fuel_surcharge'] ?? 0) + 
                                             ($item['fov_charges'] ?? 0) + 
                                             ($item['handling_charges'] ?? 0) + 
-                                            ($item['service_charges'] ?? 0);
+                                            ($item['service_charges'] ?? 0) +
+                                            ($item['misc_charges'] ?? 0) +
+                                            $itemCustomSum;
                                 $sumChgs += $itemChgs;
                             ?>
                             <tr>
@@ -129,6 +144,17 @@
                                 <td>
                                     <div class="fw-bold text-dark fs-7"><?= esc($item['customer_name']) ?></div>
                                     <div class="text-muted fs-8"><?= esc($item['consignee']) ?></div>
+                                    <?php if (!empty($itemCustomList)): ?>
+                                        <div class="mt-1 d-flex flex-wrap gap-1">
+                                            <?php foreach ($itemCustomList as $cc): ?>
+                                                <?php if (!empty($cc['label']) || (float)($cc['value'] ?? 0) > 0): ?>
+                                                    <span class="badge bg-light text-primary border me-1 fw-semibold" style="font-size:0.7rem;">
+                                                        <i class="fas fa-tag me-1"></i><?= esc($cc['label'] ?: 'Extra Charge') ?>: ₹<?= number_format((float)($cc['value'] ?? 0), 2) ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </td>
                                 <td>
                                     <div class="fw-bold text-dark fs-7"><?= esc($item['docket_no']) ?></div>
@@ -237,6 +263,22 @@
                             'Misc Charges' => $sales['misc_charges'] ?? 0,
                         ];
 
+                        $customGlobalList = [];
+                        if (!empty($sales['custom_charges'])) {
+                            $customGlobalList = is_string($sales['custom_charges']) ? json_decode($sales['custom_charges'], true) : $sales['custom_charges'];
+                            if (is_array($customGlobalList)) {
+                                foreach ($customGlobalList as $gc) {
+                                    $gLabel = !empty($gc['label']) ? $gc['label'] : 'Custom Surcharge';
+                                    $gVal = (float)($gc['value'] ?? 0);
+                                    if (!empty($gc['label']) || $gVal > 0) {
+                                        $surcharges[$gLabel] = $gVal;
+                                    }
+                                }
+                            } else {
+                                $customGlobalList = [];
+                            }
+                        }
+
                         $subtotal = $baseFreight;
                         foreach($surcharges as $amt) $subtotal += $amt;
 
@@ -261,7 +303,7 @@
                         
                         <?php foreach($surcharges as $label => $amt): if($amt > 0): ?>
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted fw-semibold"><?= $label ?></span>
+                            <span class="text-muted fw-semibold"><?= esc($label) ?></span>
                             <span class="fw-bold text-dark">₹<?= number_format((float)$amt, 2) ?></span>
                         </div>
                         <?php endif; endforeach; ?>
@@ -317,6 +359,11 @@
                                 <div class="col-6">Inbound Storage: ₹<?= number_format((float)($sales['inbound_storage'] ?? 0), 2) ?></div>
                                 <div class="col-6">Outbound Storage: ₹<?= number_format((float)($sales['outbound_storage'] ?? 0), 2) ?></div>
                                 <div class="col-6">Misc: ₹<?= number_format((float)($sales['misc_charges'] ?? 0), 2) ?></div>
+                                <?php foreach ($customGlobalList as $gc): ?>
+                                    <?php if (!empty($gc['label']) || (float)($gc['value'] ?? 0) > 0): ?>
+                                        <div class="col-6 text-primary fw-semibold"><?= esc($gc['label'] ?: 'Custom Surcharge') ?>: ₹<?= number_format((float)($gc['value'] ?? 0), 2) ?></div>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
                             </div>
                         </div>
 

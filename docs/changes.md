@@ -6,6 +6,23 @@ This file tracks every technical change, feature implementation, refactoring, an
 
 ## 1. Completed Phase 1 Implementations
 
+### [CHG-012] Dynamic Custom Charges — Shipment Item + Global Surcharges
+* **Status**: Completed
+* **Priority**: High (Client-Requested)
+* **Requirement**: Allow staff to add unlimited dynamic label+value charge fields per shipment item AND per booking (global surcharges). Labels are user-defined (e.g. "Super Charge", "Ticket Cost"). Values flow through to booking totals, sales charges, PDF invoice, and MIS Excel export.
+* **Implementation**:
+  - **DB Migration**: `2026-07-22-000001_AddCustomChargesToShipmentItemsAndSalesCharges.php` — added `custom_charges TEXT NULL` to both `shipment_items` and `sales_charges` tables.
+  - **Models**: Added `custom_charges` to `$allowedFields` in `ShipmentItemModel` and `SalesChargeModel`.
+  - **Frontend (booking_form.php)**: Added `+ Add Charge` button in item drawer (offcanvas) that appends label+value rows via `addCustomItemChargeRow()`. Added `+ Add Surcharge` button in global surcharges section via `addCustomGlobalSurchargeRow()`. Custom global surcharge inputs carry class `calc-surcharge` so they're included in `calcTotals()` live total preview. Custom charges serialize into `items_json` via `renderGrid()`. Edit page correctly restores both item-level and global custom charges from DB.
+  - **Backend (BookingService.php)**: `processShipments()` and `updateBooking()` parse `custom_charges` from `items_json` — stores as JSON string. `extractCustomGlobalSurcharges()` reads `custom_global_surcharge_labels[]`/`values[]` POST arrays and encodes to JSON. `calculateTotalAmount()` decodes and sums custom_charges in the sales total.
+  - **InvoiceService.php**: `aggregateCharges()` decodes per-item custom_charges, groups by label → `customTotals`. `resolveActiveCharges()` accepts `$customTotals` parameter, creates `custom_*` keys for dynamic PDF column resolution. `buildShipmentRows()` decodes custom_charges per row, sums into `$customChargesSum` added to `$taxable`, and stores per-label values in `$itemCustomMap`.
+  - **invoice.php**: `OTHER CHG` column now includes `array_sum($row['itemCustomMap'])` so column totals correctly sum to `TOTAL Amt.`
+  - **View Booking (view_booking.php)**: Updated `view_booking.php` to decode item-level `custom_charges` and display charge badges (`Charge 1: ₹...`) under item details, include them in item "Total Chgs", and dynamically include global custom surcharges in the Financial Summary list, Subtotal, and Charges Breakdown.
+* **Files Modified**: `app/Database/Migrations/2026-07-22-000001_AddCustomChargesToShipmentItemsAndSalesCharges.php`, `app/Models/ShipmentItemModel.php`, `app/Models/SalesChargeModel.php`, `app/Views/logistics/booking_form.php`, `app/Views/logistics/view_booking.php`, `app/Services/BookingService.php`, `app/Services/InvoiceService.php`, `app/Controllers/Logistics.php`, `app/Views/pdfs/invoice.php`
+* **QA**: Subagent Verification Loop run — 1 major issue found (invoice OTHER CHG column missing custom charges) and fixed. View Booking UI updated to display custom charge badges and breakdown. All existing functionality verified unaffected.
+
+---
+
 ### [CHG-001] Select2 Reversion to Standard Dropdowns
 * **Status**: Completed
 * **Priority**: High
@@ -107,34 +124,40 @@ This file tracks every technical change, feature implementation, refactoring, an
 
 ## 2. Pending Phase 2 Out-of-Scope Additions (Client Change Requests)
 
-The following 6 change requests have been formally cataloged and added to the official Phase 2 change request tracking spreadsheet:
+The following 6 change requests have been formally cataloged into the official Phase 2 change tracking matrix ([Google Spreadsheet](https://docs.google.com/spreadsheets/d/1W9Zi4OHg0hqVbSTgccItXIKHrBRXCDeXwyOteGqNaXk/edit?gid=0#gid=0)):
 
-### [CHG-P2-001] Customizable Email Dispatch & Field Selection Engine
-* **Status**: Pending (Out of Scope - Phase 2)
-* **Priority**: Medium
-* **Requirement**: Add an 'Email Send' action button to DataTables grids with modal field selection overlay and customized email dispatch.
+### [CHG-P2-001] Customizable Email Send Feature
+* **Module**: Booking List & Invoices Page
+* **Status**: Phase 2 Requirement
+* **How It Works**: Adds a 'Send Email' button in the table grid. Clicking it opens a window where staff can select which details (like AWB No, Charges, Status, or Customer info) to include in the email and send it directly to the client.
+* **Why It Helps**: Saves time by removing manual email drafting, automates client updates, and lets staff customize what info is shared.
 
-### [CHG-P2-002] Automated Pincode Location Lookup (Google Maps API Integration)
-* **Status**: Pending (Out of Scope - Phase 2)
-* **Priority**: Medium
-* **Requirement**: Integrate Google Places / Geocoding REST API to auto-fill State and City upon entering 6-digit postal pincodes.
+### [CHG-P2-002] Auto-Fill City & State using Pincode (Google Maps API)
+* **Module**: Booking Entry & Customer Master
+* **Status**: Phase 2 Requirement
+* **How It Works**: When staff enters a 6-digit postal pincode in any address form, the system uses Google Maps API to automatically detect and fill in the correct City and State without manual typing.
+* **Why It Helps**: Prevents spelling errors in location names, standardizes address data, and speeds up booking entry.
 
-### [CHG-P2-003] Admin Grid Column Customizer & Display Preference Manager
-* **Status**: Pending (Out of Scope - Phase 2)
-* **Priority**: Medium
-* **Requirement**: Develop a WordPress-style column management panel in Admin Settings to configure default visible/hidden grid columns.
+### [CHG-P2-003] Admin Grid Column Selector
+* **Module**: Admin Settings / Table Views
+* **Status**: Phase 2 Requirement
+* **How It Works**: Adds a setting in the Admin Panel (similar to WordPress) where admins can choose which table columns to show or hide, change column order, and save customized view presets for different staff roles.
+* **Why It Helps**: Gives admins full control to customize data views for different team members without needing a web developer.
 
-### [CHG-P2-004] Dynamic Multi-Customer / AWB Invoice Header & Item Line Logic
-* **Status**: Pending (Out of Scope - Phase 2)
-* **Priority**: High
-* **Requirement**: Modify PDF invoice rendering: (1) Print Customer Name in 'TO:' header box if all items match, otherwise print AWB Number. (2) Display 'CUSTOMER NAME' column in item table if items belong to multiple distinct customers.
+### [CHG-P2-004] Smart Customer Name vs AWB Display on PDF Invoices *(From 1.jpeg)*
+* **Module**: PDF Invoice & Booking View
+* **Status**: Phase 2 Requirement
+* **How It Works**: Header: If all packages in a booking belong to one customer, shows Customer Name in the 'TO:' box; if packages belong to different customers, shows AWB Number instead. Item Table: Adds a 'Customer Name' column next to Date if packages belong to different customers; stays hidden if all packages belong to the same customer.
+* **Why It Helps**: Ensures invoices are accurate, legally clear, and easy to read for both single-customer and multi-customer bookings.
 
-### [CHG-P2-005] Consolidated Billing History Repository & Comprehensive 28-Column MIS Excel Exporter
-* **Status**: Pending (Out of Scope - Phase 2)
-* **Priority**: High
-* **Requirement**: (1) Save generated consolidated invoices in a persistent database repository for historical PDF re-export in 'All Invoices' view. (2) Add an 'Export MIS' button exporting 28 standardized manifest columns.
+### [CHG-P2-005] Save Consolidated Invoices & Export 28-Column MIS Excel *(From 2.jpeg)*
+* **Module**: All Invoices (Consolidated Billing)
+* **Status**: Phase 2 Requirement
+* **How It Works**: 1. Saved Invoices: Whenever a consolidated bill is generated, it is saved in the system under that company. Staff can view past bills in the 'All Invoices' tab and re-download the PDF anytime. 2. Export MIS Button: Adds an 'Export MIS' button that downloads an Excel file containing 28 exact columns requested by the client (Date, LR No, Rate, Freight, Fuel Surcharge, Ticket Costs, Consignor, Consignee, etc.).
+* **Why It Helps**: Maintains a complete audit history of past consolidated bills and generates detailed MIS reports for finance and management in one click.
 
-### [CHG-P2-006] Dynamic Admin-Defined Item Surcharge Fields (10 Custom Heading Inputs) & MIS Sync
-* **Status**: Pending (Out of Scope - Phase 2)
-* **Priority**: High
-* **Requirement**: Add 10 configurable charge input fields under 'Item Specific Charges' on shipment item modal drawer with admin-defined dynamic headings, mapped directly to the 'Export MIS' Excel exporter.
+### [CHG-P2-006] 10 Dynamic Custom Charge Fields & MIS Excel Integration *(From 3.jpeg)*
+* **Module**: Shipment Item Form & MIS Export
+* **Status**: ✅ **Implemented** (Phase 2 requirement delivered in Phase 1)
+* **How It Works**: Replaced the original "10 fixed fields" spec with a `+ Add Field` approach. Each added field has an editable label (heading) and numeric value. Values flow through to booking totals, PDF invoice (OTHER CHG column), and sales charges. Global booking-level surcharges also support dynamic label+value pairs via `+ Add Surcharge` button.
+* **Implementation Reference**: See [CHG-012] above.

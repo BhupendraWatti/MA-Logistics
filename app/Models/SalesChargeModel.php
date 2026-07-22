@@ -15,6 +15,6 @@ class SalesChargeModel extends Model
         'utility_charges', 'xray_charges', 'ado', 'awb_fees_agent',
         'awb_fees_carrier', 'admin_charges', 'delivery_order_charges',
         'inbound_handling', 'inbound_storage', 'outbound_storage', 'misc_charges',
-        'total_amount', 'created_at', 'updated_at'
+        'custom_charges', 'total_amount', 'created_at', 'updated_at'
     ];
 }

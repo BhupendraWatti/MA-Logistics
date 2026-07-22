@@ -30,7 +30,14 @@ Core operational engine for creating, viewing, editing, tracking, and invoicing 
      - $\text{SGST} = \text{round}\left(\text{Taxable} \times \frac{\text{SGST Rate}}{100}\right)$
      - $\text{IGST} = \text{round}\left(\text{Taxable} \times \frac{\text{IGST Rate}}{100}\right)$
    - Derives Net Payable $=$ Taxable Subtotal $+$ CGST $+$ SGST $+$ IGST.
-5. **PDF Invoice Generation (`app/Views/pdfs/invoice.php`)**:
+5. **Dynamic Custom Charges (AWB-Protocol-Specific Fields)**:
+   - **Item-Level**: Each shipment item has a `+ Add Charge` button in the item drawer. Clicking it appends a row with two inputs: **Label** (e.g. "Super Charge", "Ticket Cost", "Flyer Fees") and **Amount (₹)**. Multiple rows can be added. Each row can be removed independently.
+   - **Global-Level**: The booking's surcharges section has a `+ Add Surcharge` button that similarly appends label+value rows at the booking level. These map to `sales_charges.custom_charges` JSON field.
+   - **Serialization**: Item charges are serialized into the `items_json` hidden field as a JSON array `[{label, value}, ...]` per item. Global charges are submitted as `custom_global_surcharge_labels[]` + `custom_global_surcharge_values[]` form arrays.
+   - **Totals**: Global custom surcharges include class `calc-surcharge` — automatically included in the live Net Payable footer calculation. `calculateTotalAmount()` in `BookingService` decodes and sums custom charges into the sales total.
+   - **Invoice PDF**: `InvoiceService::buildShipmentRows()` decodes per-item custom charges, sums them into the taxable total per row, and populates `$itemCustomMap` (per-label lookup). `invoice.php` includes custom charges in the "OTHER CHG" column so all columns sum correctly to "TOTAL Amt."
+   - **Backward Compatibility**: Existing bookings without custom charges work identically — `custom_charges` defaults to `NULL`, treated as zero throughout all calculation paths.
+6. **PDF Invoice Generation (`app/Views/pdfs/invoice.php`)**:
    - Generates pixel-perfect horizontal A4 PDF invoices.
    - Performs row-level taxable calculation: $\text{Freight} + \text{Fuel Surcharge} + \text{Docket} + \text{Pickup} + \text{Delivery}$.
    - Prints company dynamic Terms & Conditions and Authorised Signatory digital signature.

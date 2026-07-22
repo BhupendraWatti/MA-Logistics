@@ -49,7 +49,8 @@ if ($shipments_raw !== null) {
                 'handling_charges' => $item['handling_charges'] ?? '',
                 'service_charges' => $item['service_charges'] ?? '',
                 'misc_charges' => $item['misc_charges'] ?? '',
-                'misc_charges_name' => $item['misc_charges_name'] ?? 'Misc Charges'
+                'misc_charges_name' => $item['misc_charges_name'] ?? 'Misc Charges',
+                'custom_charges' => $item['custom_charges'] ?? []
             ];
         }
     }
@@ -419,6 +420,15 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                         <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">X-Ray</label><input type="number" step="0.01" name="xray_charges" class="form-control form-control-sm calc-surcharge" value="<?= $sales['xray_charges'] ?? '' ?>"></div>
                         <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">ADO</label><input type="number" step="0.01" name="ado" class="form-control form-control-sm calc-surcharge" value="<?= $sales['ado'] ?? '' ?>"></div>
                         <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Misc</label><input type="number" step="0.01" name="misc_charges" class="form-control form-control-sm calc-surcharge" value="<?= $sales['misc_charges'] ?? '' ?>"></div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="button" class="btn btn-sm btn-outline-primary w-100 fw-bold shadow-sm" onclick="addCustomGlobalSurchargeRow()">
+                                <i class="fas fa-plus me-1"></i> Add Surcharge
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-2 border-top" id="custom_global_surcharges_wrapper">
+                        <small class="fw-bold text-muted d-block mb-2 fs-8"><i class="fas fa-plus-circle me-1 text-primary"></i> Additional Custom Global Surcharges</small>
+                        <div id="custom_global_surcharges_container" class="row g-2"></div>
                     </div>
                 </div>
             </div>
@@ -682,6 +692,15 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 <input type="text" id="entry_misc_name" class="form-control form-control-sm border-0 bg-transparent fw-semibold text-muted p-0 fs-8 shadow-none text-truncate" value="Misc Charges" style="cursor: text;" title="Click to rename this charge field">
                 <input type="number" step="0.01" id="entry_misc" class="form-control form-control-sm tabular-nums">
             </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-sm btn-outline-primary w-100 fw-bold shadow-sm" onclick="addCustomItemChargeRow()">
+                    <i class="fas fa-plus me-1"></i> Add Charge
+                </button>
+            </div>
+        </div>
+        <div class="mt-3 pt-2 border-top" id="custom_item_charges_wrapper">
+            <small class="fw-bold text-muted d-block mb-2 fs-8"><i class="fas fa-plus-circle me-1 text-primary"></i> Additional Dynamic Item Charges</small>
+            <div id="custom_item_charges_container" class="row g-2"></div>
         </div>
       </div>
     </div>
@@ -775,8 +794,67 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         igst: <?= isset($company['igst_rate']) && $company['igst_rate'] !== '' ? $company['igst_rate'] : 0 ?> 
     };
     const initialShipments = <?= json_encode($shipments ?? []) ?>;
+    <?php
+    $salesCustomChargesRaw = $sales['custom_charges'] ?? [];
+    if (is_string($salesCustomChargesRaw)) {
+        $salesCustomChargesRaw = json_decode($salesCustomChargesRaw, true) ?: [];
+    }
+    ?>
+    const initialSalesCustomCharges = <?= json_encode($salesCustomChargesRaw ?: []) ?>;
     
     let manifestDataTable;
+
+    function escapeHtmlStr(str) {
+        if (typeof ERPUtils !== 'undefined' && typeof ERPUtils.escapeHtml === 'function') {
+            return ERPUtils.escapeHtml(str);
+        }
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function addCustomItemChargeRow(label = '', value = '') {
+        const html = `
+            <div class="col-md-6 custom-item-charge-row mb-1">
+                <div class="input-group input-group-sm">
+                    <input type="text" class="form-control form-control-sm custom-item-charge-label" placeholder="Heading Label (e.g. Super Charge)" value="${escapeHtmlStr(label)}">
+                    <input type="number" step="0.01" class="form-control form-control-sm custom-item-charge-value tabular-nums" placeholder="Amount (₹)" value="${value !== '' ? value : ''}">
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="$(this).closest('.custom-item-charge-row').remove()"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+        `;
+        $('#custom_item_charges_container').append(html);
+    }
+
+    function getCustomItemChargesData() {
+        let list = [];
+        $('#custom_item_charges_container .custom-item-charge-row').each(function() {
+            let lbl = $(this).find('.custom-item-charge-label').val().trim();
+            let val = parseFloat($(this).find('.custom-item-charge-value').val()) || 0;
+            if (lbl || val > 0) {
+                list.push({ label: lbl || 'Extra Charge', value: val });
+            }
+        });
+        return list;
+    }
+
+    function addCustomGlobalSurchargeRow(label = '', value = '') {
+        const html = `
+            <div class="col-md-3 custom-global-surcharge-row mb-1">
+                <div class="input-group input-group-sm">
+                    <input type="text" name="custom_global_surcharge_labels[]" class="form-control form-control-sm custom-surcharge-label" placeholder="Surcharge Heading" value="${escapeHtmlStr(label)}">
+                    <input type="number" step="0.01" name="custom_global_surcharge_values[]" class="form-control form-control-sm calc-surcharge custom-surcharge-value tabular-nums" placeholder="Amount (₹)" value="${value !== '' ? value : ''}">
+                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="$(this).closest('.custom-global-surcharge-row').remove(); calcTotals();"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+        `;
+        $('#custom_global_surcharges_container').append(html);
+        calcTotals();
+    }
 
     $(document).ready(function() {
         $('#awb_select_top').on('change', function() {
@@ -936,6 +1014,14 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             $('#global_consignee').val(initialShipments[0].consignee || '');
             
             initialShipments.forEach(s => {
+                let customCharges = [];
+                if (s.custom_charges) {
+                    if (typeof s.custom_charges === 'string') {
+                        try { customCharges = JSON.parse(s.custom_charges); } catch(e) {}
+                    } else if (Array.isArray(s.custom_charges)) {
+                        customCharges = s.custom_charges;
+                    }
+                }
                 items.push({
                     id: s.id || '',
                     customer: s.customer_name || '',
@@ -965,15 +1051,18 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     handling_charges: s.handling_charges || '',
                     service_charges: s.service_charges || '',
                     misc_charges: s.misc_charges || '',
-                    misc_charges_name: s.misc_charges_name || 'Misc Charges'
+                    misc_charges_name: s.misc_charges_name || 'Misc Charges',
+                    custom_charges: customCharges
                 });
             });
             renderGrid();
         }
         
-
-        
-        // Global docket generation listeners removed as auto-generation is now handled automatically
+        if (Array.isArray(initialSalesCustomCharges) && initialSalesCustomCharges.length > 0) {
+            initialSalesCustomCharges.forEach(sc => {
+                addCustomGlobalSurchargeRow(sc.label, sc.value);
+            });
+        }
 
         calcTotals();
     });
@@ -1124,12 +1213,11 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             $('#entry_pcs').val('1');
             $('#entry_act_wt').val('');
             $('#entry_l, #entry_w, #entry_h, #entry_vol_wt').val('');
-            $('#entry_chg_wt').val('');
-            
-            // Clear charges
+            $('#entry_chg_wt').val('');            // Clear charges
             $('#entry_eway_no, #entry_eway_date, #entry_rate, #entry_delivery, #entry_docket_chg, #entry_pickup, #entry_fuel, #entry_fov, #entry_handling, #entry_service').val('');
             $('#entry_misc').val('');
             $('#entry_misc_name').val('Misc Charges');
+            $('#custom_item_charges_container').empty();
             
         } else {
             // Edit Item
@@ -1178,6 +1266,12 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             $('#entry_service').val(item.service_charges);
             $('#entry_misc').val(item.misc_charges || '');
             $('#entry_misc_name').val(item.misc_charges_name || 'Misc Charges');
+            $('#custom_item_charges_container').empty();
+            if (Array.isArray(item.custom_charges) && item.custom_charges.length > 0) {
+                item.custom_charges.forEach(cc => {
+                    addCustomItemChargeRow(cc.label, cc.value);
+                });
+            }
         }
         $('[maxlength]').trigger('sync-counter');
         
@@ -1273,6 +1367,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             service_charges: $('#entry_service').val(),
             misc_charges: $('#entry_misc').val(),
             misc_charges_name: $('#entry_misc_name').val() || 'Misc Charges',
+            custom_charges: getCustomItemChargesData()
         };
 
         if(editIndex >= 0) {

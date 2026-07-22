@@ -25,7 +25,7 @@ foreach ($shipmentRows as $row) {
     $totalPickup += floatval($row['pickup'] ?? 0);
     $totalDelivery += floatval($row['delivery'] ?? 0);
     
-    $rowOtherChg = floatval($row['pickup'] ?? 0) + floatval($row['delivery'] ?? 0) + floatval($row['fov'] ?? 0) + floatval($row['handling'] ?? 0) + floatval($row['service'] ?? 0) + floatval($row['misc'] ?? 0);
+    $rowOtherChg = floatval($row['pickup'] ?? 0) + floatval($row['delivery'] ?? 0) + floatval($row['fov'] ?? 0) + floatval($row['handling'] ?? 0) + floatval($row['service'] ?? 0) + floatval($row['misc'] ?? 0) + array_sum($row['itemCustomMap'] ?? []);
     $totalOtherChg += $rowOtherChg;
     
     $rowFsc = floatval($row['fuelAmt'] ?? 0) + $rowOtherChg;
@@ -210,7 +210,7 @@ foreach ($shipmentRows as $row) {
             <?php
             $rowDocket = floatval($row['docket'] ?? 0);
             $rowFuelAmt = floatval($row['fuelAmt'] ?? 0);
-            $rowOtherChg = floatval($row['pickup'] ?? 0) + floatval($row['delivery'] ?? 0) + floatval($row['fov'] ?? 0) + floatval($row['handling'] ?? 0) + floatval($row['service'] ?? 0) + floatval($row['misc'] ?? 0);
+            $rowOtherChg = floatval($row['pickup'] ?? 0) + floatval($row['delivery'] ?? 0) + floatval($row['fov'] ?? 0) + floatval($row['handling'] ?? 0) + floatval($row['service'] ?? 0) + floatval($row['misc'] ?? 0) + array_sum($row['itemCustomMap'] ?? []);
             $rowTotal = floatval($row['taxable'] ?? 0);
             ?>
             <td nowrap="nowrap" style="width:3%; white-space: nowrap; text-align:center;"><?= $row['serial'] ?></td>

@@ -260,7 +260,8 @@ class BookingService
                     'service_charges' => $jsItem['service_charges'] ?? 0,
                     'misc_charges' => $jsItem['misc_charges'] ?? 0,
                     'misc_charges_name' => $jsItem['misc_charges_name'] ?? 'Misc Charges',
-                    'part_qty' => $jsItem['part_qty'] ?? 0
+                    'part_qty' => $jsItem['part_qty'] ?? 0,
+                    'custom_charges' => is_array($jsItem['custom_charges'] ?? null) ? json_encode($jsItem['custom_charges']) : ($jsItem['custom_charges'] ?? null)
                 ];
             }
         } else {
@@ -322,7 +323,8 @@ class BookingService
                     'handling_charges' => $this->validateNumeric($item['handling_charges'] ?? 0),
                     'service_charges' => $this->validateNumeric($item['service_charges'] ?? 0),
                     'misc_charges' => $this->validateNumeric($item['misc_charges'] ?? 0),
-                    'misc_charges_name' => $item['misc_charges_name'] ?? 'Misc Charges'
+                    'misc_charges_name' => $item['misc_charges_name'] ?? 'Misc Charges',
+                    'custom_charges' => is_array($item['custom_charges'] ?? null) ? json_encode($item['custom_charges']) : ($item['custom_charges'] ?? null)
                 ];
 
                 if (!empty($item['id']) && in_array((int)$item['id'], $existingIds)) {
@@ -411,7 +413,8 @@ class BookingService
             'inbound_handling' => $this->validateNumeric($postData['inbound_handling'] ?? 0),
             'inbound_storage' => $this->validateNumeric($postData['inbound_storage'] ?? 0),
             'outbound_storage' => $this->validateNumeric($postData['outbound_storage'] ?? 0),
-            'misc_charges' => $this->validateNumeric($postData['misc_charges'] ?? 0)
+            'misc_charges' => $this->validateNumeric($postData['misc_charges'] ?? 0),
+            'custom_charges' => $this->extractCustomGlobalSurcharges($postData)
         ];
 
         $salesData['total_amount'] = $this->calculateTotalAmount($salesData);
@@ -486,7 +489,8 @@ class BookingService
                     'service_charges' => $jsItem['service_charges'] ?? 0,
                     'misc_charges' => $jsItem['misc_charges'] ?? 0,
                     'misc_charges_name' => $jsItem['misc_charges_name'] ?? 'Misc Charges',
-                    'part_qty' => $jsItem['part_qty'] ?? 0
+                    'part_qty' => $jsItem['part_qty'] ?? 0,
+                    'custom_charges' => is_array($jsItem['custom_charges'] ?? null) ? json_encode($jsItem['custom_charges']) : ($jsItem['custom_charges'] ?? null)
                 ];
             }
         }
@@ -548,7 +552,8 @@ class BookingService
                     'handling_charges' => $this->validateNumeric($item['handling_charges'] ?? 0),
                     'service_charges' => $this->validateNumeric($item['service_charges'] ?? 0),
                     'misc_charges' => $this->validateNumeric($item['misc_charges'] ?? 0),
-                    'misc_charges_name' => $item['misc_charges_name'] ?? 'Misc Charges'
+                    'misc_charges_name' => $item['misc_charges_name'] ?? 'Misc Charges',
+                    'custom_charges' => is_array($item['custom_charges'] ?? null) ? json_encode($item['custom_charges']) : ($item['custom_charges'] ?? null)
                 ];
                 
                 if (!$this->shipmentModel->insert($shipmentData)) {
@@ -624,11 +629,36 @@ class BookingService
             'inbound_handling' => $this->validateNumeric($postData['inbound_handling'] ?? 0),
             'inbound_storage' => $this->validateNumeric($postData['inbound_storage'] ?? 0),
             'outbound_storage' => $this->validateNumeric($postData['outbound_storage'] ?? 0),
-            'misc_charges' => $this->validateNumeric($postData['misc_charges'] ?? 0)
+            'misc_charges' => $this->validateNumeric($postData['misc_charges'] ?? 0),
+            'custom_charges' => $this->extractCustomGlobalSurcharges($postData)
         ];
 
         $salesData['total_amount'] = $this->calculateTotalAmount($salesData);
         $this->salesModel->insert($salesData);
+    }
+
+    private function extractCustomGlobalSurcharges(array $postData): ?string
+    {
+        $labels = $postData['custom_global_surcharge_labels'] ?? [];
+        $values = $postData['custom_global_surcharge_values'] ?? [];
+        
+        if (is_array($labels) && is_array($values)) {
+            $list = [];
+            foreach ($labels as $idx => $lbl) {
+                $labelStr = trim($lbl);
+                $valNum = (float)($values[$idx] ?? 0);
+                if (!empty($labelStr) || $valNum > 0) {
+                    $list[] = [
+                        'label' => !empty($labelStr) ? $labelStr : 'Surcharge',
+                        'value' => $valNum
+                    ];
+                }
+            }
+            if (!empty($list)) {
+                return json_encode($list);
+            }
+        }
+        return null;
     }
 
     private function validateBasicData($data)
@@ -663,6 +693,16 @@ class BookingService
 
     private function calculateTotalAmount(array $salesData)
     {
+        $customTotal = 0.00;
+        if (!empty($salesData['custom_charges'])) {
+            $customList = is_string($salesData['custom_charges']) ? json_decode($salesData['custom_charges'], true) : $salesData['custom_charges'];
+            if (is_array($customList)) {
+                foreach ($customList as $c) {
+                    $customTotal += (float)($c['value'] ?? 0);
+                }
+            }
+        }
+
         return (floatval($salesData['rate'] ?? 0) * floatval($salesData['weight'] ?? 0))
             + floatval($salesData['ddc'] ?? 0)
             + floatval($salesData['ssc'] ?? 0)
@@ -682,6 +722,7 @@ class BookingService
             + floatval($salesData['inbound_handling'] ?? 0)
             + floatval($salesData['inbound_storage'] ?? 0)
             + floatval($salesData['outbound_storage'] ?? 0)
-            + floatval($salesData['misc_charges'] ?? 0);
+            + floatval($salesData['misc_charges'] ?? 0)
+            + $customTotal;
     }
 }

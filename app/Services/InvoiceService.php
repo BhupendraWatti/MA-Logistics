@@ -59,6 +59,7 @@ class InvoiceService
             'handling'=> 0.0, 'service'  => 0.0, 'misc'     => 0.0,
         ];
         $miscLabel = 'Misc Charges';
+        $customTotals = [];
 
         foreach ($shipments as $item) {
             $wt      = (float) ($item['final_chargeable_weight']  ?? 0);
@@ -78,20 +79,37 @@ class InvoiceService
             if (!empty($item['misc_charges_name'])) {
                 $miscLabel = $item['misc_charges_name'];
             }
+
+            if (!empty($item['custom_charges'])) {
+                $customList = is_string($item['custom_charges']) ? json_decode($item['custom_charges'], true) : $item['custom_charges'];
+                if (is_array($customList)) {
+                    foreach ($customList as $cc) {
+                        $lbl = strtoupper(trim($cc['label'] ?? 'EXTRA CHARGE'));
+                        $val = (float) ($cc['value'] ?? 0);
+                        if ($val > 0) {
+                            if (!isset($customTotals[$lbl])) {
+                                $customTotals[$lbl] = 0.0;
+                            }
+                            $customTotals[$lbl] += $val;
+                        }
+                    }
+                }
+            }
         }
 
-        return ['totals' => $totals, 'miscLabel' => $miscLabel];
+        return ['totals' => $totals, 'miscLabel' => $miscLabel, 'customTotals' => $customTotals];
     }
 
     /**
      * Build the map of active (non-zero) charge columns for dynamic PDF column display.
      * Returns a default minimal set if all charges are zero.
      *
-     * @param  array  $totals     Keyed totals from aggregateCharges()['totals']
-     * @param  string $miscLabel  Label from aggregateCharges()['miscLabel']
+     * @param  array  $totals        Keyed totals from aggregateCharges()['totals']
+     * @param  string $miscLabel     Label from aggregateCharges()['miscLabel']
+     * @param  array  $customTotals  Keyed totals from aggregateCharges()['customTotals']
      * @return array  e.g. ['docket' => ['label' => 'DOCKET', 'field' => 'docket'], ...]
      */
-    public function resolveActiveCharges(array $totals, string $miscLabel): array
+    public function resolveActiveCharges(array $totals, string $miscLabel, array $customTotals = []): array
     {
         $all = [];
 
@@ -106,6 +124,11 @@ class InvoiceService
         $all['handling'] = ['label' => 'HANDLING',            'sum' => $totals['handling'], 'field' => 'handling'];
         $all['service']  = ['label' => 'SERVICE',             'sum' => $totals['service'],  'field' => 'service'];
         $all['misc']     = ['label' => strtoupper($miscLabel),'sum' => $totals['misc'],     'field' => 'misc'];
+
+        foreach ($customTotals as $lbl => $val) {
+            $key = 'custom_' . strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $lbl));
+            $all[$key] = ['label' => $lbl, 'sum' => $val, 'custom' => true, 'custom_label' => $lbl];
+        }
 
         $active = array_filter($all, fn ($c) => $c['sum'] > 0);
 
@@ -169,7 +192,22 @@ class InvoiceService
             $handling = (float) ($item['handling_charges'] ?? 0);
             $service  = (float) ($item['service_charges']  ?? 0);
             $misc     = (float) ($item['misc_charges']     ?? 0);
-            $taxable  = $freight + $fuelAmt + $docket + $pickup + $delivery + $fov + $handling + $service + $misc;
+            
+            $customChargesSum = 0.0;
+            $itemCustomMap    = [];
+            if (!empty($item['custom_charges'])) {
+                $customList = is_string($item['custom_charges']) ? json_decode($item['custom_charges'], true) : $item['custom_charges'];
+                if (is_array($customList)) {
+                    foreach ($customList as $cc) {
+                        $lbl = strtoupper(trim($cc['label'] ?? 'EXTRA CHARGE'));
+                        $val = (float) ($cc['value'] ?? 0);
+                        $customChargesSum += $val;
+                        $itemCustomMap[$lbl] = $val;
+                    }
+                }
+            }
+
+            $taxable  = $freight + $fuelAmt + $docket + $pickup + $delivery + $fov + $handling + $service + $misc + $customChargesSum;
 
             $totalBoxes   += (int)   ($item['pieces'] ?? 1);
             $totalWt      += $wt;
@@ -195,6 +233,7 @@ class InvoiceService
                 'handling'      => $handling,
                 'service'       => $service,
                 'misc'          => $misc,
+                'itemCustomMap' => $itemCustomMap,
                 'taxable'       => $taxable,
             ];
 
