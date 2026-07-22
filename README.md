@@ -1,61 +1,23 @@
-# CodeIgniter 4 Framework
+# M.A. Logistics ERP (MARL EXPRESS ERP)
 
-## What is CodeIgniter?
+MARL EXPRESS ERP is a high-performance, enterprise-grade multi-company logistics management system built on CodeIgniter 4, MySQL, Bootstrap 5, and TCPDF.
 
-CodeIgniter is a PHP full-stack web framework that is light, fast, flexible and secure.
-More information can be found at the [official site](https://codeigniter.com).
+---
 
-This repository holds the distributable version of the framework.
-It has been built from the
-[development repository](https://github.com/codeigniter4/CodeIgniter4).
+## Project Documentation & Knowledge Base
 
-More information about the plans for version 4 can be found in [CodeIgniter 4](https://forum.codeigniter.com/forumdisplay.php?fid=28) on the forums.
+Before performing any analysis, implementation, debugging, refactoring, or testing, **ALL AI AGENTS MUST READ THE DOCUMENTATION FIRST**.
 
-You can read the [user guide](https://codeigniter.com/user_guide/)
-corresponding to the latest version of the framework.
+### Mandatory Documentation Reading Order:
+1. [docs/gemini.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/gemini.md) — Documentation Entry Point
+2. [docs/README.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/README.md) — Documentation Guide & Overview
+3. [docs/rules.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/rules.md) — Permanent Rules & Development Constraints
+4. [docs/architecture.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/architecture.md) — System Architecture & Layered Design
+5. [docs/functionality.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/functionality.md) — Module Workflows & Business Logic
+6. [docs/changes.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/changes.md) — Implementation & Change Log
+7. [docs/database.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/database.md) — Database Schemas & Models
+8. [docs/api.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/api.md) — REST/JSON API Endpoints
+9. [docs/known-issues.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/known-issues.md) — Active Issues & Workarounds
+10. [docs/testing.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/testing.md) — Testing Suite & Performance Load Guide
 
-## Important Change with index.php
-
-`index.php` is no longer in the root of the project! It has been moved inside the *public* folder,
-for better security and separation of components.
-
-This means that you should configure your web server to "point" to your project's *public* folder, and
-not to the project root. A better practice would be to configure a virtual host to point there. A poor practice would be to point your web server to the project root and expect to enter *public/...*, as the rest of your logic and the
-framework are exposed.
-
-**Please** read the user guide for a better explanation of how CI4 works!
-
-## Repository Management
-
-We use GitHub issues, in our main repository, to track **BUGS** and to track approved **DEVELOPMENT** work packages.
-We use our [forum](http://forum.codeigniter.com) to provide SUPPORT and to discuss
-FEATURE REQUESTS.
-
-This repository is a "distribution" one, built by our release preparation script.
-Problems with it can be raised on our forum, or as issues in the main repository.
-
-## Contributing
-
-We welcome contributions from the community.
-
-Please read the [*Contributing to CodeIgniter*](https://github.com/codeigniter4/CodeIgniter4/blob/develop/CONTRIBUTING.md) section in the development repository.
-
-## Server Requirements
-
-PHP version 8.2 or higher is required, with the following extensions installed:
-
-- [intl](http://php.net/manual/en/intl.requirements.php)
-- [mbstring](http://php.net/manual/en/mbstring.installation.php)
-
-> [!WARNING]
-> - The end of life date for PHP 7.4 was November 28, 2022.
-> - The end of life date for PHP 8.0 was November 26, 2023.
-> - The end of life date for PHP 8.1 was December 31, 2025.
-> - If you are still using below PHP 8.2, you should upgrade immediately.
-> - The end of life date for PHP 8.2 will be December 31, 2026.
-
-Additionally, make sure that the following extensions are enabled in your PHP:
-
-- json (enabled by default - don't turn it off)
-- [mysqlnd](http://php.net/manual/en/mysqlnd.install.php) if you plan to use MySQL
-- [libcurl](http://php.net/manual/en/curl.requirements.php) if you plan to use the HTTP\CURLRequest library
+Do not begin implementation until you have reviewed these files.
