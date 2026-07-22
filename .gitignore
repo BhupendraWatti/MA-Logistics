@@ -48,3 +48,9 @@ public/uploads/
 testsprite_tests\tmp\config.json
 
 testsprite_tests
+
+
+docs/
+.playwright-mcp
+.antigravitycli
+.agent

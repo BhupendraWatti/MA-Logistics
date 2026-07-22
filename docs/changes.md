@@ -1,10 +1,10 @@
 # M.A. Logistics ERP — Implementation & Change Log
 
-This file tracks every technical change, feature implementation, and refactoring performed on the M.A. Logistics ERP project.
+This file tracks every technical change, feature implementation, refactoring, and pending scope addition performed on the M.A. Logistics ERP project.
 
 ---
 
-## Change Log Entries
+## 1. Completed Phase 1 Implementations
 
 ### [CHG-001] Select2 Reversion to Standard Dropdowns
 * **Status**: Completed
@@ -12,8 +12,6 @@ This file tracks every technical change, feature implementation, and refactoring
 * **Requirement**: Revert heavy searchable combo boxes to simple standard HTML `<select>` tags to match legacy software speed.
 * **Implementation**: Stripped Select2 CSS/JS from `booking_form.php` and `layout.php`. Applied `form-select form-select-sm`.
 * **Files Modified**: `app/Views/logistics/booking_form.php`, `app/Views/layout.php`
-* **Dependencies**: Bootstrap 5
-* **Risks**: None.
 
 ---
 
@@ -23,7 +21,6 @@ This file tracks every technical change, feature implementation, and refactoring
 * **Requirement**: Prevent dropdown menu overlays from covering navigation links. Move master registries to a dedicated menu.
 * **Implementation**: Replaced Bootstrap Dropdown with Collapse (Accordion) components. Created dedicated **Masters** accordion bucket containing Customer, Transporter, Driver, Airline, and Lookup master links.
 * **Files Modified**: `app/Views/layout.php`
-* **Dependencies**: Bootstrap Collapse JS
 
 ---
 
@@ -105,3 +102,39 @@ This file tracks every technical change, feature implementation, and refactoring
 * **Requirement**: Consolidate and structure project knowledge base into standardized, modular markdown files linked via `gemini.md`.
 * **Implementation**: Created `rules.md`, `changes.md`, `functionality.md`, `architecture.md`, `database.md`, `api.md`, `known-issues.md`, `testing.md`, `README.md`, and updated `gemini.md`.
 * **Files Modified**: `docs/*`
+
+---
+
+## 2. Pending Phase 2 Out-of-Scope Additions (Client Change Requests)
+
+The following 6 change requests have been formally cataloged and added to the official Phase 2 change request tracking spreadsheet:
+
+### [CHG-P2-001] Customizable Email Dispatch & Field Selection Engine
+* **Status**: Pending (Out of Scope - Phase 2)
+* **Priority**: Medium
+* **Requirement**: Add an 'Email Send' action button to DataTables grids with modal field selection overlay and customized email dispatch.
+
+### [CHG-P2-002] Automated Pincode Location Lookup (Google Maps API Integration)
+* **Status**: Pending (Out of Scope - Phase 2)
+* **Priority**: Medium
+* **Requirement**: Integrate Google Places / Geocoding REST API to auto-fill State and City upon entering 6-digit postal pincodes.
+
+### [CHG-P2-003] Admin Grid Column Customizer & Display Preference Manager
+* **Status**: Pending (Out of Scope - Phase 2)
+* **Priority**: Medium
+* **Requirement**: Develop a WordPress-style column management panel in Admin Settings to configure default visible/hidden grid columns.
+
+### [CHG-P2-004] Dynamic Multi-Customer / AWB Invoice Header & Item Line Logic
+* **Status**: Pending (Out of Scope - Phase 2)
+* **Priority**: High
+* **Requirement**: Modify PDF invoice rendering: (1) Print Customer Name in 'TO:' header box if all items match, otherwise print AWB Number. (2) Display 'CUSTOMER NAME' column in item table if items belong to multiple distinct customers.
+
+### [CHG-P2-005] Consolidated Billing History Repository & Comprehensive 28-Column MIS Excel Exporter
+* **Status**: Pending (Out of Scope - Phase 2)
+* **Priority**: High
+* **Requirement**: (1) Save generated consolidated invoices in a persistent database repository for historical PDF re-export in 'All Invoices' view. (2) Add an 'Export MIS' button exporting 28 standardized manifest columns.
+
+### [CHG-P2-006] Dynamic Admin-Defined Item Surcharge Fields (10 Custom Heading Inputs) & MIS Sync
+* **Status**: Pending (Out of Scope - Phase 2)
+* **Priority**: High
+* **Requirement**: Add 10 configurable charge input fields under 'Item Specific Charges' on shipment item modal drawer with admin-defined dynamic headings, mapped directly to the 'Export MIS' Excel exporter.
