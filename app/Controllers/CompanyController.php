@@ -112,6 +112,9 @@ class CompanyController extends BaseController
             }
         }
 
+        // Strip any keys whose columns don't exist in the DB yet (missing migrations)
+        $data = array_intersect_key($data, array_flip($fields));
+
         $companyModel->update($companyId, $data);
 
         return redirect()->to('/company/settings')->with('success', 'Company settings updated successfully!');

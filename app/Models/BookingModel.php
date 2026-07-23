@@ -44,8 +44,8 @@ class BookingModel extends Model
     public function getFullBooking($id)
     {
         return $this->select('bookings.*, companies.name as company_name, users.username as created_by_name')
-        ->join('companies', 'companies.id = bookings.company_id')
-        ->join('users', 'users.id = bookings.created_by')
+        ->join('companies', 'companies.id = bookings.company_id', 'left')
+        ->join('users', 'users.id = bookings.created_by', 'left')
         ->find($id);
     }
 
