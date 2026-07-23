@@ -24,6 +24,14 @@ class Database extends Config
      *
      * @var array<string, mixed>
      */
+    /**
+     * Default database connection.
+     *
+     * LOCAL DEV: Override any of these via .env (database.default.*) — CI4 reads .env automatically.
+     * PRODUCTION (Hostinger): These hardcoded values are used when no .env override is present.
+     *
+     * @var array<string, mixed>
+     */
     public array $default = [
         'DSN'          => '',
         'hostname'     => 'localhost',
@@ -192,32 +200,29 @@ class Database extends Config
 
     public function __construct()
     {
+        // CI4's parent::__construct() automatically reads database.default.* keys from
+        // the .env file and overlays them on the $default array above. So .env always wins.
         parent::__construct();
 
-        // Prefer credentials supplied via the environment (.env) so that
-        // secrets do not have to live in version control. Falls back to the
-        // values defined above when the variables are not set.
-        $envHost = getenv('MARL_DB_HOSTNAME');
-        $envUser = getenv('MARL_DB_USERNAME');
-        $envPass = getenv('MARL_DB_PASSWORD');
-        $envName = getenv('MARL_DB_DATABASE');
+        // Optional: MARL_DB_* system env vars (Docker / cPanel / CI-CD) override everything.
+        $marlHost = getenv('MARL_DB_HOSTNAME');
+        $marlUser = getenv('MARL_DB_USERNAME');
+        $marlPass = getenv('MARL_DB_PASSWORD');
+        $marlName = getenv('MARL_DB_DATABASE');
 
-        if ($envHost !== false && $envHost !== '') {
-            $this->default['hostname'] = $envHost;
+        if ($marlHost !== false && $marlHost !== '') {
+            $this->default['hostname'] = $marlHost;
         }
-        if ($envUser !== false && $envUser !== '') {
-            $this->default['username'] = $envUser;
+        if ($marlUser !== false && $marlUser !== '') {
+            $this->default['username'] = $marlUser;
         }
-        if ($envPass !== false) {
-            $this->default['password'] = $envPass;
+        if ($marlPass !== false) {
+            $this->default['password'] = $marlPass;
         }
-        if ($envName !== false && $envName !== '') {
-            $this->default['database'] = $envName;
+        if ($marlName !== false && $marlName !== '') {
+            $this->default['database'] = $marlName;
         }
 
-        // Ensure that we always set the database group to 'tests' if
-        // we are currently running an automated test suite, so that
-        // we don't overwrite live data on accident.
         if (ENVIRONMENT === 'testing') {
             $this->defaultGroup = 'tests';
         }

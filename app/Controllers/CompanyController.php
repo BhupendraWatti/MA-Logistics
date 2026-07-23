@@ -61,6 +61,19 @@ class CompanyController extends BaseController
             'misc_code' => $this->request->getPost('misc_code'),
         ];
 
+        $db = \Config\Database::connect();
+        $fields = $db->getFieldNames('companies');
+
+        if (in_array('company_name', $fields) && isset($data['name'])) {
+            $data['company_name'] = $data['name'];
+        }
+        if (in_array('gst_no', $fields) && isset($data['gstin'])) {
+            $data['gst_no'] = $data['gstin'];
+        }
+        if (in_array('pan_no', $fields) && isset($data['pan'])) {
+            $data['pan_no'] = $data['pan'];
+        }
+
         // 1. Handle Base64 Signature Canvas
         $signatureBase64 = $this->request->getPost('signature_base64');
         if (!empty($signatureBase64)) {
@@ -79,6 +92,9 @@ class CompanyController extends BaseController
                 
                 file_put_contents($uploadPath . '/' . $fileName, $image_base64);
                 $data['signature_path'] = 'uploads/signatures/' . $fileName;
+                if (in_array('signature_image', $fields)) {
+                    $data['signature_image'] = $data['signature_path'];
+                }
             }
         }
 
@@ -91,6 +107,9 @@ class CompanyController extends BaseController
             $newName = 'signature_' . time() . '_' . rand(1000, 9999) . '.' . $signatureFile->getExtension();
             $signatureFile->move(FCPATH . 'uploads/signatures', $newName);
             $data['signature_path'] = 'uploads/signatures/' . $newName;
+            if (in_array('signature_image', $fields)) {
+                $data['signature_image'] = $data['signature_path'];
+            }
         }
 
         $companyModel->update($companyId, $data);

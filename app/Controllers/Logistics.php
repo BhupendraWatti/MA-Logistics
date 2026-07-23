@@ -382,9 +382,18 @@ public function companySelection()
     }
     
     $companyModel = new CompanyModel();
+    $companies = $companyModel->findAll();
+
+    foreach ($companies as &$c) {
+        if (!isset($c['name']) && isset($c['company_name'])) {
+            $c['name'] = $c['company_name'];
+        }
+    }
+    unset($c);
+
     $data = [
         'user' => session()->get(),
-        'companies' => $companyModel->findAll()
+        'companies' => $companies
     ];
     
     return view('company_selection', $data);
@@ -395,17 +404,17 @@ public function companySelection()
     $companyId = $this->request->getPost('company_id');
     
     if ($companyId) {
-        // Verify company exists
         $companyModel = new CompanyModel();
         $company = $companyModel->find($companyId);
         
         if ($company) {
+            $compName = $company['name'] ?? $company['company_name'] ?? ('Company #' . $companyId);
             session()->set([
                 'selected_company_id' => $companyId,
-                'selected_company_name' => $company['name']
+                'selected_company_name' => $compName
             ]);
             return redirect()->to('/logistics')
-                ->with('success', 'Welcome to ' . $company['name'] . ' Dashboard!');
+                ->with('success', 'Welcome to ' . $compName . ' Dashboard!');
         }
     }
     
@@ -432,46 +441,80 @@ public function companySelection()
   {
     // ONLY Admin can create companies (ignores can_create permission)
     if (session()->get('role') !== 'admin') {
-        return redirect()->to('/logistics')->with('error', 'Admin access required!');
+        return redirect()->to('/company-selection')->with('error', 'Admin access required!');
     }
 
-      $name = $this->request->getPost('name');
-      if (empty($name)) {
-          return redirect()->back()->with('error', 'Company name is required!');
-      }
+    $name = trim($this->request->getPost('name') ?? '');
+    if (empty($name)) {
+        return redirect()->back()->with('error', 'Company name is required!');
+    }
 
-      $companyModel = new CompanyModel();
-      // Check if already exists
-      if ($companyModel->where('name', $name)->first()) {
-          return redirect()->back()->with('error', 'Company already exists!');
-      }
+    try {
+        $db = \Config\Database::connect();
+        $fields = $db->getFieldNames('companies');
+        
+        $data = [];
+        if (in_array('name', $fields)) {
+            $data['name'] = $name;
+        }
+        if (in_array('company_name', $fields)) {
+            $data['company_name'] = $name;
+        }
+        if (in_array('company_code', $fields)) {
+            $data['company_code'] = 'COMP-' . strtoupper(substr(md5($name), 0, 4));
+        }
 
-      $companyModel->insert(['name' => $name]);
-      return redirect()->back()->with('success', 'Company "' . esc($name) . '" created successfully!');
+        // Check if duplicate exists
+        $builder = $db->table('companies');
+        if (in_array('name', $fields)) {
+            $builder->where('name', $name);
+        } else if (in_array('company_name', $fields)) {
+            $builder->where('company_name', $name);
+        }
+        $existing = $builder->get()->getRowArray();
+
+        if ($existing) {
+            return redirect()->back()->with('error', 'Company already exists!');
+        }
+
+        $db->table('companies')->insert($data);
+        return redirect()->back()->with('success', 'Company "' . esc($name) . '" created successfully!');
+    } catch (\Throwable $e) {
+        log_message('error', '[createCompany Error] ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Error creating company: ' . $e->getMessage());
+    }
   }
 
   public function deleteCompany($id)
   {
     // ONLY Admin can delete companies (ignores can_delete permission)
     if (session()->get('role') !== 'admin') {
-        return redirect()->to('/logistics')->with('error', 'Admin access required!');
+        return redirect()->to('/company-selection')->with('error', 'Admin access required!');
     }
-      $companyModel = new CompanyModel();
-      $company = $companyModel->find($id);
 
-      if (!$company) {
-          return redirect()->back()->with('error', 'Company not found!');
-      }
+    try {
+        $companyModel = new CompanyModel();
+        $company = $companyModel->find($id);
 
-      // Delete company (MySQL will cascade delete related bookings)
-      $companyModel->delete($id);
+        if (!$company) {
+            return redirect()->back()->with('error', 'Company not found!');
+        }
 
-      // If the currently selected company is deleted, clear session
-      if (session()->get('selected_company_id') == $id) {
-          session()->remove(['selected_company_id', 'selected_company_name']);
-      }
+        $compName = $company['name'] ?? $company['company_name'] ?? ('Company #' . $id);
 
-      return redirect()->back()->with('success', 'Company "' . esc($company['name']) . '" and all its associated records deleted successfully!');
+        // Delete company (MySQL will cascade delete related bookings)
+        $companyModel->delete($id);
+
+        // If the currently selected company is deleted, clear session
+        if (session()->get('selected_company_id') == $id) {
+            session()->remove(['selected_company_id', 'selected_company_name']);
+        }
+
+        return redirect()->back()->with('success', 'Company "' . esc($compName) . '" and all its associated records deleted successfully!');
+    } catch (\Throwable $e) {
+        log_message('error', '[deleteCompany Error] ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Error deleting company: ' . $e->getMessage());
+    }
   }
 
 

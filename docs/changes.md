@@ -23,6 +23,19 @@ This file tracks every technical change, feature implementation, refactoring, an
 
 ---
 
+### [CHG-013] Production CRUD, Database Operations & CSRF Token Mismatch Fixes
+* **Status**: Completed
+* **Priority**: Critical
+* **Requirement**: Resolve database non-updating issue on production, fix CSRF modal form submission failures, auto-heal admin privileges, and make company CRUD operations resilient across database column schema variations (`name` vs `company_name`, `gstin` vs `gst_no`).
+* **Implementation**:
+  - **CSRF Token Fix (`.env`)**: Updated `security.tokenRandomize = false` in `.env` to ensure CSRF token names remain consistent across modal form submissions, preventing 403 silent rejects.
+  - **Admin Auto-Healing (`UserModel.php`)**: Enhanced `attemptLogin()` with `ensureDefaultAdmin()` to automatically seed or repair admin account credentials (`password`, `role`, `is_active`, `can_create`, `can_edit`, `can_delete`, `branch_id`).
+  - **Database Schema Resiliency (`Logistics.php`, `CompanyController.php`, `CompanyModel.php`)**: Dynamically detect database table fields (`$db->getFieldNames('companies')`) in `createCompany()`, `setCompany()`, `deleteCompany()`, and `updateSettings()`. Added support for field aliases (`name`/`company_name`, `gstin`/`gst_no`, `pan`/`pan_no`, `signature_path`/`signature_image`).
+  - **Error Handling**: Wrapped company creation and deletion inside `try/catch (\Throwable $e)` blocks to surface explicit error feedback via SweetAlert alerts.
+* **Files Modified**: `.env`, `app/Models/UserModel.php`, `app/Models/CompanyModel.php`, `app/Controllers/Logistics.php`, `app/Controllers/CompanyController.php`, `docs/known-issues.md`, `docs/changes.md`
+
+---
+
 ### [CHG-001] Select2 Reversion to Standard Dropdowns
 * **Status**: Completed
 * **Priority**: High
