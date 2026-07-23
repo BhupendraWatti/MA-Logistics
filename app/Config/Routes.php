@@ -45,9 +45,9 @@ $routes->get('logistics/clearCompany', 'Logistics::clearCompany');
 
 // COMPANY SELECTION (CRITICAL - MUST BE BEFORE FALLBACK)
 $routes->get('company-selection', 'Logistics::companySelection');
-$routes->post('logistics/setCompany', 'Logistics::setCompany');
-$routes->post('logistics/createCompany', 'Logistics::createCompany');
-$routes->post('logistics/deleteCompany/(:num)', 'Logistics::deleteCompany/$1');
+$routes->match(['get', 'post'], 'logistics/setCompany', 'Logistics::setCompany');
+$routes->match(['get', 'post'], 'logistics/createCompany', 'Logistics::createCompany');
+$routes->match(['get', 'post'], 'logistics/deleteCompany/(:num)', 'Logistics::deleteCompany/$1');
 
 // ====== MASTER MODULE ======
 $routes->get('masters/company',                       'CompanyController::settings');

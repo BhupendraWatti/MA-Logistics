@@ -23,16 +23,18 @@ This file tracks every technical change, feature implementation, refactoring, an
 
 ---
 
-### [CHG-013] Production CRUD, Database Operations & CSRF Token Mismatch Fixes
+### [CHG-013] Production CRUD, Database Operations, AuthFilter Exemption & CSRF Token Fixes
 * **Status**: Completed
 * **Priority**: Critical
-* **Requirement**: Resolve database non-updating issue on production, fix CSRF modal form submission failures, auto-heal admin privileges, and make company CRUD operations resilient across database column schema variations (`name` vs `company_name`, `gstin` vs `gst_no`).
+* **Requirement**: Resolve company creation and database non-updating issue on production, fix AuthFilter company requirement block, fix CSRF modal form submission failures, auto-heal admin privileges, and make company CRUD operations resilient across database column schema variations (`name` vs `company_name`, `gstin` vs `gst_no`).
 * **Implementation**:
+  - **Routes Method Matching (`Routes.php`)**: Updated company management routes (`logistics/setCompany`, `logistics/createCompany`, `logistics/deleteCompany`) to `$routes->match(['get', 'post'], ...)` instead of strict POST-only, preventing form submissions from failing when web servers (e.g. Apache/Hostinger URL rewrites) convert POST requests to GET redirects.
+  - **AuthFilter Route Exemption (`AuthFilter.php`)**: Added `logistics/createCompany` and `logistics/deleteCompany` to the `$companyExempt` array in `AuthFilter.php`. Previously, when no company was selected (`selected_company_id` is null), submitting the "+ Add Company" modal triggered `AuthFilter`'s company requirement check (`strpos($cleanUri, 'logistics') === 0`), causing an immediate redirect back to `/company-selection` BEFORE `createCompany()` was ever executed!
   - **CSRF Token Fix (`.env`)**: Updated `security.tokenRandomize = false` in `.env` to ensure CSRF token names remain consistent across modal form submissions, preventing 403 silent rejects.
   - **Admin Auto-Healing (`UserModel.php`)**: Enhanced `attemptLogin()` with `ensureDefaultAdmin()` to automatically seed or repair admin account credentials (`password`, `role`, `is_active`, `can_create`, `can_edit`, `can_delete`, `branch_id`).
   - **Database Schema Resiliency (`Logistics.php`, `CompanyController.php`, `CompanyModel.php`)**: Dynamically detect database table fields (`$db->getFieldNames('companies')`) in `createCompany()`, `setCompany()`, `deleteCompany()`, and `updateSettings()`. Added support for field aliases (`name`/`company_name`, `gstin`/`gst_no`, `pan`/`pan_no`, `signature_path`/`signature_image`).
   - **Error Handling**: Wrapped company creation and deletion inside `try/catch (\Throwable $e)` blocks to surface explicit error feedback via SweetAlert alerts.
-* **Files Modified**: `.env`, `app/Models/UserModel.php`, `app/Models/CompanyModel.php`, `app/Controllers/Logistics.php`, `app/Controllers/CompanyController.php`, `docs/known-issues.md`, `docs/changes.md`
+* **Files Modified**: `.env`, `app/Config/Routes.php`, `app/Filters/AuthFilter.php`, `app/Models/UserModel.php`, `app/Models/CompanyModel.php`, `app/Controllers/Logistics.php`, `app/Controllers/CompanyController.php`, `docs/known-issues.md`, `docs/changes.md`
 
 ---
 

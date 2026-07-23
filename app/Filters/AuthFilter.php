@@ -23,8 +23,17 @@ class AuthFilter implements FilterInterface
             return redirect()->to('/login');
         }
 
-        // COMPANY REQUIRED
-        if ((strpos($cleanUri, 'logistics') === 0 || strpos($cleanUri, 'admin') === 0) && $cleanUri !== 'logistics/setCompany') {
+        // COMPANY REQUIRED (Except company management routes)
+        $companyExempt = ['logistics/setCompany', 'logistics/createCompany', 'logistics/deleteCompany'];
+        $isExemptCompanyRoute = false;
+        foreach ($companyExempt as $exempt) {
+            if ($cleanUri === $exempt || strpos($cleanUri, $exempt . '/') === 0) {
+                $isExemptCompanyRoute = true;
+                break;
+            }
+        }
+
+        if ((strpos($cleanUri, 'logistics') === 0 || strpos($cleanUri, 'admin') === 0) && !$isExemptCompanyRoute) {
             if (! session()->get('selected_company_id')) {
                 return redirect()->to('/company-selection');
             }

@@ -444,9 +444,9 @@ public function companySelection()
         return redirect()->to('/company-selection')->with('error', 'Admin access required!');
     }
 
-    $name = trim($this->request->getPost('name') ?? '');
+    $name = trim($this->request->getVar('name') ?? '');
     if (empty($name)) {
-        return redirect()->back()->with('error', 'Company name is required!');
+        return redirect()->to('/company-selection')->with('error', 'Company name is required!');
     }
 
     try {
@@ -478,10 +478,10 @@ public function companySelection()
         }
 
         $db->table('companies')->insert($data);
-        return redirect()->back()->with('success', 'Company "' . esc($name) . '" created successfully!');
+        return redirect()->to('/company-selection')->with('success', 'Company "' . esc($name) . '" created successfully!');
     } catch (\Throwable $e) {
         log_message('error', '[createCompany Error] ' . $e->getMessage());
-        return redirect()->back()->with('error', 'Error creating company: ' . $e->getMessage());
+        return redirect()->to('/company-selection')->with('error', 'Error creating company: ' . $e->getMessage());
     }
   }
 
