@@ -23,6 +23,22 @@ This file tracks every technical change, feature implementation, refactoring, an
 
 ---
 
+### [CHG-014] Comprehensive Multi-Agent QA Audit & Automated Verification
+* **Status**: Completed
+* **Priority**: Critical (Pre-Release Assurance)
+* **Requirement**: Conduct a comprehensive software QA audit across all modules, forms, button columns, masters, invoices, role permissions (`admin`, `staff`, `tracking`), database CRUD integrity, TCPDF layout stability, and exception handling safeguards.
+* **Implementation**:
+  - Executed CLI route validation (`php spark routes`) and database migration check (`php spark migrate:status`).
+  - Audited RBAC permissions in `AuthFilter.php`, `AuthController.php`, and `AdminController.php` (login feedback, branch-level row isolation, permission toggles).
+  - Verified tenant-scoped CRUD operations across all Master models (`CustomerModel`, `TransporterModel`, `DriverModel`, `AirlineModel`, `BankAccountModel`, `LookupValueModel`).
+  - Audited DataTables SSP fast counts, button column actions (View, Edit, Delete, PDF Invoice, Tracking Drawer), and manual chargeable weight override logging to `audit_logs`.
+  - Verified `InvoiceService.php` charge aggregation, GST mutual exclusion, amount-in-words Indian numbering system, and `invoice.php` Option C layout stability.
+  - Verified `TrackingController` POD file upload handling, tracking history rollback on event deletion, and public API (`GET /api/track/{awb_no}`).
+  - Fixed Playwright test script locator ambiguity in `testsprite_tests/TC001_...py` (`input[name="username"]`, `input[name="password"]`).
+* **Files Modified**: `testsprite_tests/TC001_Sign_in_and_reach_the_logistics_workspace.py`, `docs/known-issues.md`, `docs/changes.md`, `docs/testing.md`
+
+---
+
 ### [CHG-013] Production CRUD, Database Operations, AuthFilter Exemption & CSRF Token Fixes
 * **Status**: Completed
 * **Priority**: Critical
