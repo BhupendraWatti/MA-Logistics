@@ -22,7 +22,7 @@
                         <th>Date</th>
                         <th>Origin → Dest</th>
                         <th>Status</th>
-                        <th>Total Pieces</th>
+                        <th>Total Boxes</th>
                         <th>Total Chargeable Wt</th>
                         <th>Actions</th>
                     </tr>

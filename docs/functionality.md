@@ -11,6 +11,10 @@ This document provides a comprehensive functional description of all modules, bu
 * **Optional LR/docket clubbing**: Invoice row building supports grouping rows with the same LR/docket number when `club_by_lr=1` or consolidated billing posts `billing_mode=docket`; default invoice output remains per shipment item.
 * **Remarks compatibility**: New `bookings.remarks` and legacy `bookings.narration` both print in the invoice remarks block.
 * **Financial-year invoice numbering**: Consolidated PDF generation finalizes a company-scoped invoice number such as `MA-26-27/001`, persists it to selected shipment rows, and reuses that number on later reprints instead of allocating duplicates.
+* **Edit-mode item autosave**: In booking edit mode, saving or deleting a shipment item immediately posts the updated booking form via AJAX to `Logistics::update()`. Staff no longer need to click Update Booking after Save Item for item-level changes to persist.
+* **Invoice charge overflow rule**: The default invoice layout shows at most the first four active item-specific charge columns in the order Delivery, Docket, Pickup, Fuel, then later charges/custom charges. Any remaining active charges are summed into the Other Charges column so totals still match the taxable row amount.
+* **Runtime uniqueness feedback**: AWB uniqueness is checked while the AWB field is edited. Docket uniqueness is checked while editing the item drawer and again before Save Item accepts the row, preventing late save-time validation from discarding filled form data.
+* **Default invoice bank selection**: The All Invoices generator preselects the company default bank account when one is configured; backend invoice generation still falls back to the default bank, then first bank, then legacy company bank fields.
 
 ---
 

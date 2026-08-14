@@ -52,7 +52,7 @@
                             <th class="consignee-cell">Consignee</th>
                             <th>Remark</th>
                             <th>Status</th>
-                            <th>Pieces</th>
+                            <th>Boxes</th>
                             <th>Total Wt</th>
                             <th>Amount</th>
                             <th style="width: 140px;">Actions</th>

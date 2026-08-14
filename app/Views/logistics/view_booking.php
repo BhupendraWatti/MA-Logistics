@@ -69,8 +69,8 @@
                     <div class="fw-bold fs-6 text-dark"><?= esc($booking['flight_number']) ?: '-' ?></div>
                 </div>
                 <div class="col-6 col-md-3">
-                    <div class="text-uppercase text-muted fs-8 fw-bold mb-1">TOTAL PIECES</div>
-                    <div class="fw-bold fs-6 text-dark"><?= $booking['total_pieces'] ?> Pcs</div>
+                    <div class="text-uppercase text-muted fs-8 fw-bold mb-1">TOTAL BOXES</div>
+                    <div class="fw-bold fs-6 text-dark"><?= $booking['total_pieces'] ?> Boxes</div>
                 </div>
                 <div class="col-6 col-md-2">
                     <div class="text-uppercase text-muted fs-8 fw-bold mb-1">STATUS</div>
@@ -100,7 +100,7 @@
                                 <th class="ps-4 fw-bold">#</th>
                                 <th class="fw-bold">Customer / Consignee</th>
                                 <th class="fw-bold">Docket / Invoice</th>
-                                <th class="text-center fw-bold">Pcs</th>
+                                <th class="text-center fw-bold">Boxes</th>
                                 <th class="text-end fw-bold">Act. Wt</th>
                                 <th class="text-end fw-bold">Chg. Wt</th>
                                 <th class="text-end pe-4 fw-bold">Total Chgs</th>

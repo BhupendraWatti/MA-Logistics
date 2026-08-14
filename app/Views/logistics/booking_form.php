@@ -71,7 +71,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 <span class="badge bg-dark">Booking ID: <?= $bookingId ?></span>
             </div>
         </div>
-    <?= form_open_multipart('logistics/update/' . $bookingId, ['id' => 'bookingForm']) ?>
+        <?= form_open_multipart('logistics/update/' . $bookingId, ['id' => 'bookingForm']) ?>
     <?php else: ?>
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h4 class="mb-0 text-dark fw-bold">New Consignment</h4>
@@ -91,20 +91,19 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         <div class="row align-items-center">
             <div class="col-md-6 col-lg-4">
                 <div class="input-group input-group-sm position-relative">
-                    <span class="input-group-text bg-white fw-bold text-muted border-secondary"><i class="fas fa-search me-1 text-primary"></i> Quick Switch AWB:</span>
-                    <input
-                        type="search"
-                        id="awb_search_top"
+                    <span class="input-group-text bg-white fw-bold text-muted border-secondary"><i
+                            class="fas fa-search me-1 text-primary"></i> Quick Switch AWB:</span>
+                    <input type="search" id="awb_search_top"
                         class="form-control fw-bold border-secondary shadow-none no-track"
-                        placeholder="Search AWB number..."
-                        autocomplete="off"
-                        value="<?= esc($booking['awb_no'] ?? '') ?>"
-                    >
-                    <button type="button" class="btn btn-outline-secondary" id="awb_search_clear" title="Clear AWB search" aria-label="Clear AWB search">
+                        placeholder="Search AWB number..." autocomplete="off"
+                        value="<?= esc($booking['awb_no'] ?? '') ?>">
+                    <button type="button" class="btn btn-outline-secondary" id="awb_search_clear"
+                        title="Clear AWB search" aria-label="Clear AWB search">
                         <i class="fas fa-times" aria-hidden="true"></i>
                     </button>
                     <input type="hidden" id="awb_select_top" value="<?= esc($booking['id'] ?? '') ?>">
-                    <div id="awb_search_results" class="list-group position-absolute shadow-sm d-none bg-white w-100" style="top:100%; left:0; z-index:1060; max-height:320px; overflow-y:auto;"></div>
+                    <div id="awb_search_results" class="list-group position-absolute shadow-sm d-none bg-white w-100"
+                        style="top:100%; left:0; z-index:1060; max-height:320px; overflow-y:auto;"></div>
                 </div>
             </div>
         </div>
@@ -113,7 +112,8 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     <!-- ERP TABS -->
     <ul class="nav nav-tabs fw-medium" id="bookingTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="tab1-tab" data-bs-toggle="tab" data-bs-target="#tab1" type="button" role="tab">
+            <button class="nav-link active" id="tab1-tab" data-bs-toggle="tab" data-bs-target="#tab1" type="button"
+                role="tab">
                 1. Consignment Details
             </button>
         </li>
@@ -134,189 +134,237 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         <!-- TAB 1: CONSIGNMENT DETAILS -->
         <div class="tab-pane fade show active" id="tab1" role="tabpanel">
             <div class="row g-4 mb-4">
-                <div class="col-md-12"><h6 class="fw-bold text-primary mb-0 border-bottom pb-2">A. Routing & Documentation</h6></div>
+                <div class="col-md-12">
+                    <h6 class="fw-bold text-primary mb-0 border-bottom pb-2">Routing & Documentation</h6>
+                </div>
 
                 <div class="col-md-3">
-                    <label class="form-label text-muted fs-7 fw-semibold">AWB NUMBER <span class="text-danger">*</span></label>
-                    <input type="text" name="awb_no" id="awb_no" class="form-control form-control-sm border-secondary shadow-none fw-bold"
-                           value="<?= isset($booking['awb_no']) ? esc($booking['awb_no']) : '' ?>" required>
-                    <div id="awb_unique_feedback" class="invalid-feedback fw-semibold">This AWB number already exists for this company.</div>
+                    <label class="form-label text-muted fs-7 fw-semibold">AWB NUMBER <span
+                            class="text-danger">*</span></label>
+                    <input type="text" name="awb_no" id="awb_no"
+                        class="form-control form-control-sm border-secondary shadow-none fw-bold"
+                        value="<?= isset($booking['awb_no']) ? esc($booking['awb_no']) : '' ?>" required>
+                    <div id="awb_unique_feedback" class="invalid-feedback fw-semibold">This AWB number already exists
+                        for this company.</div>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label text-muted fs-7 fw-semibold">BOOKING DATE <span class="text-danger">*</span></label>
+                    <label class="form-label text-muted fs-7 fw-semibold">BOOKING DATE <span
+                            class="text-danger">*</span></label>
                     <input type="datetime-local" name="booking_date" class="form-control form-control-sm shadow-none"
-                    value="<?= isset($booking['booking_date']) ? date('Y-m-d\TH:i', strtotime($booking['booking_date'])) : date('Y-m-d\TH:i') ?>" required>
+                        value="<?= isset($booking['booking_date']) ? date('Y-m-d\TH:i', strtotime($booking['booking_date'])) : date('Y-m-d\TH:i') ?>"
+                        required>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label text-muted fs-7 fw-semibold">ORIGIN <span class="text-danger">*</span></label>
-                    <select name="origin" id="origin" class="form-select form-select-sm shadow-none fw-bold" onchange="handleOtherOption(this)" required>
+                    <label class="form-label text-muted fs-7 fw-semibold">ORIGIN <span
+                            class="text-danger">*</span></label>
+                    <select name="origin" id="origin" class="form-select form-select-sm shadow-none fw-bold"
+                        onchange="handleOtherOption(this)" required>
                         <option value="NEW_ENTRY" style="color: #20c997; font-weight: bold;">+ NEW ENTRY</option>
                         <?php if (empty($booking['origin'])): ?>
                             <option value="" selected disabled>--Select Origin--</option>
                         <?php else: ?>
                             <option value="<?= esc($booking['origin']) ?>" selected><?= esc($booking['origin']) ?></option>
                         <?php endif; ?>
-                        <?php foreach($lookups['origin'] ?? [] as $l): ?>
+                        <?php foreach ($lookups['origin'] ?? [] as $l): ?>
                             <?php if (($booking['origin'] ?? '') != $l['value']): ?>
                                 <option value="<?= esc($l['value']) ?>"><?= esc($l['value']) ?></option>
                             <?php endif; ?>
                         <?php endforeach; ?>
                         <option value="Other">Other</option>
                     </select>
-                    <input type="text" id="origin_other" class="form-control form-control-sm shadow-none mt-1 d-none" placeholder="Enter Origin">
+                    <input type="text" id="origin_other" class="form-control form-control-sm shadow-none mt-1 d-none"
+                        placeholder="Enter Origin">
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label text-muted fs-7 fw-semibold">DESTINATION <span class="text-danger">*</span></label>
-                    <select name="destination" id="destination" class="form-select form-select-sm shadow-none fw-bold" onchange="handleOtherOption(this)" required>
+                    <label class="form-label text-muted fs-7 fw-semibold">DESTINATION <span
+                            class="text-danger">*</span></label>
+                    <select name="destination" id="destination" class="form-select form-select-sm shadow-none fw-bold"
+                        onchange="handleOtherOption(this)" required>
                         <option value="NEW_ENTRY" style="color: #20c997; font-weight: bold;">+ NEW ENTRY</option>
                         <?php if (empty($booking['destination'])): ?>
                             <option value="" selected disabled>--Select Destination--</option>
                         <?php else: ?>
-                            <option value="<?= esc($booking['destination']) ?>" selected><?= esc($booking['destination']) ?></option>
+                            <option value="<?= esc($booking['destination']) ?>" selected><?= esc($booking['destination']) ?>
+                            </option>
                         <?php endif; ?>
-                        <?php foreach($lookups['destination'] ?? [] as $l): ?>
+                        <?php foreach ($lookups['destination'] ?? [] as $l): ?>
                             <?php if (($booking['destination'] ?? '') != $l['value']): ?>
                                 <option value="<?= esc($l['value']) ?>"><?= esc($l['value']) ?></option>
                             <?php endif; ?>
                         <?php endforeach; ?>
                         <option value="Other">Other</option>
                     </select>
-                    <input type="text" id="destination_other" class="form-control form-control-sm shadow-none mt-1 d-none" placeholder="Enter Destination">
+                    <input type="text" id="destination_other"
+                        class="form-control form-control-sm shadow-none mt-1 d-none" placeholder="Enter Destination">
                 </div>
 
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">MODE OF TRANSPORT</label>
-                    <select name="mode_transport" id="mode_transport" class="form-select form-select-sm shadow-none" onchange="handleOtherOption(this)">
+                    <select name="mode_transport" id="mode_transport" class="form-select form-select-sm shadow-none"
+                        onchange="handleOtherOption(this)">
                         <option value="">--Select--</option>
                         <option value="NEW_ENTRY" style="color: #20c997; font-weight: bold;">+ NEW ENTRY</option>
-                        <?php foreach($lookups['mode'] ?? [] as $l): ?>
+                        <?php foreach ($lookups['mode'] ?? [] as $l): ?>
                             <option value="<?= esc($l['value']) ?>" <?= ($booking['mode_transport'] ?? '') == $l['value'] ? 'selected' : '' ?>><?= esc($l['value']) ?></option>
                         <?php endforeach; ?>
                         <option value="Other">Other</option>
                     </select>
-                    <input type="text" id="mode_transport_other" class="form-control form-control-sm shadow-none mt-1 d-none" placeholder="Enter Mode">
+                    <input type="text" id="mode_transport_other"
+                        class="form-control form-control-sm shadow-none mt-1 d-none" placeholder="Enter Mode">
                 </div>
 
-                <input type="hidden" name="payment_type" id="payment_type" value="<?= esc($booking['payment_type'] ?? '') ?>">
+                <input type="hidden" name="payment_type" id="payment_type"
+                    value="<?= esc($booking['payment_type'] ?? '') ?>">
 
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">MATERIAL TYPE</label>
-                    <select name="material_type" id="material_type" class="form-select form-select-sm shadow-none" onchange="handleOtherOption(this)">
+                    <select name="material_type" id="material_type" class="form-select form-select-sm shadow-none"
+                        onchange="handleOtherOption(this)">
                         <option value="">--Select--</option>
                         <option value="NEW_ENTRY" style="color: #20c997; font-weight: bold;">+ NEW ENTRY</option>
-                        <?php foreach($lookups['material_type'] ?? [] as $l): ?>
+                        <?php foreach ($lookups['material_type'] ?? [] as $l): ?>
                             <option value="<?= esc($l['value']) ?>" <?= ($booking['material_type'] ?? '') == $l['value'] ? 'selected' : '' ?>><?= esc($l['value']) ?></option>
                         <?php endforeach; ?>
                         <option value="Other">Other</option>
                     </select>
-                    <input type="text" id="material_type_other" class="form-control form-control-sm shadow-none mt-1 d-none" placeholder="Enter Material Type">
+                    <input type="text" id="material_type_other"
+                        class="form-control form-control-sm shadow-none mt-1 d-none" placeholder="Enter Material Type">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">MATERIAL CATEGORY</label>
-                    <select name="material_category" id="material_category" class="form-select form-select-sm shadow-none" onchange="handleOtherOption(this)">
+                    <select name="material_category" id="material_category"
+                        class="form-select form-select-sm shadow-none" onchange="handleOtherOption(this)">
                         <option value="">--Select--</option>
                         <option value="NEW_ENTRY" style="color: #20c997; font-weight: bold;">+ NEW ENTRY</option>
-                        <?php foreach($lookups['material_category'] ?? [] as $l): ?>
+                        <?php foreach ($lookups['material_category'] ?? [] as $l): ?>
                             <option value="<?= esc($l['value']) ?>" <?= ($booking['material_category'] ?? '') == $l['value'] ? 'selected' : '' ?>><?= esc($l['value']) ?></option>
                         <?php endforeach; ?>
                         <option value="Other">Other</option>
                     </select>
-                    <input type="text" id="material_category_other" class="form-control form-control-sm shadow-none mt-1 d-none" placeholder="Enter Material Category">
+                    <input type="text" id="material_category_other"
+                        class="form-control form-control-sm shadow-none mt-1 d-none"
+                        placeholder="Enter Material Category">
                 </div>
                 <div class="col-md-3 d-flex flex-column justify-content-end d-none" id="gst_applied_container">
                     <div class="form-check mb-1">
-                        <input class="form-check-input" type="checkbox" name="gst_applied" id="gst_applied" value="1" <?= (!isset($booking['id']) || !empty($booking['gst_applied'])) ? 'checked' : '' ?>>
+                        <input class="form-check-input" type="checkbox" name="gst_applied" id="gst_applied" value="1"
+                            <?= (!isset($booking['id']) || !empty($booking['gst_applied'])) ? 'checked' : '' ?>>
                         <label class="form-check-label fw-bold text-dark" for="gst_applied">GST Applied</label>
                     </div>
                 </div>
 
                 <div class="col-md-12">
                     <small id="gst_warning_msg" class="text-warning fw-bold d-none" style="font-size: 0.8rem;">
-                        <i class="fas fa-exclamation-triangle me-1"></i> Selected customer has no GST number — GST will not be applied.
+                        <i class="fas fa-exclamation-triangle me-1"></i> Selected customer has no GST number — GST will
+                        not be applied.
                     </small>
                 </div>
 
                 <div class="col-md-12">
                     <label class="form-label text-muted fs-7 fw-semibold">MATERIAL DETAILS</label>
-                    <textarea name="material_details" class="form-control form-control-sm shadow-none" rows="2" placeholder="Enter material details..."><?= esc($booking['material_details'] ?? '') ?></textarea>
+                    <textarea name="material_details" class="form-control form-control-sm shadow-none" rows="2"
+                        placeholder="Enter material details..."><?= esc($booking['material_details'] ?? '') ?></textarea>
                 </div>
                 <div class="col-md-12">
                     <label class="form-label text-muted fs-7 fw-semibold">REMARK / NOTE</label>
-                    <textarea name="remarks" id="remarks" class="form-control form-control-sm shadow-none" rows="2" maxlength="500" placeholder="PO number, client note, or billing instruction..."><?= esc($booking['remarks'] ?? ($booking['narration'] ?? '')) ?></textarea>
+                    <textarea name="remarks" id="remarks" class="form-control form-control-sm shadow-none" rows="2"
+                        maxlength="500"
+                        placeholder="PO number, client note, or billing instruction..."><?= esc($booking['remarks'] ?? ($booking['narration'] ?? '')) ?></textarea>
                 </div>
             </div>
 
             <!-- GLOBAL PARTIES (Applies to all items implicitly, but can be overridden) -->
             <div class="row g-4 mb-4 d-none">
-                <div class="col-md-12"><h6 class="fw-bold text-primary mb-0 border-bottom pb-2">B. Primary Parties (Global)</h6></div>
+                <div class="col-md-12">
+                    <h6 class="fw-bold text-primary mb-0 border-bottom pb-2">B. Primary Parties (Global)</h6>
+                </div>
                 <div class="col-md-4">
                     <label class="form-label text-muted fs-7 fw-semibold">CONSIGNOR (SHIPPER)</label>
-                    <select id="global_shipper" class="form-select form-select-sm shadow-none fw-bold" onchange="autoFillShipperGlobal()">
+                    <select id="global_shipper" class="form-select form-select-sm shadow-none fw-bold"
+                        onchange="autoFillShipperGlobal()">
                         <option value="">Select Shipper</option>
                         <option value="NEW_ENTRY" style="color: #20c997; font-weight: bold;">+ NEW ENTRY</option>
-                        <?php foreach($customers ?? [] as $c): ?>
+                        <?php foreach ($customers ?? [] as $c): ?>
                             <option value="<?= esc($c['name']) ?>"><?= esc($c['name']) ?> (<?= esc($c['code']) ?>)</option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label text-muted fs-7 fw-semibold">BILL TO</label>
-                    <textarea id="global_bill_to" class="form-control form-control-sm shadow-none" rows="2" maxlength="250"></textarea>
+                    <textarea id="global_bill_to" class="form-control form-control-sm shadow-none" rows="2"
+                        maxlength="250"></textarea>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label text-muted fs-7 fw-semibold">CONSIGNEE</label>
-                    <textarea id="global_consignee" class="form-control form-control-sm shadow-none" rows="2" maxlength="250"></textarea>
+                    <textarea id="global_consignee" class="form-control form-control-sm shadow-none" rows="2"
+                        maxlength="250"></textarea>
                 </div>
             </div>
 
             <div class="row g-4 mb-3">
-                <div class="col-md-12"><h6 class="fw-bold text-primary mb-0 border-bottom pb-2">C. Transport & Driver Details</h6></div>
+                <div class="col-md-12">
+                    <h6 class="fw-bold text-primary mb-0 border-bottom pb-2">Transport & Driver Details</h6>
+                </div>
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">TRANSPORTER</label>
-                    <select name="transporter_name" id="transporter_name" class="form-select form-select-sm shadow-none" onchange="autoFillTransporter()">
+                    <select name="transporter_name" id="transporter_name" class="form-select form-select-sm shadow-none"
+                        onchange="autoFillTransporter()">
                         <option value="">--Select Transporter--</option>
                         <option value="NEW_ENTRY" style="color: #20c997; font-weight: bold;">+ NEW ENTRY</option>
                         <?php if (!empty($booking['transporter_name'])): ?>
-                            <option value="<?= esc($booking['transporter_name']) ?>" selected><?= esc($booking['transporter_name']) ?></option>
+                            <option value="<?= esc($booking['transporter_name']) ?>" selected>
+                                <?= esc($booking['transporter_name']) ?>
+                            </option>
                         <?php endif; ?>
-                        <?php foreach($transporters ?? [] as $t): ?>
+                        <?php foreach ($transporters ?? [] as $t): ?>
                             <?php if (($booking['transporter_name'] ?? '') != $t['name']): ?>
-                                <option value="<?= esc($t['name']) ?>" data-mobile="<?= esc($t['mobile']) ?>"><?= esc($t['name']) ?></option>
+                                <option value="<?= esc($t['name']) ?>" data-mobile="<?= esc($t['mobile']) ?>">
+                                    <?= esc($t['name']) ?>
+                                </option>
                             <?php endif; ?>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">TRANSPORTER MOBILE</label>
-                    <input type="text" name="transporter_mobile" id="transporter_mobile" class="form-control form-control-sm shadow-none" value="<?= $booking['transporter_mobile'] ?? '' ?>">
+                    <input type="text" name="transporter_mobile" id="transporter_mobile"
+                        class="form-control form-control-sm shadow-none"
+                        value="<?= $booking['transporter_mobile'] ?? '' ?>">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">DRIVER NAME</label>
-                    <select name="driver_name" id="driver_name" class="form-select form-select-sm shadow-none" onchange="autoFillDriver()">
+                    <select name="driver_name" id="driver_name" class="form-select form-select-sm shadow-none"
+                        onchange="autoFillDriver()">
                         <option value="">--Select Driver--</option>
                         <option value="NEW_ENTRY" style="color: #20c997; font-weight: bold;">+ NEW ENTRY</option>
                         <?php if (!empty($booking['driver_name'])): ?>
-                            <option value="<?= esc($booking['driver_name']) ?>" selected><?= esc($booking['driver_name']) ?></option>
+                            <option value="<?= esc($booking['driver_name']) ?>" selected><?= esc($booking['driver_name']) ?>
+                            </option>
                         <?php endif; ?>
-                        <?php foreach($drivers ?? [] as $d): ?>
+                        <?php foreach ($drivers ?? [] as $d): ?>
                             <?php if (($booking['driver_name'] ?? '') != $d['name']): ?>
-                                <option value="<?= esc($d['name']) ?>" data-mobile="<?= esc($d['mobile']) ?>" data-vehicle="<?= esc($d['vehicle_no']) ?>"><?= esc($d['name']) ?></option>
+                                <option value="<?= esc($d['name']) ?>" data-mobile="<?= esc($d['mobile']) ?>"
+                                    data-vehicle="<?= esc($d['vehicle_no']) ?>"><?= esc($d['name']) ?></option>
                             <?php endif; ?>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">DRIVER MOBILE</label>
-                    <input type="text" name="driver_mobile" id="driver_mobile" class="form-control form-control-sm shadow-none" value="<?= $booking['driver_mobile'] ?? '' ?>">
+                    <input type="text" name="driver_mobile" id="driver_mobile"
+                        class="form-control form-control-sm shadow-none" value="<?= $booking['driver_mobile'] ?? '' ?>">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">VEHICLE NO</label>
-                    <input type="text" name="vehicle_no" id="vehicle_no" class="form-control form-control-sm shadow-none" value="<?= $booking['vehicle_no'] ?? '' ?>">
+                    <input type="text" name="vehicle_no" id="vehicle_no"
+                        class="form-control form-control-sm shadow-none" value="<?= $booking['vehicle_no'] ?? '' ?>">
                 </div>
             </div>
 
             <div class="text-end mt-4">
-                <button type="button" class="btn btn-primary" onclick="new bootstrap.Tab(document.getElementById('tab2-tab')).show()">Proceed to Shipment Items <i class="fas fa-arrow-right ms-1"></i></button>
+                <button type="button" class="btn btn-primary"
+                    onclick="new bootstrap.Tab(document.getElementById('tab2-tab')).show()">Proceed to Shipment Items <i
+                        class="fas fa-arrow-right ms-1"></i></button>
             </div>
         </div>
 
@@ -329,25 +377,32 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     <select name="airlines" id="airlines_select" class="form-select form-select-sm shadow-none">
                         <option value="">--Select--</option>
                         <option value="NEW_ENTRY" style="color: #20c997; font-weight: bold;">+ NEW ENTRY</option>
-                        <?php foreach($airlines ?? [] as $a): ?>
-                            <option value="<?= esc($a['name']) ?>" data-code="<?= esc($a['code'] ?? '') ?>" <?= ($booking['airlines'] ?? '') == $a['name'] ? 'selected' : '' ?>><?= esc($a['name']) ?></option>
+                        <?php foreach ($airlines ?? [] as $a): ?>
+                            <option value="<?= esc($a['name']) ?>" data-code="<?= esc($a['code'] ?? '') ?>"
+                                <?= ($booking['airlines'] ?? '') == $a['name'] ? 'selected' : '' ?>><?= esc($a['name']) ?>
+                            </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold mb-1">Flight Number</label>
-                    <input type="text" name="flight_number" class="form-control form-control-sm shadow-none" value="<?= esc($booking['flight_number'] ?? '') ?>">
+                    <input type="text" name="flight_number" class="form-control form-control-sm shadow-none"
+                        value="<?= esc($booking['flight_number'] ?? '') ?>">
                 </div>
                 <div class="col-md-2">
                     <label class="form-label text-muted fs-7 fw-semibold mb-1">Global Volumetric Formula</label>
                     <div class="input-group input-group-sm shadow-none">
                         <span class="input-group-text">÷</span>
-                        <input type="number" name="volumetric_formula" id="volumetric_formula" class="form-control fw-bold" value="<?= esc($booking['volumetric_formula'] ?? $volumetric_formula ?? 6000) ?>" onchange="recalcAllItems()">
+                        <input type="number" name="volumetric_formula" id="volumetric_formula"
+                            class="form-control fw-bold"
+                            value="<?= esc($booking['volumetric_formula'] ?? $volumetric_formula ?? 6000) ?>"
+                            onchange="recalcAllItems()">
                     </div>
-                    <small class="text-muted" style="font-size:0.65rem;">Modifying this recalculates all items below.</small>
+                    <!-- <small class="text-muted" style="font-size:0.65rem;">Modifying this recalculates all items below.</small> -->
                 </div>
                 <div class="col-md-4 text-end">
-                    <button type="button" class="btn btn-primary shadow-sm" onclick="openItemModal(-1)"><i class="fas fa-plus"></i> Add Item</button>
+                    <button type="button" class="btn btn-primary shadow-sm" onclick="openItemModal(-1)"><i
+                            class="fas fa-plus"></i> Add Item</button>
                 </div>
             </div>
 
@@ -364,7 +419,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                             <th>Invoice No</th>
                             <th>Part NO.</th>
                             <th>Part Qty</th>
-                            <th>Pcs/Boxes</th>
+                            <th>Boxes</th>
                             <th>Act Wt</th>
                             <th>Vol Wt</th>
                             <th>Chg Wt</th>
@@ -379,7 +434,9 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             <div id="hiddenInputsContainer"></div>
 
             <div class="text-end mt-4">
-                <button type="button" class="btn btn-primary" onclick="new bootstrap.Tab(document.getElementById('tab3-tab')).show()">Proceed to Charges <i class="fas fa-arrow-right ms-1"></i></button>
+                <button type="button" class="btn btn-primary"
+                    onclick="new bootstrap.Tab(document.getElementById('tab3-tab')).show()">Proceed to Charges <i
+                        class="fas fa-arrow-right ms-1"></i></button>
             </div>
         </div>
 
@@ -390,11 +447,15 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             <div class="row mb-4">
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">Global Rate (₹/KG)</label>
-                    <input type="number" step="0.01" id="salesRate" name="rate" class="form-control form-control-sm shadow-none bg-light fw-bold" value="<?= $sales['rate'] ?? '' ?>" oninput="calcTotals()">
+                    <input type="number" step="0.01" id="salesRate" name="rate"
+                        class="form-control form-control-sm shadow-none bg-light fw-bold"
+                        value="<?= $sales['rate'] ?? '' ?>" oninput="calcTotals()">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">Total Chg. Weight (KG)</label>
-                    <input type="number" step="0.01" id="salesWeight" name="weight" class="form-control form-control-sm shadow-none bg-light fw-bold tabular-nums" value="<?= $sales['weight'] ?? '' ?>" readonly>
+                    <input type="number" step="0.01" id="salesWeight" name="weight"
+                        class="form-control form-control-sm shadow-none bg-light fw-bold tabular-nums"
+                        value="<?= $sales['weight'] ?? '' ?>" readonly>
                 </div>
             </div>
 
@@ -402,33 +463,86 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 <div class="card-body">
                     <h6 class="fw-bold mb-3">Additional Global Surcharges</h6>
                     <div class="row g-3">
-                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">AWB Agent</label><input type="number" step="0.01" name="awb_fees_agent" class="form-control form-control-sm calc-surcharge" value="<?= $sales['awb_fees_agent'] ?? '' ?>"></div>
-                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">AWB Carrier</label><input type="number" step="0.01" name="awb_fees_carrier" class="form-control form-control-sm calc-surcharge" value="<?= $sales['awb_fees_carrier'] ?? '' ?>"></div>
-                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Admin</label><input type="number" step="0.01" name="admin_charges" class="form-control form-control-sm calc-surcharge" value="<?= $sales['admin_charges'] ?? '' ?>"></div>
-                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Del Order</label><input type="number" step="0.01" name="delivery_order_charges" class="form-control form-control-sm calc-surcharge" value="<?= $sales['delivery_order_charges'] ?? '' ?>"></div>
-                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Inb Handling</label><input type="number" step="0.01" name="inbound_handling" class="form-control form-control-sm calc-surcharge" value="<?= $sales['inbound_handling'] ?? '' ?>"></div>
-                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Inb Storage</label><input type="number" step="0.01" name="inbound_storage" class="form-control form-control-sm calc-surcharge" value="<?= $sales['inbound_storage'] ?? '' ?>"></div>
-                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Outb Storage</label><input type="number" step="0.01" name="outbound_storage" class="form-control form-control-sm calc-surcharge" value="<?= $sales['outbound_storage'] ?? '' ?>"></div>
-                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">DDC</label><input type="number" step="0.01" name="ddc" class="form-control form-control-sm calc-surcharge" value="<?= $sales['ddc'] ?? '' ?>"></div>
-                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">SSC</label><input type="number" step="0.01" name="ssc" class="form-control form-control-sm calc-surcharge" value="<?= $sales['ssc'] ?? '' ?>"></div>
-                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">BTC</label><input type="number" step="0.01" name="btc" class="form-control form-control-sm calc-surcharge" value="<?= $sales['btc'] ?? '' ?>"></div>
-                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">FLC</label><input type="number" step="0.01" name="flc" class="form-control form-control-sm calc-surcharge" value="<?= $sales['flc'] ?? '' ?>"></div>
-                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">DOC</label><input type="number" step="0.01" name="doc" class="form-control form-control-sm calc-surcharge" value="<?= $sales['doc'] ?? '' ?>"></div>
-                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">TCP</label><input type="number" step="0.01" name="tcp" class="form-control form-control-sm calc-surcharge" value="<?= $sales['tcp'] ?? '' ?>"></div>
-                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Inbound TSP</label><input type="number" step="0.01" name="inbound_tsp" class="form-control form-control-sm calc-surcharge" value="<?= $sales['inbound_tsp'] ?? '' ?>"></div>
-                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Outbound TSP</label><input type="number" step="0.01" name="outbound_tsp" class="form-control form-control-sm calc-surcharge" value="<?= $sales['outbound_tsp'] ?? '' ?>"></div>
-                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Utility</label><input type="number" step="0.01" name="utility_charges" class="form-control form-control-sm calc-surcharge" value="<?= $sales['utility_charges'] ?? '' ?>"></div>
-                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">X-Ray</label><input type="number" step="0.01" name="xray_charges" class="form-control form-control-sm calc-surcharge" value="<?= $sales['xray_charges'] ?? '' ?>"></div>
-                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">ADO</label><input type="number" step="0.01" name="ado" class="form-control form-control-sm calc-surcharge" value="<?= $sales['ado'] ?? '' ?>"></div>
-                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Misc</label><input type="number" step="0.01" name="misc_charges" class="form-control form-control-sm calc-surcharge" value="<?= $sales['misc_charges'] ?? '' ?>"></div>
+                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">AWB Agent</label><input
+                                type="number" step="0.01" name="awb_fees_agent"
+                                class="form-control form-control-sm calc-surcharge"
+                                value="<?= $sales['awb_fees_agent'] ?? '' ?>"></div>
+                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">AWB Carrier</label><input
+                                type="number" step="0.01" name="awb_fees_carrier"
+                                class="form-control form-control-sm calc-surcharge"
+                                value="<?= $sales['awb_fees_carrier'] ?? '' ?>"></div>
+                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Admin</label><input
+                                type="number" step="0.01" name="admin_charges"
+                                class="form-control form-control-sm calc-surcharge"
+                                value="<?= $sales['admin_charges'] ?? '' ?>"></div>
+                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Del Order</label><input
+                                type="number" step="0.01" name="delivery_order_charges"
+                                class="form-control form-control-sm calc-surcharge"
+                                value="<?= $sales['delivery_order_charges'] ?? '' ?>"></div>
+                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Inb Handling</label><input
+                                type="number" step="0.01" name="inbound_handling"
+                                class="form-control form-control-sm calc-surcharge"
+                                value="<?= $sales['inbound_handling'] ?? '' ?>"></div>
+                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Inb Storage</label><input
+                                type="number" step="0.01" name="inbound_storage"
+                                class="form-control form-control-sm calc-surcharge"
+                                value="<?= $sales['inbound_storage'] ?? '' ?>"></div>
+                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Outb Storage</label><input
+                                type="number" step="0.01" name="outbound_storage"
+                                class="form-control form-control-sm calc-surcharge"
+                                value="<?= $sales['outbound_storage'] ?? '' ?>"></div>
+                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">DDC</label><input type="number"
+                                step="0.01" name="ddc" class="form-control form-control-sm calc-surcharge"
+                                value="<?= $sales['ddc'] ?? '' ?>"></div>
+                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">SSC</label><input type="number"
+                                step="0.01" name="ssc" class="form-control form-control-sm calc-surcharge"
+                                value="<?= $sales['ssc'] ?? '' ?>"></div>
+                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">BTC</label><input type="number"
+                                step="0.01" name="btc" class="form-control form-control-sm calc-surcharge"
+                                value="<?= $sales['btc'] ?? '' ?>"></div>
+                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">FLC</label><input type="number"
+                                step="0.01" name="flc" class="form-control form-control-sm calc-surcharge"
+                                value="<?= $sales['flc'] ?? '' ?>"></div>
+                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">DOC</label><input type="number"
+                                step="0.01" name="doc" class="form-control form-control-sm calc-surcharge"
+                                value="<?= $sales['doc'] ?? '' ?>"></div>
+                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">TCP</label><input type="number"
+                                step="0.01" name="tcp" class="form-control form-control-sm calc-surcharge"
+                                value="<?= $sales['tcp'] ?? '' ?>"></div>
+                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Inbound TSP</label><input
+                                type="number" step="0.01" name="inbound_tsp"
+                                class="form-control form-control-sm calc-surcharge"
+                                value="<?= $sales['inbound_tsp'] ?? '' ?>"></div>
+                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Outbound TSP</label><input
+                                type="number" step="0.01" name="outbound_tsp"
+                                class="form-control form-control-sm calc-surcharge"
+                                value="<?= $sales['outbound_tsp'] ?? '' ?>"></div>
+                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Utility</label><input
+                                type="number" step="0.01" name="utility_charges"
+                                class="form-control form-control-sm calc-surcharge"
+                                value="<?= $sales['utility_charges'] ?? '' ?>"></div>
+                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">X-Ray</label><input
+                                type="number" step="0.01" name="xray_charges"
+                                class="form-control form-control-sm calc-surcharge"
+                                value="<?= $sales['xray_charges'] ?? '' ?>"></div>
+                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">ADO</label><input type="number"
+                                step="0.01" name="ado" class="form-control form-control-sm calc-surcharge"
+                                value="<?= $sales['ado'] ?? '' ?>"></div>
+                        <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Misc</label><input
+                                type="number" step="0.01" name="misc_charges"
+                                class="form-control form-control-sm calc-surcharge"
+                                value="<?= $sales['misc_charges'] ?? '' ?>"></div>
                         <div class="col-md-2 d-flex align-items-end">
-                            <button type="button" class="btn btn-sm btn-outline-primary w-100 fw-bold shadow-sm" onclick="addCustomGlobalSurchargeRow()">
+                            <button type="button" class="btn btn-sm btn-outline-primary w-100 fw-bold shadow-sm"
+                                onclick="addCustomGlobalSurchargeRow()">
                                 <i class="fas fa-plus me-1"></i> Add Surcharge
                             </button>
                         </div>
                     </div>
                     <div class="mt-3 pt-2 border-top" id="custom_global_surcharges_wrapper">
-                        <small class="fw-bold text-muted d-block mb-2 fs-8"><i class="fas fa-plus-circle me-1 text-primary"></i> Additional Custom Global Surcharges</small>
+                        <small class="fw-bold text-muted d-block mb-2 fs-8"><i
+                                class="fas fa-plus-circle me-1 text-primary"></i> Additional Custom Global
+                            Surcharges</small>
                         <div id="custom_global_surcharges_container" class="row g-2"></div>
                     </div>
                 </div>
@@ -437,9 +551,11 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             <!-- Tax & Digital Signature overrides per Booking -->
             <div class="row g-4 mb-4">
                 <div class="col-lg-6" id="gst_config_card_container">
-                    <div class="card border-0 shadow-sm h-100" style="background-color: #fcfcfc; border: 1px solid #eaeaea !important;">
+                    <div class="card border-0 shadow-sm h-100"
+                        style="background-color: #fcfcfc; border: 1px solid #eaeaea !important;">
                         <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-                            <h6 class="fw-bold text-primary mb-0"><i class="fas fa-percent me-1"></i> Tax &amp; GST Configuration (Customizable)</h6>
+                            <h6 class="fw-bold text-primary mb-0"><i class="fas fa-percent me-1"></i> Tax &amp; GST
+                                Configuration (Customizable)</h6>
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
@@ -452,26 +568,36 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                                 </div>
                                 <div class="col-12 border-top pt-2">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <label class="form-label text-muted fs-7 fw-semibold mb-0">Booking Tax Rates (%)</label>
+                                        <label class="form-label text-muted fs-7 fw-semibold mb-0">Booking Tax Rates
+                                            (%)</label>
                                         <span class="badge bg-primary fs-8" id="totalGstBadge">Total GST: 18.00%</span>
                                     </div>
                                     <div class="row g-2">
                                         <div class="col-4" id="cgst_col">
                                             <div class="input-group input-group-sm">
                                                 <span class="input-group-text bg-light text-muted fs-8">CGST</span>
-                                                <input type="number" step="0.01" min="0" max="50" name="cgst_rate" id="cgst_rate" class="form-control shadow-none tabular-nums fw-bold rate-input" value="<?= isset($booking['id']) ? esc($booking['cgst_rate']) : '9.00' ?>">
+                                                <input type="number" step="0.01" min="0" max="50" name="cgst_rate"
+                                                    id="cgst_rate"
+                                                    class="form-control shadow-none tabular-nums fw-bold rate-input"
+                                                    value="<?= isset($booking['id']) ? esc($booking['cgst_rate']) : '9.00' ?>">
                                             </div>
                                         </div>
                                         <div class="col-4" id="sgst_col">
                                             <div class="input-group input-group-sm">
                                                 <span class="input-group-text bg-light text-muted fs-8">SGST</span>
-                                                <input type="number" step="0.01" min="0" max="50" name="sgst_rate" id="sgst_rate" class="form-control shadow-none tabular-nums fw-bold rate-input" value="<?= isset($booking['id']) ? esc($booking['sgst_rate']) : '9.00' ?>">
+                                                <input type="number" step="0.01" min="0" max="50" name="sgst_rate"
+                                                    id="sgst_rate"
+                                                    class="form-control shadow-none tabular-nums fw-bold rate-input"
+                                                    value="<?= isset($booking['id']) ? esc($booking['sgst_rate']) : '9.00' ?>">
                                             </div>
                                         </div>
                                         <div class="col-4" id="igst_col">
                                             <div class="input-group input-group-sm">
                                                 <span class="input-group-text bg-light text-muted fs-8">IGST</span>
-                                                <input type="number" step="0.01" min="0" max="50" name="igst_rate" id="igst_rate" class="form-control shadow-none tabular-nums fw-bold rate-input" value="<?= isset($booking['id']) ? esc($booking['igst_rate']) : '0.00' ?>">
+                                                <input type="number" step="0.01" min="0" max="50" name="igst_rate"
+                                                    id="igst_rate"
+                                                    class="form-control shadow-none tabular-nums fw-bold rate-input"
+                                                    value="<?= isset($booking['id']) ? esc($booking['igst_rate']) : '0.00' ?>">
                                             </div>
                                         </div>
                                     </div>
@@ -482,40 +608,54 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 </div>
 
                 <div class="col-lg-6">
-                    <div class="card border-0 shadow-sm h-100" style="background-color: #fcfcfc; border: 1px solid #eaeaea !important;">
+                    <div class="card border-0 shadow-sm h-100"
+                        style="background-color: #fcfcfc; border: 1px solid #eaeaea !important;">
                         <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-                            <h6 class="fw-bold text-primary mb-0"><i class="fas fa-file-invoice me-1"></i> Digital Signature</h6>
+                            <h6 class="fw-bold text-primary mb-0"><i class="fas fa-file-invoice me-1"></i> Digital
+                                Signature</h6>
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
                                 <div class="col-md-12">
-                                    <label class="form-label text-muted fs-7 fw-semibold">Upload Signature Image <small class="text-muted">(PNG/JPG/JPEG)</small></label>
-                                    <input type="file" name="signature_image" class="form-control form-control-sm shadow-none" accept="image/png,image/jpeg,image/jpg">
+                                    <label class="form-label text-muted fs-7 fw-semibold">Upload Signature Image <small
+                                            class="text-muted">(PNG/JPG/JPEG)</small></label>
+                                    <input type="file" name="signature_image"
+                                        class="form-control form-control-sm shadow-none"
+                                        accept="image/png,image/jpeg,image/jpg">
                                     <?php if (!empty($booking['signature_path'])): ?>
                                         <div class="mt-2 bg-light p-2 rounded d-inline-block position-relative w-100">
-                                            <small class="text-muted d-block mb-1">Current Signature for this Booking:</small>
-                                            <img src="<?= base_url(esc($booking['signature_path'])) ?>" style="max-height:60px; mix-blend-mode: multiply;">
+                                            <small class="text-muted d-block mb-1">Current Signature for this
+                                                Booking:</small>
+                                            <img src="<?= base_url(esc($booking['signature_path'])) ?>"
+                                                style="max-height:60px; mix-blend-mode: multiply;">
                                             <div class="mt-2">
-                                                <a href="<?= base_url('logistics/deleteSignature/' . $booking['id']) ?>" class="btn btn-sm btn-danger shadow-sm py-1 px-2 fw-bold" onclick="return confirm('Are you sure you want to delete this booking\'s signature?');">
+                                                <a href="<?= base_url('logistics/deleteSignature/' . $booking['id']) ?>"
+                                                    class="btn btn-sm btn-danger shadow-sm py-1 px-2 fw-bold"
+                                                    onclick="return confirm('Are you sure you want to delete this booking\'s signature?');">
                                                     <i class="fas fa-trash"></i> Delete Signature
                                                 </a>
                                             </div>
                                         </div>
                                     <?php elseif (!empty($company['signature_path'])): ?>
-                                        <div class="mt-2 bg-light p-2 rounded d-inline-block position-relative w-100 opacity-75">
+                                        <div
+                                            class="mt-2 bg-light p-2 rounded d-inline-block position-relative w-100 opacity-75">
                                             <small class="text-muted d-block mb-1">Using Company Default Signature:</small>
-                                            <img src="<?= base_url(esc($company['signature_path'])) ?>" style="max-height:60px; mix-blend-mode: multiply;">
+                                            <img src="<?= base_url(esc($company['signature_path'])) ?>"
+                                                style="max-height:60px; mix-blend-mode: multiply;">
                                         </div>
                                     <?php endif; ?>
                                 </div>
                                 <div class="col-md-12 mt-3">
                                     <label class="form-label text-muted fs-7 fw-semibold">Or Draw Your Signature</label>
                                     <div class="border rounded bg-light p-2 text-center">
-                                        <div class="bg-white border rounded mb-2 overflow-hidden" style="height: 120px;">
-                                            <canvas id="signatureCanvas" style="width: 100%; height: 120px; touch-action: none; cursor: crosshair; display: block;"></canvas>
+                                        <div class="bg-white border rounded mb-2 overflow-hidden"
+                                            style="height: 120px;">
+                                            <canvas id="signatureCanvas"
+                                                style="width: 100%; height: 120px; touch-action: none; cursor: crosshair; display: block;"></canvas>
                                         </div>
                                         <div class="text-end">
-                                            <button type="button" id="clearCanvas" class="btn btn-xs btn-outline-warning text-dark fw-bold shadow-sm py-1 px-2 fs-8">
+                                            <button type="button" id="clearCanvas"
+                                                class="btn btn-xs btn-outline-warning text-dark fw-bold shadow-sm py-1 px-2 fs-8">
                                                 <i class="fas fa-eraser"></i> Clear Drawing
                                             </button>
                                         </div>
@@ -535,7 +675,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     <div class="sticky-footer d-flex justify-content-between align-items-center">
         <div class="d-flex gap-4 align-items-center">
             <div>
-                <div class="text-muted fs-8 fw-semibold text-uppercase">Total Pieces</div>
+                <div class="text-muted fs-8 fw-semibold text-uppercase">Total Boxes</div>
                 <div class="fs-5 fw-bold tabular-nums text-dark"><span id="sumPcs">0</span></div>
                 <input type="hidden" name="total_pieces" id="input_total_pieces">
             </div>
@@ -582,14 +722,14 @@ foreach ($customers ?? [] as $c) {
 }
 ?>
 <datalist id="billToOptions">
-    <?php foreach($customers ?? [] as $c): ?>
+    <?php foreach ($customers ?? [] as $c): ?>
         <?php if (!empty($c['bill_to'])): ?>
             <option value="<?= esc($c['bill_to']) ?>"><?= esc($c['name'] ?? '') ?></option>
         <?php endif; ?>
     <?php endforeach; ?>
 </datalist>
 <datalist id="consigneeOptions">
-    <?php foreach($customers ?? [] as $c): ?>
+    <?php foreach ($customers ?? [] as $c): ?>
         <?php if (!empty($c['consignee'])): ?>
             <option value="<?= esc($c['consignee']) ?>"><?= esc($c['name'] ?? '') ?></option>
         <?php endif; ?>
@@ -598,182 +738,226 @@ foreach ($customers ?? [] as $c) {
 
 <!-- ITEM DRAWER -->
 <div class="offcanvas offcanvas-end erp-drawer erp-drawer-wide" tabindex="-1" id="itemModal" data-bs-backdrop="true">
-  <div class="offcanvas-header bg-light">
-    <h5 class="offcanvas-title fw-bold text-primary" id="itemModalLabel"><i class="fas fa-box-open me-2"></i> Shipment Item Details</h5>
-    <button type="button" class="btn-close text-reset shadow-none" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-  </div>
-  <div class="offcanvas-body position-relative p-0">
-    <div class="erp-drawer-content pb-5">
-        <input type="hidden" id="entry_edit_index" value="-1">
+    <div class="offcanvas-header bg-light">
+        <h5 class="offcanvas-title fw-bold text-primary" id="itemModalLabel"><i class="fas fa-box-open me-2"></i>
+            Shipment Item Details</h5>
+        <button type="button" class="btn-close text-reset shadow-none" data-bs-dismiss="offcanvas"
+            aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body position-relative p-0">
+        <div class="erp-drawer-content pb-5">
+            <input type="hidden" id="entry_edit_index" value="-1">
 
-        <h6 class="fw-bold border-bottom pb-2 mb-3 text-primary">Item Parties & References</h6>
-        <div class="row g-3 mb-4">
-            <div class="col-md-3">
-                <label class="fs-8 text-muted fw-semibold">Customer / Sub-Shipper</label>
-                <select id="entry_customer" class="form-select form-select-sm shadow-none">
-                    <option value="">Select Shipper</option>
-                    <option value="NEW_ENTRY" style="color: #20c997; font-weight: bold;">+ NEW ENTRY</option>
-                    <?php foreach($customers ?? [] as $c): ?>
-                        <option value="<?= esc($c['name']) ?>"><?= esc($c['name']) ?> (<?= esc($c['code']) ?>)</option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="fs-8 text-muted fw-semibold">Bill To</label>
-                <select id="entry_bill_to" class="form-select form-select-sm shadow-none party-typeahead">
-                    <option value="">Select Bill To</option>
-                    <?php foreach($partyOptions ?? [] as $party): ?>
-                        <option value="<?= esc($party) ?>"><?= esc($party) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="fs-8 text-muted fw-semibold">Consignee</label>
-                <select id="entry_consignee" class="form-select form-select-sm shadow-none party-typeahead">
-                    <option value="">Select Consignee</option>
-                    <?php foreach($partyOptions ?? [] as $party): ?>
-                        <option value="<?= esc($party) ?>"><?= esc($party) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label class="fs-8 text-muted fw-semibold">Payment Type</label>
-                <select id="entry_payment_type" class="form-select form-select-sm shadow-none" onchange="handleEntryPaymentTypeChange(this)">
-                    <option value="">--Select--</option>
-                    <option value="NEW_ENTRY" style="color: #20c997; font-weight: bold;">+ NEW ENTRY</option>
-                    <?php foreach($lookups['payment_type'] ?? [] as $l): ?>
-                        <option value="<?= esc($l['value']) ?>"><?= esc($l['value']) ?></option>
-                    <?php endforeach; ?>
-                    <option value="Other">Other</option>
-                </select>
-                <input type="text" id="entry_payment_type_other" class="form-control form-control-sm shadow-none mt-1 d-none" placeholder="Enter Payment Type...">
-            </div>
-            <div class="col-md-3">
-                <div class="d-flex justify-content-between align-items-center">
-                    <label class="fs-8 text-muted fw-semibold">Docket No / Ref</label>
-                    <div class="form-check mb-0">
-                        <?php
-                        $autoGenChecked = true;
-                        if (isset($booking['id']) && !empty($shipments)) {
-                            foreach ($shipments as $s) {
-                                $docketNo = $s['docket_no'] ?? '';
-                                if ($docketNo !== '' && strpos($docketNo, 'DCK-') !== 0) {
-                                    $autoGenChecked = false;
-                                    break;
+            <h6 class="fw-bold border-bottom pb-2 mb-3 text-primary">Item Parties & References</h6>
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <label class="fs-8 text-muted fw-semibold">Customer / Sub-Shipper</label>
+                    <select id="entry_customer" class="form-select form-select-sm shadow-none">
+                        <option value="">Select Shipper</option>
+                        <option value="NEW_ENTRY" style="color: #20c997; font-weight: bold;">+ NEW ENTRY</option>
+                        <?php foreach ($customers ?? [] as $c): ?>
+                            <option value="<?= esc($c['name']) ?>"><?= esc($c['name']) ?> (<?= esc($c['code']) ?>)</option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="fs-8 text-muted fw-semibold">Bill To</label>
+                    <select id="entry_bill_to" class="form-select form-select-sm shadow-none party-typeahead">
+                        <option value="">Select Bill To</option>
+                        <?php foreach ($partyOptions ?? [] as $party): ?>
+                            <option value="<?= esc($party) ?>"><?= esc($party) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="fs-8 text-muted fw-semibold">Consignee</label>
+                    <select id="entry_consignee" class="form-select form-select-sm shadow-none party-typeahead">
+                        <option value="">Select Consignee</option>
+                        <?php foreach ($partyOptions ?? [] as $party): ?>
+                            <option value="<?= esc($party) ?>"><?= esc($party) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="fs-8 text-muted fw-semibold">Payment Type</label>
+                    <select id="entry_payment_type" class="form-select form-select-sm shadow-none"
+                        onchange="handleEntryPaymentTypeChange(this)">
+                        <option value="">--Select--</option>
+                        <option value="NEW_ENTRY" style="color: #20c997; font-weight: bold;">+ NEW ENTRY</option>
+                        <?php foreach ($lookups['payment_type'] ?? [] as $l): ?>
+                            <option value="<?= esc($l['value']) ?>"><?= esc($l['value']) ?></option>
+                        <?php endforeach; ?>
+                        <option value="Other">Other</option>
+                    </select>
+                    <input type="text" id="entry_payment_type_other"
+                        class="form-control form-control-sm shadow-none mt-1 d-none"
+                        placeholder="Enter Payment Type...">
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <label class="fs-8 text-muted fw-semibold">Docket No / Ref</label>
+                        <div class="form-check mb-0">
+                            <?php
+                            $autoGenChecked = true;
+                            if (isset($booking['id']) && !empty($shipments)) {
+                                foreach ($shipments as $s) {
+                                    $docketNo = $s['docket_no'] ?? '';
+                                    if ($docketNo !== '' && strpos($docketNo, 'DCK-') !== 0) {
+                                        $autoGenChecked = false;
+                                        break;
+                                    }
                                 }
                             }
-                        }
-                        ?>
-                        <input class="form-check-input" type="checkbox" id="modal_auto_generate_docket" value="1" <?= $autoGenChecked ? 'checked' : '' ?> style="transform: scale(0.85); margin-top: 0.15rem;">
-                        <label class="form-check-label fs-8 text-muted fw-semibold" for="modal_auto_generate_docket">Auto</label>
+                            ?>
+                            <input class="form-check-input" type="checkbox" id="modal_auto_generate_docket" value="1"
+                                <?= $autoGenChecked ? 'checked' : '' ?>
+                                style="transform: scale(0.85); margin-top: 0.15rem;">
+                            <label class="form-check-label fs-8 text-muted fw-semibold"
+                                for="modal_auto_generate_docket">Auto</label>
+                        </div>
+                    </div>
+                    <input type="text" id="entry_docket" class="form-control form-control-sm shadow-none"
+                        placeholder="Enter Docket No manually">
+                </div>
+                <div class="col-md-3">
+                    <label class="fs-8 text-muted fw-semibold">Invoice No</label>
+                    <input type="text" id="entry_invoice" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-3">
+                    <label class="fs-8 text-muted fw-semibold">Part NO.</label>
+                    <input type="text" id="entry_part_no" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-3">
+                    <label class="fs-8 text-muted fw-semibold">Invoice Date</label>
+                    <input type="date" id="entry_invoice_date" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-3">
+                    <label class="fs-8 text-muted fw-semibold">Total Part Quantity</label>
+                    <input type="number" id="entry_part_qty" class="form-control form-control-sm" value="0" min="0">
+                </div>
+            </div>
+
+            <h6 class="fw-bold border-bottom pb-2 mb-3 text-primary">Dimensions & Weight</h6>
+            <div class="row g-3 mb-4">
+                <div class="col-md-2 d-none">
+                    <label class="fs-8 text-muted fw-semibold">Contents Description <span
+                            class="text-danger">*</span></label>
+                    <input type="text" id="entry_contents" class="form-control form-control-sm" value="Goods" required>
+                </div>
+                <div class="col-md-1">
+                    <label class="fs-8 text-muted fw-semibold">Boxes <span class="text-danger">*</span></label>
+                    <input type="number" id="entry_pcs" class="form-control form-control-sm tabular-nums" value="0"
+                        min="0">
+                </div>
+                <div class="col-md-2">
+                    <label class="fs-8 text-muted fw-semibold">Actual Wt (kg) <span class="text-danger">*</span></label>
+                    <input type="number" step="0.01" min="0" id="entry_act_wt"
+                        class="form-control form-control-sm tabular-nums" oninput="calcEntryVol()">
+                </div>
+                <div class="col-md-3">
+                    <label class="fs-8 text-muted fw-semibold">Dims (L × W × H) cm</label>
+                    <div class="d-flex gap-1">
+                        <input type="number" id="entry_l" class="form-control form-control-sm tabular-nums"
+                            placeholder="L" oninput="calcEntryVol()">
+                        <input type="number" id="entry_w" class="form-control form-control-sm tabular-nums"
+                            placeholder="W" oninput="calcEntryVol()">
+                        <input type="number" id="entry_h" class="form-control form-control-sm tabular-nums"
+                            placeholder="H" oninput="calcEntryVol()">
                     </div>
                 </div>
-                <input type="text" id="entry_docket" class="form-control form-control-sm shadow-none" placeholder="Enter Docket No manually">
-            </div>
-            <div class="col-md-3">
-                <label class="fs-8 text-muted fw-semibold">Invoice No</label>
-                <input type="text" id="entry_invoice" class="form-control form-control-sm">
-            </div>
-            <div class="col-md-3">
-                <label class="fs-8 text-muted fw-semibold">Part NO.</label>
-                <input type="text" id="entry_part_no" class="form-control form-control-sm">
-            </div>
-            <div class="col-md-3">
-                <label class="fs-8 text-muted fw-semibold">Invoice Date</label>
-                <input type="date" id="entry_invoice_date" class="form-control form-control-sm">
-            </div>
-            <div class="col-md-3">
-                <label class="fs-8 text-muted fw-semibold">Total Part Quantity</label>
-                <input type="number" id="entry_part_qty" class="form-control form-control-sm" value="0" min="0">
-            </div>
-        </div>
-
-        <h6 class="fw-bold border-bottom pb-2 mb-3 text-primary">Dimensions & Weight</h6>
-        <div class="row g-3 mb-4">
-            <div class="col-md-2 d-none">
-                <label class="fs-8 text-muted fw-semibold">Contents Description <span class="text-danger">*</span></label>
-                <input type="text" id="entry_contents" class="form-control form-control-sm" value="Goods" required>
-            </div>
-            <div class="col-md-1">
-                <label class="fs-8 text-muted fw-semibold">Pcs <span class="text-danger">*</span></label>
-                <input type="number" id="entry_pcs" class="form-control form-control-sm tabular-nums" value="1" min="0">
-            </div>
-            <div class="col-md-2">
-                <label class="fs-8 text-muted fw-semibold">Actual Wt (kg) <span class="text-danger">*</span></label>
-                <input type="number" step="0.01" min="0" id="entry_act_wt" class="form-control form-control-sm tabular-nums" oninput="calcEntryVol()">
-            </div>
-            <div class="col-md-3">
-                <label class="fs-8 text-muted fw-semibold">Dims (L × W × H) cm</label>
-                <div class="d-flex gap-1">
-                    <input type="number" id="entry_l" class="form-control form-control-sm tabular-nums" placeholder="L" oninput="calcEntryVol()">
-                    <input type="number" id="entry_w" class="form-control form-control-sm tabular-nums" placeholder="W" oninput="calcEntryVol()">
-                    <input type="number" id="entry_h" class="form-control form-control-sm tabular-nums" placeholder="H" oninput="calcEntryVol()">
+                <div class="col-md-2">
+                    <label class="fs-8 text-muted fw-semibold">Volumetric Wt (kg)</label>
+                    <input type="text" id="entry_vol_wt" class="form-control form-control-sm bg-light tabular-nums"
+                        readonly>
+                </div>
+                <div class="col-md-2">
+                    <label class="fs-8 text-muted fw-semibold">Chargeable Wt (kg)</label>
+                    <input type="number" step="0.01" id="entry_chg_wt"
+                        class="form-control form-control-sm tabular-nums">
                 </div>
             </div>
-            <div class="col-md-2">
-                <label class="fs-8 text-muted fw-semibold">Volumetric Wt (kg)</label>
-                <input type="text" id="entry_vol_wt" class="form-control form-control-sm bg-light tabular-nums" readonly>
-            </div>
-            <div class="col-md-2">
-                <label class="fs-8 text-muted fw-semibold">Chargeable Wt (kg)</label>
-                <input type="number" step="0.01" id="entry_chg_wt" class="form-control form-control-sm tabular-nums">
-            </div>
-        </div>
 
-        <h6 class="fw-bold border-bottom pb-2 mb-3 text-primary">Item Specific Charges</h6>
-        <div class="row g-3">
-            <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">E-Way No</label><input type="text" id="entry_eway_no" class="form-control form-control-sm"></div>
-            <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">E-Way Date</label><input type="date" id="entry_eway_date" class="form-control form-control-sm"></div>
-            <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Item Rate</label><input type="number" step="0.01" id="entry_rate" class="form-control form-control-sm tabular-nums"></div>
-            <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Delivery Charge</label><input type="number" step="0.01" id="entry_delivery" class="form-control form-control-sm tabular-nums"></div>
-            <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Docket Charge</label><input type="number" step="0.01" id="entry_docket_chg" class="form-control form-control-sm tabular-nums"></div>
-            <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Pickup Charge</label><input type="number" step="0.01" id="entry_pickup" class="form-control form-control-sm tabular-nums"></div>
-            <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Fuel Surcharge</label><input type="number" step="0.01" id="entry_fuel" class="form-control form-control-sm tabular-nums"></div>
-            <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">FOV Charge</label><input type="number" step="0.01" id="entry_fov" class="form-control form-control-sm tabular-nums"></div>
-            <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Handling Charge</label><input type="number" step="0.01" id="entry_handling" class="form-control form-control-sm tabular-nums"></div>
-            <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Service Charge</label><input type="number" step="0.01" id="entry_service" class="form-control form-control-sm tabular-nums"></div>
-            <div class="col-md-2">
-                <input type="text" id="entry_misc_name" class="form-control form-control-sm border-0 bg-transparent fw-semibold text-muted p-0 fs-8 shadow-none text-truncate" value="Misc Charges" style="cursor: text;" title="Click to rename this charge field">
-                <input type="number" step="0.01" id="entry_misc" class="form-control form-control-sm tabular-nums">
+            <h6 class="fw-bold border-bottom pb-2 mb-3 text-primary">Item Specific Charges</h6>
+            <div class="row g-3">
+                <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">E-Way No</label><input type="text"
+                        id="entry_eway_no" class="form-control form-control-sm"></div>
+                <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">E-Way Date</label><input type="date"
+                        id="entry_eway_date" class="form-control form-control-sm"></div>
+                <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Item Rate</label><input type="number"
+                        step="0.01" id="entry_rate" class="form-control form-control-sm tabular-nums"></div>
+                <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Delivery Charge</label><input
+                        type="number" step="0.01" id="entry_delivery" class="form-control form-control-sm tabular-nums">
+                </div>
+                <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Docket Charge</label><input
+                        type="number" step="0.01" id="entry_docket_chg"
+                        class="form-control form-control-sm tabular-nums"></div>
+                <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Pickup Charge</label><input
+                        type="number" step="0.01" id="entry_pickup" class="form-control form-control-sm tabular-nums">
+                </div>
+                <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Fuel Surcharge</label><input
+                        type="number" step="0.01" id="entry_fuel" class="form-control form-control-sm tabular-nums">
+                </div>
+                <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">FOV Charge</label><input type="number"
+                        step="0.01" id="entry_fov" class="form-control form-control-sm tabular-nums"></div>
+                <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Handling Charge</label><input
+                        type="number" step="0.01" id="entry_handling" class="form-control form-control-sm tabular-nums">
+                </div>
+                <div class="col-md-2"><label class="fs-8 text-muted fw-semibold">Service Charge</label><input
+                        type="number" step="0.01" id="entry_service" class="form-control form-control-sm tabular-nums">
+                </div>
+                <div class="col-md-2">
+                    <input type="text" id="entry_misc_name"
+                        class="form-control form-control-sm border-0 bg-transparent fw-semibold text-muted p-0 fs-8 shadow-none text-truncate"
+                        value="Misc Charges" style="cursor: text;" title="Click to rename this charge field">
+                    <input type="number" step="0.01" id="entry_misc" class="form-control form-control-sm tabular-nums">
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-sm btn-outline-primary w-100 fw-bold shadow-sm"
+                        onclick="addCustomItemChargeRow()">
+                        <i class="fas fa-plus me-1"></i> Add Charge
+                    </button>
+                </div>
             </div>
-            <div class="col-md-2 d-flex align-items-end">
-                <button type="button" class="btn btn-sm btn-outline-primary w-100 fw-bold shadow-sm" onclick="addCustomItemChargeRow()">
-                    <i class="fas fa-plus me-1"></i> Add Charge
-                </button>
+            <div class="mt-3 pt-2 border-top" id="custom_item_charges_wrapper">
+                <small class="fw-bold text-muted d-block mb-2 fs-8"><i class="fas fa-plus-circle me-1 text-primary"></i>
+                    Additional Dynamic Item Charges</small>
+                <div id="custom_item_charges_container" class="row g-2"></div>
             </div>
         </div>
-        <div class="mt-3 pt-2 border-top" id="custom_item_charges_wrapper">
-            <small class="fw-bold text-muted d-block mb-2 fs-8"><i class="fas fa-plus-circle me-1 text-primary"></i> Additional Dynamic Item Charges</small>
-            <div id="custom_item_charges_container" class="row g-2"></div>
-        </div>
-      </div>
     </div>
     <div class="sticky-footer">
-      <button type="button" class="btn btn-outline-secondary px-4 fw-bold shadow-sm" data-bs-dismiss="offcanvas">Cancel</button>
-      <button type="button" class="btn btn-primary px-5 fw-bold shadow-sm" onclick="saveItemToGrid()"><i class="fas fa-check me-2"></i> Save Item</button>
+        <button type="button" class="btn btn-outline-secondary px-4 fw-bold shadow-sm"
+            data-bs-dismiss="offcanvas">Cancel</button>
+        <button type="button" class="btn btn-primary px-5 fw-bold shadow-sm" onclick="saveItemToGrid()"><i
+                class="fas fa-check me-2"></i> Save Item</button>
     </div>
-  </div>
+</div>
 <!-- QUICK MASTER CREATION MODAL -->
-<div class="modal fade" id="quickMasterModal" tabindex="-1" aria-labelledby="quickMasterModalLabel" aria-hidden="true" style="z-index: 1070;">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content shadow-lg border-0">
-      <div class="modal-header bg-primary text-white py-3">
-        <h6 class="modal-title fw-bold" id="quickMasterModalLabel"><i class="fas fa-plus-circle me-2"></i> Add New Master Entry</h6>
-        <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body p-4 bg-light">
-        <form id="quickMasterForm" autocomplete="off">
-            <?= csrf_field() ?>
-            <!-- Dynamic Fields Container -->
-            <div id="quickMasterFields"></div>
-        </form>
-      </div>
-      <div class="modal-footer bg-white border-top-0 pt-0">
-        <button type="button" class="btn btn-outline-secondary fw-bold px-3 py-1.5 fs-7" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary fw-bold px-4 py-1.5 fs-7 shadow-sm" id="btnSaveQuickMaster"><i class="fas fa-check me-2"></i> Save Entry</button>
-      </div>
+<div class="modal fade" id="quickMasterModal" tabindex="-1" aria-labelledby="quickMasterModalLabel" aria-hidden="true"
+    style="z-index: 1070;">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-primary text-white py-3">
+                <h6 class="modal-title fw-bold" id="quickMasterModalLabel"><i class="fas fa-plus-circle me-2"></i> Add
+                    New Master Entry</h6>
+                <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <form id="quickMasterForm" autocomplete="off">
+                    <?= csrf_field() ?>
+                    <!-- Dynamic Fields Container -->
+                    <div id="quickMasterFields"></div>
+                </form>
+            </div>
+            <div class="modal-footer bg-white border-top-0 pt-0">
+                <button type="button" class="btn btn-outline-secondary fw-bold px-3 py-1.5 fs-7"
+                    data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary fw-bold px-4 py-1.5 fs-7 shadow-sm"
+                    id="btnSaveQuickMaster"><i class="fas fa-check me-2"></i> Save Entry</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 <?= $this->endSection() ?>
@@ -781,11 +965,17 @@ foreach ($customers ?? [] as $c) {
 <?= $this->section('scripts') ?>
 <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 <style>
-.fs-7 { font-size: 0.85rem; }
-.fs-8 { font-size: 0.75rem; }
-.shipment-actions .btn {
-    min-width: 36px;
-}
+    .fs-7 {
+        font-size: 0.85rem;
+    }
+
+    .fs-8 {
+        font-size: 0.75rem;
+    }
+
+    .shipment-actions .btn {
+        min-width: 36px;
+    }
 </style>
 
 <script>
@@ -808,14 +998,14 @@ foreach ($customers ?? [] as $c) {
                     type: 'POST',
                     data: { exclude_dockets: previewDockets },
                     dataType: 'json',
-                    success: function(res) {
+                    success: function (res) {
                         if (res.status === 'success' && $('#entry_edit_index').val() === '-1' && $('#modal_auto_generate_docket').is(':checked')) {
                             $('#entry_docket').val(res.docket_no).css('color', '#888888');
                         } else if (res.status !== 'success') {
                             console.error("Docket preview error status returned:", res.message);
                         }
                     },
-                    error: function(xhr, status, error) {
+                    error: function (xhr, status, error) {
                         console.error("Docket preview AJAX call failed details:", {
                             status: status,
                             error: error,
@@ -850,9 +1040,13 @@ foreach ($customers ?? [] as $c) {
     ?>
     const initialSalesCustomCharges = <?= json_encode($salesCustomChargesRaw ?: []) ?>;
     const bookingIdForDraft = <?= isset($bookingId) ? (int) $bookingId : 0 ?>;
+    const isEditMode = <?= isset($isEdit) && $isEdit ? 'true' : 'false' ?>;
     const bookingDraftKey = 'ma_logistics_booking_draft_' + (bookingIdForDraft || 'new');
 
     let manifestDataTable;
+    let autosaveTimer = null;
+    let autosaveInFlight = false;
+    let docketCheckTimer = null;
 
     function escapeHtmlStr(str) {
         if (typeof ERPUtils !== 'undefined' && typeof ERPUtils.escapeHtml === 'function') {
@@ -870,7 +1064,7 @@ foreach ($customers ?? [] as $c) {
     function setPartySelectValue(selector, value) {
         const cleanValue = value || '';
         const $select = $(selector);
-        const exists = $select.find('option').filter(function() {
+        const exists = $select.find('option').filter(function () {
             return $(this).val() === cleanValue;
         }).length > 0;
         if (cleanValue && !exists) {
@@ -895,7 +1089,7 @@ foreach ($customers ?? [] as $c) {
         $('#bookingForm')
             .find('input, select, textarea')
             .not('[type="file"], [name="signature_base64"]')
-            .each(function() {
+            .each(function () {
                 const key = this.name || this.id;
                 if (!key) return;
                 if (this.type === 'checkbox') {
@@ -932,7 +1126,7 @@ foreach ($customers ?? [] as $c) {
         Object.keys(draft).forEach(key => {
             if (['items', 'saved_at'].includes(key)) return;
             const $fields = $('#bookingForm').find('[name="' + key + '"], #' + key);
-            $fields.each(function() {
+            $fields.each(function () {
                 if (this.type === 'checkbox') {
                     this.checked = !!draft[key];
                 } else if (draft[key] !== undefined && draft[key] !== null) {
@@ -1000,7 +1194,7 @@ foreach ($customers ?? [] as $c) {
 
     function getCustomItemChargesData() {
         let list = [];
-        $('#custom_item_charges_container .custom-item-charge-row').each(function() {
+        $('#custom_item_charges_container .custom-item-charge-row').each(function () {
             let lbl = $(this).find('.custom-item-charge-label').val().trim();
             let val = parseFloat($(this).find('.custom-item-charge-value').val()) || 0;
             if (lbl || val > 0) {
@@ -1022,7 +1216,7 @@ foreach ($customers ?? [] as $c) {
         const cleanValue = value || '';
         const $select = $('#entry_payment_type');
         let hasOption = cleanValue === '';
-        $select.find('option').each(function() {
+        $select.find('option').each(function () {
             if ($(this).val() === cleanValue) {
                 hasOption = true;
                 return false;
@@ -1062,7 +1256,7 @@ foreach ($customers ?? [] as $c) {
         calcTotals();
     }
 
-    $(document).ready(function() {
+    $(document).ready(function () {
         const awbSearchRows = <?= json_encode(array_map(static function ($pb) {
             return [
                 'id' => (int) ($pb['id'] ?? 0),
@@ -1142,7 +1336,7 @@ foreach ($customers ?? [] as $c) {
         }
 
         $('#awb_search_top').on('input focus', renderAwbSearchResults);
-        $('#awb_search_top').on('keydown', function(e) {
+        $('#awb_search_top').on('keydown', function (e) {
             if (e.key !== 'Enter') {
                 return;
             }
@@ -1155,7 +1349,7 @@ foreach ($customers ?? [] as $c) {
                 switchToAwbBooking(first.id);
             }
         });
-        $(document).on('mousedown', '.awb-search-option', function(e) {
+        $(document).on('mousedown', '.awb-search-option', function (e) {
             e.preventDefault();
             const targetId = $(this).data('id');
             $('#awb_search_top').val($(this).data('awb'));
@@ -1163,35 +1357,35 @@ foreach ($customers ?? [] as $c) {
             $('#awb_search_results').addClass('d-none');
             switchToAwbBooking(targetId);
         });
-        $('#awb_search_clear').on('click', function() {
+        $('#awb_search_clear').on('click', function () {
             $('#awb_search_top').val('').focus();
             $('#awb_select_top').val('');
             renderAwbSearchResults();
         });
-        $(document).on('click', function(e) {
+        $(document).on('click', function (e) {
             if (!$(e.target).closest('#awb_search_top, #awb_search_results').length) {
                 $('#awb_search_results').addClass('d-none');
             }
         });
 
-        $('#airlines_select').on('change', function() {
+        $('#airlines_select').on('change', function () {
             const code = $(this).find('option:selected').data('code') || '';
             $('input[name="flight_number"]').val(code);
         });
 
-        $('input[name="awb_no"]').on('input change', function() {
+        $('input[name="awb_no"]').on('input change', function () {
             if (manifestDataTable) {
                 manifestDataTable.rows().invalidate().draw(false);
             }
         });
 
         let awbCheckTimer = null;
-        $('#awb_no').on('input change blur', function() {
+        $('#awb_no').on('input change blur', function () {
             clearTimeout(awbCheckTimer);
             awbCheckTimer = setTimeout(checkAwbUnique, 350);
         });
 
-        $('#bookingForm').on('input change', 'input, select, textarea', function(e) {
+        $('#bookingForm').on('input change', 'input, select, textarea', function (e) {
             if (e.isTrigger || $(this).hasClass('no-track')) return;
             saveLocalBookingDraft();
         });
@@ -1199,12 +1393,12 @@ foreach ($customers ?? [] as $c) {
         promptLocalDraftRecovery();
 
         // Handle auto-generate docket checkbox change
-        $('#modal_auto_generate_docket').on('change', function() {
+        $('#modal_auto_generate_docket').on('change', function () {
             updateDocketInputState();
         });
 
         // Dynamic visual character counters for fields with maxlength attribute
-        $('[maxlength]').each(function() {
+        $('[maxlength]').each(function () {
             const $field = $(this);
             const maxLength = parseInt($field.attr('maxlength'));
 
@@ -1245,7 +1439,7 @@ foreach ($customers ?? [] as $c) {
             },
             {
                 data: null,
-                render: function() {
+                render: function () {
                     return $('input[name="awb_no"]').val() || '';
                 }
             },
@@ -1265,7 +1459,7 @@ foreach ($customers ?? [] as $c) {
                 orderable: false,
                 searchable: false,
                 className: 'text-end',
-                render: function(data, type, row, meta) {
+                render: function (data, type, row, meta) {
                     const itemId = row.id || '';
                     const pdfButtons = itemId ? `
                         <a class="btn btn-sm btn-light text-danger border shadow-none" href="${BASE_URL}logistics/exportDocketPdf/${itemId}" target="_blank" title="Individual invoice PDF" aria-label="Individual invoice PDF"><i class="fas fa-file-pdf" aria-hidden="true"></i></a>
@@ -1289,13 +1483,13 @@ foreach ($customers ?? [] as $c) {
         $('#manifestTable_wrapper .row:first').hide();
         $('#manifestTable_wrapper .row:last').hide();
 
-        if(initialShipments.length > 0) {
+        if (initialShipments.length > 0) {
             // Load global parties from first item - match exactly the stored customer_name as the option value
             const storedCustName = initialShipments[0].customer_name || '';
             // The select option values are the plain customer name (not name+code)
             // Try exact match first, then partial match
             let matched = false;
-            $('#global_shipper option').each(function() {
+            $('#global_shipper option').each(function () {
                 if ($(this).val() === storedCustName) {
                     $('#global_shipper').val(storedCustName);
                     matched = true;
@@ -1304,7 +1498,7 @@ foreach ($customers ?? [] as $c) {
             });
             if (!matched && storedCustName) {
                 // Try to find option whose value starts with the stored name
-                $('#global_shipper option').each(function() {
+                $('#global_shipper option').each(function () {
                     if ($(this).val().startsWith(storedCustName)) {
                         $('#global_shipper').val($(this).val());
                         return false;
@@ -1319,7 +1513,7 @@ foreach ($customers ?? [] as $c) {
                 let customCharges = [];
                 if (s.custom_charges) {
                     if (typeof s.custom_charges === 'string') {
-                        try { customCharges = JSON.parse(s.custom_charges); } catch(e) {}
+                        try { customCharges = JSON.parse(s.custom_charges); } catch (e) { }
                     } else if (Array.isArray(s.custom_charges)) {
                         customCharges = s.custom_charges;
                     }
@@ -1386,17 +1580,115 @@ foreach ($customers ?? [] as $c) {
                 <?= csrf_token() ?>: $('meta[name="csrf-token"]').attr('content')
             },
             dataType: 'json',
-            success: function(res) {
+            success: function (res) {
                 if (res.status === 'success' && res.unique === false) {
                     $('#awb_no').addClass('is-invalid');
                 } else {
                     $('#awb_no').removeClass('is-invalid');
                 }
             },
-            error: function() {
+            error: function () {
                 $('#awb_no').removeClass('is-invalid');
             }
         });
+    }
+
+    function updateCsrfToken(hash) {
+        if (!hash) return;
+        $('meta[name="csrf-token"]').attr('content', hash);
+        $('input[name="<?= csrf_token() ?>"]').val(hash);
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': hash
+            }
+        });
+    }
+
+    function checkDocketUniqueNow(docketNo) {
+        const cleanDocketNo = (docketNo || '').trim();
+        if (!cleanDocketNo) {
+            $('#entry_docket').removeClass('is-invalid');
+            return Promise.resolve(true);
+        }
+
+        return new Promise(resolve => {
+            $.ajax({
+                url: BASE_URL + 'masters/dockets/check-unique',
+                type: 'POST',
+                data: {
+                    docket_no: cleanDocketNo,
+                    booking_id: bookingIdForDraft,
+                    <?= csrf_token() ?>: $('meta[name="csrf-token"]').attr('content')
+                },
+                dataType: 'json',
+                success: function (res) {
+                    updateCsrfToken(res.csrf_hash);
+                    const unique = !(res.status === 'success' && !res.unique);
+                    $('#entry_docket').toggleClass('is-invalid', !unique);
+                    resolve(unique);
+                },
+                error: function () {
+                    $('#entry_docket').removeClass('is-invalid');
+                    resolve(true);
+                }
+            });
+        });
+    }
+
+    function autosaveBookingChanges(sourceLabel) {
+        if (!isEditMode || bookingIdForDraft <= 0) {
+            return;
+        }
+
+        clearTimeout(autosaveTimer);
+        autosaveTimer = setTimeout(function () {
+            if (autosaveInFlight) {
+                autosaveBookingChanges(sourceLabel);
+                return;
+            }
+
+            renderGrid();
+            autosaveInFlight = true;
+            $('#mainSubmitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Auto saving...');
+
+            const formEl = document.getElementById('bookingForm');
+            const formData = new FormData(formEl);
+            formData.set('<?= csrf_token() ?>', $('meta[name="csrf-token"]').attr('content'));
+
+            $.ajax({
+                url: $(formEl).attr('action'),
+                type: 'POST',
+                data: formData,
+                dataType: 'json',
+                processData: false,
+                contentType: false,
+                success: function (res) {
+                    updateCsrfToken(res.csrf_hash);
+                    if (res.status === 'success') {
+                        clearLocalBookingDraft();
+                        window.isDirty = false;
+                        Swal.fire({
+                            title: 'Auto saved',
+                            text: sourceLabel || 'Booking changes saved.',
+                            icon: 'success',
+                            timer: 1200,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        ERPUtils.showError('Auto Save Failed', res.message || 'Booking changes could not be saved.');
+                    }
+                },
+                error: function (xhr) {
+                    const res = xhr.responseJSON || {};
+                    updateCsrfToken(res.csrf_hash);
+                    ERPUtils.showError('Auto Save Failed', res.message || 'Booking changes could not be saved.');
+                },
+                complete: function () {
+                    autosaveInFlight = false;
+                    $('#mainSubmitBtn').prop('disabled', false).html('Update Booking');
+                }
+            });
+        }, 250);
     }
 
     function saveAsDraft() {
@@ -1407,10 +1699,10 @@ foreach ($customers ?? [] as $c) {
 
     function autoFillShipperGlobal() {
         let name = $('#global_shipper').val();
-        if(name) {
+        if (name) {
             const defaults = resolveCustomerDefaults(name);
             const c = _customers.find(x => (x.name || '').trim().toLowerCase() === (name || '').trim().toLowerCase());
-            const newBillTo    = defaults.billTo;
+            const newBillTo = defaults.billTo;
             const newConsignee = defaults.consignee;
 
             $('#global_bill_to').val(newBillTo);
@@ -1429,8 +1721,8 @@ foreach ($customers ?? [] as $c) {
             // This ensures the invoice is generated with the NEW customer's details
             if (items.length > 0) {
                 items.forEach(s => {
-                    s.customer  = name;
-                    s.bill_to   = newBillTo;
+                    s.customer = name;
+                    s.bill_to = newBillTo;
                     s.consignee = newConsignee;
                     if (c && c.payment_type) {
                         s.payment_type = c.payment_type;
@@ -1442,7 +1734,7 @@ foreach ($customers ?? [] as $c) {
         syncGstOptionsVisibility();
     }
 
-    $(document).on('input change', '#global_bill_to, #global_consignee', function() {
+    $(document).on('input change', '#global_bill_to, #global_consignee', function () {
         const billTo = $('#global_bill_to').val() || '';
         const consignee = $('#global_consignee').val() || '';
         if (items.length > 0) {
@@ -1472,7 +1764,7 @@ foreach ($customers ?? [] as $c) {
         const act = parseFloat($('#entry_act_wt').val()) || 0;
         const formula = parseFloat($('#volumetric_formula').val()) || 6000;
         let vol = 0;
-        if(l>0 && w>0 && h>0) {
+        if (l > 0 && w > 0 && h > 0) {
             vol = (l * w * h) / formula;
             $('#entry_vol_wt').val(vol.toFixed(2));
         } else {
@@ -1493,14 +1785,14 @@ foreach ($customers ?? [] as $c) {
                 type: 'POST',
                 data: { exclude_dockets: activeDockets },
                 dataType: 'json',
-                success: function(response) {
+                success: function (response) {
                     if (response.status === 'success') {
                         resolve(response.docket_no);
                     } else {
                         reject(response.message || "Failed to generate docket.");
                     }
                 },
-                error: function() {
+                error: function () {
                     reject("Server error during docket generation.");
                 }
             });
@@ -1512,7 +1804,7 @@ foreach ($customers ?? [] as $c) {
 
         // Always use the currently selected global shipper
         const globalShipper = $('#global_shipper').val() || '';
-        const globalBillTo  = $('#global_bill_to').val() || '';
+        const globalBillTo = $('#global_bill_to').val() || '';
         const globalConsignee = $('#global_consignee').val() || '';
 
         const awbVal = $('input[name="awb_no"]').val() || '';
@@ -1591,7 +1883,7 @@ foreach ($customers ?? [] as $c) {
             const w = parseFloat(item.w) || 0;
             const h = parseFloat(item.h) || 0;
             const formula = parseFloat($('#volumetric_formula').val()) || 6000;
-            if(l>0 && w>0 && h>0) {
+            if (l > 0 && w > 0 && h > 0) {
                 const vol = (l * w * h) / formula;
                 $('#entry_vol_wt').val(vol.toFixed(2));
             } else {
@@ -1639,8 +1931,8 @@ foreach ($customers ?? [] as $c) {
             ERPUtils.showWarning("Invalid Weight", "Actual Weight cannot be negative.");
             return;
         }
-        // Block save if docket is flagged as duplicate (exists in another AWB)
-        if ($('#entry_docket').hasClass('is-invalid')) {
+        const docketIsUnique = await checkDocketUniqueNow($('#entry_docket').val());
+        if (!docketIsUnique || $('#entry_docket').hasClass('is-invalid')) {
             ERPUtils.showWarning("Duplicate Docket", "This docket number is already assigned to another AWB and cannot be used here.");
             return;
         }
@@ -1681,7 +1973,7 @@ foreach ($customers ?? [] as $c) {
         const w = parseFloat($('#entry_w').val()) || 0;
         const h = parseFloat($('#entry_h').val()) || 0;
         const formula = parseFloat($('#volumetric_formula').val()) || 6000;
-        const vol_wt = (l*w*h)/formula;
+        const vol_wt = (l * w * h) / formula;
         const chg_wt = parseFloat($('#entry_chg_wt').val()) || Math.max(act_wt, vol_wt);
 
         const itemObj = {
@@ -1717,7 +2009,7 @@ foreach ($customers ?? [] as $c) {
             custom_charges: getCustomItemChargesData()
         };
 
-        if(editIndex >= 0) {
+        if (editIndex >= 0) {
             items[editIndex] = itemObj;
         } else {
             items.push(itemObj);
@@ -1729,15 +2021,19 @@ foreach ($customers ?? [] as $c) {
         // Hide modal
         var modalEl = document.getElementById('itemModal');
         var modal = bootstrap.Offcanvas.getInstance(modalEl);
-        if(modal) modal.hide();
+        if (modal) modal.hide();
 
-        Swal.fire({
-            title: "Success",
-            text: editIndex >= 0 ? "Item updated successfully!" : "Item added to grid!",
-            icon: "success",
-            timer: 1500,
-            showConfirmButton: false
-        });
+        if (isEditMode) {
+            autosaveBookingChanges(editIndex >= 0 ? 'Item updated and saved.' : 'Item added and saved.');
+        } else {
+            Swal.fire({
+                title: "Success",
+                text: editIndex >= 0 ? "Item updated successfully!" : "Item added to grid!",
+                icon: "success",
+                timer: 1500,
+                showConfirmButton: false
+            });
+        }
     }
 
     function deleteItem(index) {
@@ -1754,16 +2050,20 @@ foreach ($customers ?? [] as $c) {
                 items.splice(index, 1);
                 window.isDirty = true;
                 renderGrid();
-                Swal.fire({
-                    title: 'Deleted!',
-                    text: 'Item has been removed from the grid.',
-                    icon: 'success',
-                    timer: 1000,
-                    showConfirmButton: false
-                });
-            }
-        });
-    }
+                    if (isEditMode) {
+                        autosaveBookingChanges('Item removed and saved.');
+                    } else {
+                        Swal.fire({
+                            title: 'Deleted!',
+                            text: 'Item has been removed from the grid.',
+                            icon: 'success',
+                            timer: 1000,
+                            showConfirmButton: false
+                        });
+                    }
+                }
+            });
+        }
 
     function renderGrid() {
         $('#hiddenInputsContainer').empty();
@@ -1823,7 +2123,7 @@ foreach ($customers ?? [] as $c) {
         const weight = parseFloat($('#salesWeight').val()) || 0;
         taxable += rate * weight;
 
-        $('.calc-surcharge').each(function() {
+        $('.calc-surcharge').each(function () {
             taxable += parseFloat($(this).val()) || 0;
         });
 
@@ -1858,7 +2158,7 @@ foreach ($customers ?? [] as $c) {
     }
 
     $(document).on('input', '#salesRate, .calc-surcharge, .rate-input', calcTotals);
-    $(document).on('change', '#gst_applied', function() {
+    $(document).on('change', '#gst_applied', function () {
         const rawName = $('#global_shipper').val();
         const name = (rawName || '').trim().toLowerCase();
 
@@ -1871,7 +2171,7 @@ foreach ($customers ?? [] as $c) {
         syncGstOptionsVisibility();
     });
 
-    $(document).on('change', '#entry_customer', function() {
+    $(document).on('change', '#entry_customer', function () {
         const name = $(this).val();
         if (name && name !== 'NEW_ENTRY') {
             const defaults = resolveCustomerDefaults(name);
@@ -1901,7 +2201,7 @@ foreach ($customers ?? [] as $c) {
         }
     });
 
-    $(document).on('change', '#gst_type', function() {
+    $(document).on('change', '#gst_type', function () {
         handleGstTypeChange(false);
     });
 
@@ -1965,7 +2265,7 @@ foreach ($customers ?? [] as $c) {
     }
 
     let signaturePad;
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
         var canvas = document.getElementById('signatureCanvas');
         if (canvas && typeof SignaturePad !== 'undefined') {
             signaturePad = new SignaturePad(canvas, {
@@ -1995,7 +2295,7 @@ foreach ($customers ?? [] as $c) {
             // FIX: Resize canvas when Tab 3 (Financials) becomes visible
             var tab3Btn = document.getElementById('tab3-tab');
             if (tab3Btn) {
-                tab3Btn.addEventListener('shown.bs.tab', function() {
+                tab3Btn.addEventListener('shown.bs.tab', function () {
                     // Small timeout ensures Bootstrap has fully shown the tab pane
                     setTimeout(resizeCanvas, 50);
                 });
@@ -2021,14 +2321,14 @@ foreach ($customers ?? [] as $c) {
         calcTotals();
     });
 
-    $('#bookingForm').on('submit', function() {
+    $('#bookingForm').on('submit', function () {
         const isDraftSave = $('#booking_status').val() === 'Draft';
         if ($('#awb_no').hasClass('is-invalid')) {
             ERPUtils.showWarning("Duplicate AWB", "Please use a unique AWB number before saving this booking.");
             return false;
         }
 
-        if(!isDraftSave && items.length === 0) {
+        if (!isDraftSave && items.length === 0) {
             ERPUtils.showWarning("Missing Data", "Please add at least one shipment item.");
             return false;
         }
@@ -2056,8 +2356,8 @@ foreach ($customers ?? [] as $c) {
     });
 
     // BUG FIX #3: Restrict NEW_ENTRY handler to only known master dropdowns (prevents nested modal chaos)
-    const MASTER_QUICK_DROPDOWNS = ['origin','destination','mode_transport','entry_payment_type','material_type','material_category','global_shipper','entry_customer','transporter_name','driver_name','airlines_select'];
-    $(document).on('change', 'select', function() {
+    const MASTER_QUICK_DROPDOWNS = ['origin', 'destination', 'mode_transport', 'entry_payment_type', 'material_type', 'material_category', 'global_shipper', 'entry_customer', 'transporter_name', 'driver_name', 'airlines_select'];
+    $(document).on('change', 'select', function () {
         if ($(this).val() === 'NEW_ENTRY' && MASTER_QUICK_DROPDOWNS.includes($(this).attr('id'))) {
             const dropdownId = $(this).attr('id');
             openQuickMasterModal(dropdownId, $(this));
@@ -2119,7 +2419,7 @@ foreach ($customers ?? [] as $c) {
             submitUrl = BASE_URL + 'masters/customers/create';
 
             let paymentOptions = '<option value="">--Select--</option>';
-            <?php foreach($lookups['payment_type'] ?? [] as $l): ?>
+            <?php foreach ($lookups['payment_type'] ?? [] as $l): ?>
                 paymentOptions += `<option value="<?= esc($l['value']) ?>"><?= esc($l['value']) ?></option>`;
             <?php endforeach; ?>
 
@@ -2242,7 +2542,7 @@ foreach ($customers ?? [] as $c) {
         });
     }
 
-    $('#btnSaveQuickMaster').on('click', function() {
+    $('#btnSaveQuickMaster').on('click', function () {
         const $form = $('#quickMasterForm');
 
         // Check form validity
@@ -2262,7 +2562,7 @@ foreach ($customers ?? [] as $c) {
             type: 'POST',
             data: formData,
             dataType: 'json',
-            success: function(res) {
+            success: function (res) {
                 $('#btnSaveQuickMaster').prop('disabled', false).html('<i class="fas fa-check me-2"></i> Save Entry');
 
                 // BUG FIX #4: Refresh CSRF token from response to prevent 403 on second save
@@ -2359,7 +2659,7 @@ foreach ($customers ?? [] as $c) {
                     ERPUtils.showError("Save Failed", res.message || "An error occurred.");
                 }
             },
-            error: function(xhr, status, error) {
+            error: function (xhr, status, error) {
                 $('#btnSaveQuickMaster').prop('disabled', false).html('<i class="fas fa-check me-2"></i> Save Entry');
                 console.error("AJAX Master Save error detail:", {
                     status: status,
@@ -2372,33 +2672,21 @@ foreach ($customers ?? [] as $c) {
     });
 
     // --- REAL-TIME DUPLICATE DOCKET CHECK ---
-    $('#entry_docket').on('change', function() {
+    $('#entry_docket').on('input change blur', function () {
         const docketNo = $(this).val().trim();
-        const editIndex = $('#entry_edit_index').val();
-        const bookingId = <?= isset($bookingId) ? $bookingId : 0 ?>;
 
-        if (docketNo) {
-            // Check against database for other bookings (allow duplicate within same AWB)
-            $.ajax({
-                url: BASE_URL + 'masters/dockets/check-unique',
-                type: 'POST',
-                data: { docket_no: docketNo, booking_id: bookingId },
-                dataType: 'json',
-                success: function(res) {
-                    if (res.status === 'success' && !res.unique) {
-                        Swal.fire({
-                            title: 'Duplicate Docket Warning',
-                            text: 'This docket number is already assigned to another AWB and cannot be used here.',
-                            icon: 'warning',
-                            confirmButtonText: 'OK'
-                        });
-                        $('#entry_docket').addClass('is-invalid');
-                    } else {
-                        $('#entry_docket').removeClass('is-invalid');
-                    }
-                }
-            });
-        }
+        clearTimeout(docketCheckTimer);
+        docketCheckTimer = setTimeout(async function () {
+            const unique = await checkDocketUniqueNow(docketNo);
+            if (!unique) {
+                Swal.fire({
+                    title: 'Duplicate Docket Warning',
+                    text: 'This docket number is already assigned to another AWB and cannot be used here.',
+                    icon: 'warning',
+                    confirmButtonText: 'OK'
+                });
+            }
+        }, 350);
     });
 
     function handleOtherOption(selectEl) {

@@ -14,6 +14,10 @@ This document outlines the testing strategy, manual smoke test procedures, perfo
 | **TC021** | FY Invoice Auto-Number Finalization | Generate a consolidated PDF for blank invoice rows; backend allocates the next company/prefix/FY number, persists it to selected shipment rows, and reuses it on reprint. | PASS |
 | **TC022** | Hide Zero-Value Invoice Charges | Generate PDF invoices where docket/fuel/other/pickup/delivery charges are zero; zero-value surcharge columns are omitted and non-zero charge columns still total correctly. | PASS |
 | **TC023** | Item-Level Payment Type UI | Add/edit shipment items with Payment Type in the item drawer; values persist in `items_json`, display in the grid, and keep booking-level compatibility through the hidden field. | PASS |
+| **TC024** | Edit-Mode Save Item Autosave | Open an existing booking, edit item charges, click Save Item, then reload the AWB without pressing Update Booking. | PASS |
+| **TC025** | Invoice First-Four Charge Columns | Generate a default invoice with more than four active item charges; first four charges render as columns and remaining charges sum into Other Charges. | PASS |
+| **TC026** | Runtime AWB/Docket Uniqueness | Type a duplicate AWB or docket in the booking form/item drawer; duplicate feedback appears before final booking save and Save Item blocks duplicate docket rows. | PASS |
+| **TC027** | Default Bank Preselection | Mark one bank as default in Bank Accounts, open All Invoices, and verify that bank is selected automatically. | PASS |
 
 ---
 

@@ -367,6 +367,15 @@ public function edit($id)
         $bookingService->updateBooking($id, $this->request->getPost(), session()->get('user_id'), $companyId);
         $awb_no = $this->request->getPost('awb_no');
 
+        if ($this->request->isAJAX()) {
+            session_write_close();
+            return $this->response->setJSON([
+                'status'    => 'success',
+                'message'   => 'Booking updated successfully! AWB: ' . $awb_no,
+                'csrf_hash' => csrf_hash(),
+            ]);
+        }
+
         $redirectTo = $this->request->getPost('redirect_to_booking_id');
         if (!empty($redirectTo)) {
             return redirect()->to('/logistics/edit/' . $redirectTo)->with('success', 'Booking updated as Draft successfully.');
@@ -386,6 +395,14 @@ public function edit($id)
                          (strpos($msg, 'Connection') !== false);
                          
         $userMessage = $isSystemError ? 'A secure database or system error occurred. Technical logs have been updated safely.' : $msg;
+        if ($this->request->isAJAX()) {
+            session_write_close();
+            return $this->response->setStatusCode(400)->setJSON([
+                'status'    => 'error',
+                'message'   => $userMessage,
+                'csrf_hash' => csrf_hash(),
+            ]);
+        }
         return redirect()->back()->withInput()->with('error', $userMessage);
     }
   }

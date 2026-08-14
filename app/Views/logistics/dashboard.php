@@ -49,7 +49,7 @@
                             <th class="consignee-cell">Consignee</th>
                             <th>Created</th>
                             <th>Created By</th>
-                            <th>Pieces</th>
+                            <th>Boxes</th>
                             <th>Weight</th>
                             <th class="pe-4">Status</th>
                             <th class="text-end pe-4">Action</th>

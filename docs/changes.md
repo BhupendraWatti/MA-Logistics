@@ -4,6 +4,22 @@ This file tracks every technical change, feature implementation, refactoring, an
 
 ## Latest Frontend Change
 
+### [CHG-019] Booking Autosave, Invoice Charge Overflow, Runtime Uniqueness, Default Bank Selection, Boxes Wording
+* **Status**: Completed
+* **Priority**: High
+* **Requirement**: Make edited shipment-item saves persist immediately, preselect the default bank on invoice generation, validate duplicate AWB/docket values before final save, route only the first four active item charges into invoice charge columns with the remainder in Other Charges, and display package counts as Boxes instead of PCS/Pieces.
+* **Implementation**:
+  - Added AJAX JSON support to `Logistics::update()` so edit-mode item drawer saves can persist the whole booking without redirecting back to the booking list.
+  - Updated `booking_form.php` so Save Item in edit mode triggers an autosave after updating `items_json`, and delete-item autosaves too.
+  - Tightened runtime AWB/docket uniqueness feedback by checking docket uniqueness on input/change/blur and rechecking before accepting a drawer item.
+  - Updated the default invoice layout to show only the first four active charge columns in client order and sum remaining active charges/custom charges into the Other Charges column.
+  - Preselected the company default bank account in All Invoices while keeping `InvoiceService::resolveBankDetails()` as the backend fallback.
+  - Changed visible PCS/Pieces labels in booking and logistics views to Boxes while preserving existing database field names.
+* **Files Modified**: `app/Controllers/Logistics.php`, `app/Views/logistics/booking_form.php`, `app/Views/logistics/all_invoices.php`, `app/Views/logistics/view_booking.php`, `app/Views/logistics/manage_bookings.php`, `app/Views/logistics/search_results.php`, `app/Views/logistics/dashboard.php`, `app/Views/pdfs/invoice.php`, `docs/*`
+* **QA**: PHP syntax checks passed for all modified PHP files; `git diff --check` passed.
+
+---
+
 ### [CHG-018] Move Payment Type To Shipment Item Drawer
 * **Status**: Completed
 * **Priority**: High

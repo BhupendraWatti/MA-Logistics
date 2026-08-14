@@ -67,7 +67,7 @@
                                 <select name="bank_id" id="fBank" class="form-select form-select-sm shadow-none" required>
                                     <option value="">-- Choose Bank --</option>
                                     <?php foreach ($banks as $b): ?>
-                                        <option value="<?= esc($b['id']) ?>">
+                                        <option value="<?= esc($b['id']) ?>" <?= (int) ($b['is_default'] ?? 0) === 1 ? 'selected' : '' ?>>
                                             <?= esc($b['bank_name']) ?> (<?= esc($b['account_number']) ?>) <?= $b['is_default'] == 1 ? '[Default]' : '' ?>
                                         </option>
                                     <?php endforeach; ?>

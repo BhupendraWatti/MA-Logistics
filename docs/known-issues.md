@@ -6,6 +6,7 @@ This document tracks known issues, technical limitations, accepted workarounds, 
 
 * **Resolved in CHG-015**: Backend support for item-level payment type/material category, date/category customer rate snapshot lookup, zero actual-weight allowance, master AWB weight sanity validation, Customer Master invoice address/GST/PAN fallback, remarks aliasing, and optional LR/docket clubbing.
 * **Resolved in CHG-016**: Consolidated invoice PDF generation now auto-generates company-scoped financial-year invoice numbers, persists them to selected shipment rows, and reuses finalized numbers for reprints.
+* **Resolved in CHG-019**: Edit-mode Save Item now autosaves booking changes, default bank accounts are preselected in invoice generation, duplicate AWB/docket feedback appears during entry, default invoices place only the first four active charges into columns, and later charges flow into Other Charges.
 
 ---
 
