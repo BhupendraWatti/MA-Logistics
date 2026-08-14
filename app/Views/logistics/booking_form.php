@@ -1,5 +1,5 @@
 <?= $this->extend('layout') ?>
-<?php 
+<?php
 $booking = $booking ?? [];
 $company = $company ?? [];
 $sales = $sales ?? [];
@@ -50,7 +50,8 @@ if ($shipments_raw !== null) {
                 'service_charges' => $item['service_charges'] ?? '',
                 'misc_charges' => $item['misc_charges'] ?? '',
                 'misc_charges_name' => $item['misc_charges_name'] ?? 'Misc Charges',
-                'custom_charges' => $item['custom_charges'] ?? []
+                'custom_charges' => $item['custom_charges'] ?? [],
+                'payment_type' => $item['payment_type'] ?? ($booking['payment_type'] ?? '')
             ];
         }
     }
@@ -85,20 +86,25 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     <input type="hidden" name="status" id="booking_status" value="Active">
     <input type="hidden" name="redirect_to_booking_id" id="redirect_to_booking_id" value="">
 
-    <!-- Quick Switch AWB Dropdown at top -->
+    <!-- Quick Switch AWB search at top -->
     <div class="card p-3 mb-3 border-0 bg-light rounded shadow-sm">
         <div class="row align-items-center">
             <div class="col-md-6 col-lg-4">
-                <div class="input-group input-group-sm">
+                <div class="input-group input-group-sm position-relative">
                     <span class="input-group-text bg-white fw-bold text-muted border-secondary"><i class="fas fa-search me-1 text-primary"></i> Quick Switch AWB:</span>
-                    <select id="awb_select_top" class="form-select fw-bold border-secondary shadow-none no-track">
-                        <option value="">-- Select AWB to Edit --</option>
-                        <?php foreach ($previous_bookings ?? [] as $pb): ?>
-                            <option value="<?= $pb['id'] ?>" <?= (isset($booking['id']) && $booking['id'] == $pb['id']) ? 'selected' : '' ?>>
-                                <?= esc($pb['awb_no']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <input
+                        type="search"
+                        id="awb_search_top"
+                        class="form-control fw-bold border-secondary shadow-none no-track"
+                        placeholder="Search AWB number..."
+                        autocomplete="off"
+                        value="<?= esc($booking['awb_no'] ?? '') ?>"
+                    >
+                    <button type="button" class="btn btn-outline-secondary" id="awb_search_clear" title="Clear AWB search" aria-label="Clear AWB search">
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                    </button>
+                    <input type="hidden" id="awb_select_top" value="<?= esc($booking['id'] ?? '') ?>">
+                    <div id="awb_search_results" class="list-group position-absolute shadow-sm d-none bg-white w-100" style="top:100%; left:0; z-index:1060; max-height:320px; overflow-y:auto;"></div>
                 </div>
             </div>
         </div>
@@ -124,20 +130,21 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     </ul>
 
     <div class="tab-content border border-top-0 rounded-bottom bg-white p-4 mb-5 shadow-sm" id="bookingTabsContent">
-        
+
         <!-- TAB 1: CONSIGNMENT DETAILS -->
         <div class="tab-pane fade show active" id="tab1" role="tabpanel">
             <div class="row g-4 mb-4">
                 <div class="col-md-12"><h6 class="fw-bold text-primary mb-0 border-bottom pb-2">A. Routing & Documentation</h6></div>
-                
+
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">AWB NUMBER <span class="text-danger">*</span></label>
-                    <input type="text" name="awb_no" class="form-control form-control-sm border-secondary shadow-none fw-bold" 
-                    value="<?= isset($booking['awb_no']) ? esc($booking['awb_no']) : '' ?>" required>
+                    <input type="text" name="awb_no" id="awb_no" class="form-control form-control-sm border-secondary shadow-none fw-bold"
+                           value="<?= isset($booking['awb_no']) ? esc($booking['awb_no']) : '' ?>" required>
+                    <div id="awb_unique_feedback" class="invalid-feedback fw-semibold">This AWB number already exists for this company.</div>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">BOOKING DATE <span class="text-danger">*</span></label>
-                    <input type="datetime-local" name="booking_date" class="form-control form-control-sm shadow-none" 
+                    <input type="datetime-local" name="booking_date" class="form-control form-control-sm shadow-none"
                     value="<?= isset($booking['booking_date']) ? date('Y-m-d\TH:i', strtotime($booking['booking_date'])) : date('Y-m-d\TH:i') ?>" required>
                 </div>
                 <div class="col-md-3">
@@ -176,7 +183,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     </select>
                     <input type="text" id="destination_other" class="form-control form-control-sm shadow-none mt-1 d-none" placeholder="Enter Destination">
                 </div>
-                
+
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">MODE OF TRANSPORT</label>
                     <select name="mode_transport" id="mode_transport" class="form-select form-select-sm shadow-none" onchange="handleOtherOption(this)">
@@ -189,19 +196,8 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     </select>
                     <input type="text" id="mode_transport_other" class="form-control form-control-sm shadow-none mt-1 d-none" placeholder="Enter Mode">
                 </div>
-                
-                <div class="col-md-3">
-                    <label class="form-label text-muted fs-7 fw-semibold">PAYMENT TYPE</label>
-                    <select name="payment_type" id="payment_type" class="form-select form-select-sm shadow-none" onchange="handleOtherOption(this)">
-                        <option value="">--Select--</option>
-                        <option value="NEW_ENTRY" style="color: #20c997; font-weight: bold;">+ NEW ENTRY</option>
-                        <?php foreach($lookups['payment_type'] ?? [] as $l): ?>
-                            <option value="<?= esc($l['value']) ?>" <?= ($booking['payment_type'] ?? '') == $l['value'] ? 'selected' : '' ?>><?= esc($l['value']) ?></option>
-                        <?php endforeach; ?>
-                        <option value="Other">Other</option>
-                    </select>
-                    <input type="text" id="payment_type_other" class="form-control form-control-sm shadow-none mt-1 d-none" placeholder="Enter Payment Type">
-                </div>
+
+                <input type="hidden" name="payment_type" id="payment_type" value="<?= esc($booking['payment_type'] ?? '') ?>">
 
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">MATERIAL TYPE</label>
@@ -243,6 +239,10 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 <div class="col-md-12">
                     <label class="form-label text-muted fs-7 fw-semibold">MATERIAL DETAILS</label>
                     <textarea name="material_details" class="form-control form-control-sm shadow-none" rows="2" placeholder="Enter material details..."><?= esc($booking['material_details'] ?? '') ?></textarea>
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label text-muted fs-7 fw-semibold">REMARK / NOTE</label>
+                    <textarea name="remarks" id="remarks" class="form-control form-control-sm shadow-none" rows="2" maxlength="500" placeholder="PO number, client note, or billing instruction..."><?= esc($booking['remarks'] ?? ($booking['narration'] ?? '')) ?></textarea>
                 </div>
             </div>
 
@@ -314,7 +314,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     <input type="text" name="vehicle_no" id="vehicle_no" class="form-control form-control-sm shadow-none" value="<?= $booking['vehicle_no'] ?? '' ?>">
                 </div>
             </div>
-            
+
             <div class="text-end mt-4">
                 <button type="button" class="btn btn-primary" onclick="new bootstrap.Tab(document.getElementById('tab2-tab')).show()">Proceed to Shipment Items <i class="fas fa-arrow-right ms-1"></i></button>
             </div>
@@ -322,8 +322,22 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
 
         <!-- TAB 2: SHIPMENT ITEMS & GRID -->
         <div class="tab-pane fade" id="tab2" role="tabpanel">
-            
-            <div class="d-flex justify-content-between align-items-end mb-3">
+
+            <div class="row g-3 align-items-end mb-3">
+                <div class="col-md-3">
+                    <label class="form-label text-muted fs-7 fw-semibold mb-1">Airlines</label>
+                    <select name="airlines" id="airlines_select" class="form-select form-select-sm shadow-none">
+                        <option value="">--Select--</option>
+                        <option value="NEW_ENTRY" style="color: #20c997; font-weight: bold;">+ NEW ENTRY</option>
+                        <?php foreach($airlines ?? [] as $a): ?>
+                            <option value="<?= esc($a['name']) ?>" data-code="<?= esc($a['code'] ?? '') ?>" <?= ($booking['airlines'] ?? '') == $a['name'] ? 'selected' : '' ?>><?= esc($a['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-muted fs-7 fw-semibold mb-1">Flight Number</label>
+                    <input type="text" name="flight_number" class="form-control form-control-sm shadow-none" value="<?= esc($booking['flight_number'] ?? '') ?>">
+                </div>
                 <div class="col-md-2">
                     <label class="form-label text-muted fs-7 fw-semibold mb-1">Global Volumetric Formula</label>
                     <div class="input-group input-group-sm shadow-none">
@@ -332,7 +346,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     </div>
                     <small class="text-muted" style="font-size:0.65rem;">Modifying this recalculates all items below.</small>
                 </div>
-                <div>
+                <div class="col-md-4 text-end">
                     <button type="button" class="btn btn-primary shadow-sm" onclick="openItemModal(-1)"><i class="fas fa-plus"></i> Add Item</button>
                 </div>
             </div>
@@ -346,6 +360,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                             <th>AWB No.</th>
                             <th>Docket No</th>
                             <th>Customer</th>
+                            <th>Payment</th>
                             <th>Invoice No</th>
                             <th>Part NO.</th>
                             <th>Part Qty</th>
@@ -354,15 +369,15 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                             <th>Vol Wt</th>
                             <th>Chg Wt</th>
                             <th>Item Rate</th>
-                            <th class="text-end" style="width: 100px;">Actions</th>
+                            <th class="text-end" style="width: 170px;">Actions</th>
                         </tr>
                     </thead>
                 </table>
             </div>
-            
+
             <input type="hidden" name="items_json" id="items_json">
             <div id="hiddenInputsContainer"></div>
-            
+
             <div class="text-end mt-4">
                 <button type="button" class="btn btn-primary" onclick="new bootstrap.Tab(document.getElementById('tab3-tab')).show()">Proceed to Charges <i class="fas fa-arrow-right ms-1"></i></button>
             </div>
@@ -371,22 +386,8 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         <!-- TAB 3: FINANCIALS & CHARGES -->
         <div class="tab-pane fade" id="tab3" role="tabpanel">
             <h6 class="fw-bold text-primary mb-3 border-bottom pb-2">Financials & Global Charges</h6>
-            
+
             <div class="row mb-4">
-                <div class="col-md-3">
-                    <label class="form-label text-muted fs-7 fw-semibold">Airlines</label>
-                    <select name="airlines" id="airlines_select" class="form-select form-select-sm shadow-none">
-                        <option value="">--Select--</option>
-                        <option value="NEW_ENTRY" style="color: #20c997; font-weight: bold;">+ NEW ENTRY</option>
-                        <?php foreach($airlines ?? [] as $a): ?>
-                            <option value="<?= esc($a['name']) ?>" data-code="<?= esc($a['code'] ?? '') ?>" <?= ($booking['airlines'] ?? '') == $a['name'] ? 'selected' : '' ?>><?= esc($a['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label text-muted fs-7 fw-semibold">Flight Number</label>
-                    <input type="text" name="flight_number" class="form-control form-control-sm shadow-none" value="<?= $booking['flight_number'] ?? '' ?>">
-                </div>
                 <div class="col-md-3">
                     <label class="form-label text-muted fs-7 fw-semibold">Global Rate (₹/KG)</label>
                     <input type="number" step="0.01" id="salesRate" name="rate" class="form-control form-control-sm shadow-none bg-light fw-bold" value="<?= $sales['rate'] ?? '' ?>" oninput="calcTotals()">
@@ -526,10 +527,10 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     </div>
                 </div>
             </div>
-            
+
         </div>
     </div>
-    
+
     <!-- STICKY FOOTER -->
     <div class="sticky-footer d-flex justify-content-between align-items-center">
         <div class="d-flex gap-4 align-items-center">
@@ -557,13 +558,8 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 <div class="fs-8 text-muted">Taxable: <span id="totalTaxableAmount">₹0.00</span></div>
             </div>
         </div>
-        
+
         <div class="d-flex gap-2">
-            <?php if (isset($isEdit) && $isEdit && isset($bookingId)): ?>
-                <a href="<?= base_url('logistics/exportPdf/' . $bookingId) ?>" class="btn btn-outline-danger bg-white fw-bold shadow-sm" target="_blank">
-                    <i class="fas fa-file-pdf text-danger me-1"></i> Export PDF
-                </a>
-            <?php endif; ?>
             <button type="button" class="btn btn-outline-secondary bg-white" onclick="saveAsDraft()">Save Draft</button>
             <button type="submit" id="mainSubmitBtn" class="btn btn-success fw-bold px-4 shadow-sm">
                 <?php if (isset($isEdit) && $isEdit): ?>Update Booking<?php else: ?>Create Booking<?php endif; ?>
@@ -574,6 +570,32 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     <?= form_close() ?>
 </div>
 
+<?php
+$partyOptions = [];
+foreach ($customers ?? [] as $c) {
+    foreach ([$c['name'] ?? '', $c['bill_to'] ?? '', $c['consignee'] ?? ''] as $partyValue) {
+        $partyValue = trim((string) $partyValue);
+        if ($partyValue !== '') {
+            $partyOptions[$partyValue] = $partyValue;
+        }
+    }
+}
+?>
+<datalist id="billToOptions">
+    <?php foreach($customers ?? [] as $c): ?>
+        <?php if (!empty($c['bill_to'])): ?>
+            <option value="<?= esc($c['bill_to']) ?>"><?= esc($c['name'] ?? '') ?></option>
+        <?php endif; ?>
+    <?php endforeach; ?>
+</datalist>
+<datalist id="consigneeOptions">
+    <?php foreach($customers ?? [] as $c): ?>
+        <?php if (!empty($c['consignee'])): ?>
+            <option value="<?= esc($c['consignee']) ?>"><?= esc($c['name'] ?? '') ?></option>
+        <?php endif; ?>
+    <?php endforeach; ?>
+</datalist>
+
 <!-- ITEM DRAWER -->
 <div class="offcanvas offcanvas-end erp-drawer erp-drawer-wide" tabindex="-1" id="itemModal" data-bs-backdrop="true">
   <div class="offcanvas-header bg-light">
@@ -583,7 +605,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
   <div class="offcanvas-body position-relative p-0">
     <div class="erp-drawer-content pb-5">
         <input type="hidden" id="entry_edit_index" value="-1">
-        
+
         <h6 class="fw-bold border-bottom pb-2 mb-3 text-primary">Item Parties & References</h6>
         <div class="row g-3 mb-4">
             <div class="col-md-3">
@@ -598,11 +620,33 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             </div>
             <div class="col-md-3">
                 <label class="fs-8 text-muted fw-semibold">Bill To</label>
-                <input type="text" id="entry_bill_to" class="form-control form-control-sm" maxlength="250">
+                <select id="entry_bill_to" class="form-select form-select-sm shadow-none party-typeahead">
+                    <option value="">Select Bill To</option>
+                    <?php foreach($partyOptions ?? [] as $party): ?>
+                        <option value="<?= esc($party) ?>"><?= esc($party) ?></option>
+                    <?php endforeach; ?>
+                </select>
             </div>
             <div class="col-md-3">
                 <label class="fs-8 text-muted fw-semibold">Consignee</label>
-                <input type="text" id="entry_consignee" class="form-control form-control-sm" maxlength="250">
+                <select id="entry_consignee" class="form-select form-select-sm shadow-none party-typeahead">
+                    <option value="">Select Consignee</option>
+                    <?php foreach($partyOptions ?? [] as $party): ?>
+                        <option value="<?= esc($party) ?>"><?= esc($party) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="fs-8 text-muted fw-semibold">Payment Type</label>
+                <select id="entry_payment_type" class="form-select form-select-sm shadow-none" onchange="handleEntryPaymentTypeChange(this)">
+                    <option value="">--Select--</option>
+                    <option value="NEW_ENTRY" style="color: #20c997; font-weight: bold;">+ NEW ENTRY</option>
+                    <?php foreach($lookups['payment_type'] ?? [] as $l): ?>
+                        <option value="<?= esc($l['value']) ?>"><?= esc($l['value']) ?></option>
+                    <?php endforeach; ?>
+                    <option value="Other">Other</option>
+                </select>
+                <input type="text" id="entry_payment_type_other" class="form-control form-control-sm shadow-none mt-1 d-none" placeholder="Enter Payment Type...">
             </div>
             <div class="col-md-3">
                 <div class="d-flex justify-content-between align-items-center">
@@ -652,11 +696,11 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             </div>
             <div class="col-md-1">
                 <label class="fs-8 text-muted fw-semibold">Pcs <span class="text-danger">*</span></label>
-                <input type="number" id="entry_pcs" class="form-control form-control-sm tabular-nums" value="1" min="1">
+                <input type="number" id="entry_pcs" class="form-control form-control-sm tabular-nums" value="1" min="0">
             </div>
             <div class="col-md-2">
                 <label class="fs-8 text-muted fw-semibold">Actual Wt (kg) <span class="text-danger">*</span></label>
-                <input type="number" step="0.01" id="entry_act_wt" class="form-control form-control-sm tabular-nums" oninput="calcEntryVol()">
+                <input type="number" step="0.01" min="0" id="entry_act_wt" class="form-control form-control-sm tabular-nums" oninput="calcEntryVol()">
             </div>
             <div class="col-md-3">
                 <label class="fs-8 text-muted fw-semibold">Dims (L × W × H) cm</label>
@@ -739,6 +783,9 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
 <style>
 .fs-7 { font-size: 0.85rem; }
 .fs-8 { font-size: 0.75rem; }
+.shipment-actions .btn {
+    min-width: 36px;
+}
 </style>
 
 <script>
@@ -748,13 +795,13 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     function updateDocketInputState() {
         const isAutoGen = $('#modal_auto_generate_docket').is(':checked');
         const editIndex = $('#entry_edit_index').val();
-        
+
         // Only apply auto-gen preview/manual carryover if we are adding a NEW item
         if (editIndex === '-1') {
             if (isAutoGen) {
                 // Show "DCK-XXXXX" instead of empty/fetching message while calling the preview endpoint
                 $('#entry_docket').val('DCK-XXXXX').prop('readonly', true).css('color', '#888888');
-                
+
                 let previewDockets = items.map(i => i.docket).filter(d => d);
                 $.ajax({
                     url: BASE_URL + 'masters/dockets/preview',
@@ -788,10 +835,11 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         }
     }
     const _customers = <?= json_encode($customers ?? []) ?>;
-    const _companyGst = { 
-        cgst: <?= isset($company['cgst_rate']) && $company['cgst_rate'] !== '' ? $company['cgst_rate'] : 9 ?>, 
-        sgst: <?= isset($company['sgst_rate']) && $company['sgst_rate'] !== '' ? $company['sgst_rate'] : 9 ?>, 
-        igst: <?= isset($company['igst_rate']) && $company['igst_rate'] !== '' ? $company['igst_rate'] : 0 ?> 
+    const defaultPaymentType = <?= json_encode($booking['payment_type'] ?? '') ?>;
+    const _companyGst = {
+        cgst: <?= isset($company['cgst_rate']) && $company['cgst_rate'] !== '' ? $company['cgst_rate'] : 9 ?>,
+        sgst: <?= isset($company['sgst_rate']) && $company['sgst_rate'] !== '' ? $company['sgst_rate'] : 9 ?>,
+        igst: <?= isset($company['igst_rate']) && $company['igst_rate'] !== '' ? $company['igst_rate'] : 0 ?>
     };
     const initialShipments = <?= json_encode($shipments ?? []) ?>;
     <?php
@@ -801,7 +849,9 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     }
     ?>
     const initialSalesCustomCharges = <?= json_encode($salesCustomChargesRaw ?: []) ?>;
-    
+    const bookingIdForDraft = <?= isset($bookingId) ? (int) $bookingId : 0 ?>;
+    const bookingDraftKey = 'ma_logistics_booking_draft_' + (bookingIdForDraft || 'new');
+
     let manifestDataTable;
 
     function escapeHtmlStr(str) {
@@ -815,6 +865,124 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
+    }
+
+    function setPartySelectValue(selector, value) {
+        const cleanValue = value || '';
+        const $select = $(selector);
+        const exists = $select.find('option').filter(function() {
+            return $(this).val() === cleanValue;
+        }).length > 0;
+        if (cleanValue && !exists) {
+            $select.append($('<option>', { value: cleanValue, text: cleanValue }));
+        }
+        $select.val(cleanValue);
+    }
+
+    function resolveCustomerDefaults(name) {
+        const cleanName = (name || '').trim();
+        const c = _customers.find(x => (x.name || '').trim().toLowerCase() === cleanName.toLowerCase());
+        return {
+            customer: cleanName,
+            billTo: cleanName,
+            consignee: (c && c.consignee) ? c.consignee : cleanName,
+            paymentType: c && c.payment_type ? c.payment_type : ''
+        };
+    }
+
+    function serializeBookingDraft() {
+        const formData = {};
+        $('#bookingForm')
+            .find('input, select, textarea')
+            .not('[type="file"], [name="signature_base64"]')
+            .each(function() {
+                const key = this.name || this.id;
+                if (!key) return;
+                if (this.type === 'checkbox') {
+                    formData[key] = this.checked;
+                } else {
+                    formData[key] = $(this).val();
+                }
+            });
+
+        formData.items = items;
+        formData.saved_at = new Date().toISOString();
+        return formData;
+    }
+
+    function saveLocalBookingDraft() {
+        try {
+            localStorage.setItem(bookingDraftKey, JSON.stringify(serializeBookingDraft()));
+        } catch (e) {
+            console.warn('Unable to save local booking draft', e);
+        }
+    }
+
+    function clearLocalBookingDraft() {
+        try {
+            localStorage.removeItem(bookingDraftKey);
+        } catch (e) {
+            console.warn('Unable to clear local booking draft', e);
+        }
+    }
+
+    function restoreBookingDraft(draft) {
+        if (!draft || typeof draft !== 'object') return;
+
+        Object.keys(draft).forEach(key => {
+            if (['items', 'saved_at'].includes(key)) return;
+            const $fields = $('#bookingForm').find('[name="' + key + '"], #' + key);
+            $fields.each(function() {
+                if (this.type === 'checkbox') {
+                    this.checked = !!draft[key];
+                } else if (draft[key] !== undefined && draft[key] !== null) {
+                    $(this).val(draft[key]);
+                }
+            });
+        });
+
+        if (Array.isArray(draft.items)) {
+            items = draft.items;
+            renderGrid();
+        }
+        handleGstTypeChange(true);
+        syncGstOptionsVisibility();
+        $('[maxlength]').trigger('sync-counter');
+    }
+
+    function promptLocalDraftRecovery() {
+        if (initialShipments.length > 0) return;
+        let raw = null;
+        try {
+            raw = localStorage.getItem(bookingDraftKey);
+        } catch (e) {
+            return;
+        }
+        if (!raw) return;
+
+        let draft = null;
+        try {
+            draft = JSON.parse(raw);
+        } catch (e) {
+            clearLocalBookingDraft();
+            return;
+        }
+
+        Swal.fire({
+            title: 'Recover unsaved draft?',
+            text: 'A local draft was found for this booking form.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Restore Draft',
+            cancelButtonText: 'Discard'
+        }).then(result => {
+            if (result.isConfirmed) {
+                restoreBookingDraft(draft);
+                window.isDirty = true;
+            } else {
+                clearLocalBookingDraft();
+            }
+        });
     }
 
     function addCustomItemChargeRow(label = '', value = '') {
@@ -842,6 +1010,44 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         return list;
     }
 
+    function getEntryPaymentTypeValue() {
+        if ($('#entry_payment_type').val() === 'Other') {
+            return ($('#entry_payment_type_other').val() || '').trim();
+        }
+
+        return $('#entry_payment_type').val() || '';
+    }
+
+    function setEntryPaymentTypeValue(value) {
+        const cleanValue = value || '';
+        const $select = $('#entry_payment_type');
+        let hasOption = cleanValue === '';
+        $select.find('option').each(function() {
+            if ($(this).val() === cleanValue) {
+                hasOption = true;
+                return false;
+            }
+        });
+
+        if (hasOption) {
+            $select.val(cleanValue);
+            $('#entry_payment_type_other').addClass('d-none').val('');
+            return;
+        }
+
+        $select.val('Other');
+        $('#entry_payment_type_other').removeClass('d-none').val(cleanValue);
+    }
+
+    function handleEntryPaymentTypeChange(selectEl) {
+        if (selectEl.value === 'Other') {
+            $('#entry_payment_type_other').removeClass('d-none').focus();
+            return;
+        }
+
+        $('#entry_payment_type_other').addClass('d-none').val('');
+    }
+
     function addCustomGlobalSurchargeRow(label = '', value = '') {
         const html = `
             <div class="col-md-3 custom-global-surcharge-row mb-1">
@@ -857,27 +1063,33 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     }
 
     $(document).ready(function() {
-        $('#awb_select_top').on('change', function() {
-            let targetId = $(this).val();
+        const awbSearchRows = <?= json_encode(array_map(static function ($pb) {
+            return [
+                'id' => (int) ($pb['id'] ?? 0),
+                'awb_no' => (string) ($pb['awb_no'] ?? ''),
+            ];
+        }, $previous_bookings ?? [])) ?>;
+
+        function switchToAwbBooking(targetId) {
             if (targetId) {
                 const isNewBooking = <?= !isset($booking['id']) ? 'true' : 'false' ?>;
                 const hasItems = items.length > 0;
                 const dirty = typeof window.checkDirty === 'function' ? window.checkDirty() : (!!window.isDirty);
-                
+
                 if (isNewBooking && !hasItems) {
                     window.isDirty = false;
                     window.allowLeave = true;
                     window.location.href = BASE_URL + 'logistics/edit/' + targetId;
                     return;
                 }
-                
+
                 if (!dirty) {
                     window.isDirty = false;
                     window.allowLeave = true;
                     window.location.href = BASE_URL + 'logistics/edit/' + targetId;
                     return;
                 }
-                
+
                 Swal.fire({
                     title: 'Switching Booking',
                     text: 'Your current changes will be saved as a Draft, and you will be redirected to edit the selected booking.',
@@ -891,9 +1103,74 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                         $('#redirect_to_booking_id').val(targetId);
                         saveAsDraft();
                     } else {
-                        $(this).val('<?= $booking['id'] ?? '' ?>');
+                        $('#awb_select_top').val(<?= json_encode((string) ($booking['id'] ?? '')) ?>);
+                        $('#awb_search_top').val(<?= json_encode((string) ($booking['awb_no'] ?? '')) ?>);
                     }
                 });
+            }
+        }
+
+        function renderAwbSearchResults() {
+            const query = ($('#awb_search_top').val() || '').trim().toLowerCase();
+            const $results = $('#awb_search_results');
+            $results.empty();
+
+            if (!query) {
+                $results.addClass('d-none');
+                return;
+            }
+
+            const matches = awbSearchRows
+                .filter(row => (row.awb_no || '').toLowerCase().includes(query))
+                .slice(0, 80);
+
+            if (!matches.length) {
+                $results
+                    .append('<div class="list-group-item text-muted small">No AWB found</div>')
+                    .removeClass('d-none');
+                return;
+            }
+
+            matches.forEach(row => {
+                $results.append(`
+                    <button type="button" class="list-group-item list-group-item-action awb-search-option fw-semibold" data-id="${row.id}" data-awb="${escapeHtmlStr(row.awb_no)}">
+                        ${escapeHtmlStr(row.awb_no)}
+                    </button>
+                `);
+            });
+            $results.removeClass('d-none');
+        }
+
+        $('#awb_search_top').on('input focus', renderAwbSearchResults);
+        $('#awb_search_top').on('keydown', function(e) {
+            if (e.key !== 'Enter') {
+                return;
+            }
+            e.preventDefault();
+            const query = ($(this).val() || '').trim().toLowerCase();
+            const exact = awbSearchRows.find(row => (row.awb_no || '').toLowerCase() === query);
+            const first = exact || awbSearchRows.find(row => (row.awb_no || '').toLowerCase().includes(query));
+            if (first) {
+                $('#awb_select_top').val(first.id);
+                switchToAwbBooking(first.id);
+            }
+        });
+        $(document).on('mousedown', '.awb-search-option', function(e) {
+            e.preventDefault();
+            const targetId = $(this).data('id');
+            $('#awb_search_top').val($(this).data('awb'));
+            $('#awb_select_top').val(targetId);
+            $('#awb_search_results').addClass('d-none');
+            switchToAwbBooking(targetId);
+        });
+        $('#awb_search_clear').on('click', function() {
+            $('#awb_search_top').val('').focus();
+            $('#awb_select_top').val('');
+            renderAwbSearchResults();
+        });
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('#awb_search_top, #awb_search_results').length) {
+                $('#awb_search_results').addClass('d-none');
             }
         });
 
@@ -908,6 +1185,19 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             }
         });
 
+        let awbCheckTimer = null;
+        $('#awb_no').on('input change blur', function() {
+            clearTimeout(awbCheckTimer);
+            awbCheckTimer = setTimeout(checkAwbUnique, 350);
+        });
+
+        $('#bookingForm').on('input change', 'input, select, textarea', function(e) {
+            if (e.isTrigger || $(this).hasClass('no-track')) return;
+            saveLocalBookingDraft();
+        });
+
+        promptLocalDraftRecovery();
+
         // Handle auto-generate docket checkbox change
         $('#modal_auto_generate_docket').on('change', function() {
             updateDocketInputState();
@@ -917,17 +1207,17 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         $('[maxlength]').each(function() {
             const $field = $(this);
             const maxLength = parseInt($field.attr('maxlength'));
-            
+
             // Create counter element
             const $counter = $('<div class="char-counter text-muted text-end mt-1" style="font-size: 0.75rem; font-weight: 600; min-height: 18px;"></div>');
             $field.after($counter);
-            
+
             function updateCounter() {
                 const currentLength = $field.val().length;
                 const remaining = maxLength - currentLength;
-                
+
                 $counter.text(`${remaining} characters remaining / limit: ${maxLength}`);
-                
+
                 if (remaining <= 20) {
                     $counter.removeClass('text-muted text-warning').addClass('text-danger');
                 } else if (remaining <= 50) {
@@ -936,7 +1226,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     $counter.removeClass('text-danger text-warning').addClass('text-muted');
                 }
             }
-            
+
             $field.on('input propertychange change keyup paste', updateCounter);
             // Re-sync on modal openings or value bindings
             $field.on('sync-counter', updateCounter);
@@ -945,9 +1235,9 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
 
         // Initialize DataTable for Grid
         manifestDataTable = ERPUtils.initDataTable('#manifestTable', null, [
-            { 
-                data: null, 
-                orderable: false, 
+            {
+                data: null,
+                orderable: false,
                 searchable: false,
                 render: function (data, type, row, meta) {
                     return meta.row + 1;
@@ -961,6 +1251,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             },
             { data: 'docket' },
             { data: 'customer' },
+            { data: 'payment_type', render: data => escapeHtmlStr(data || '-') },
             { data: 'invoice_no' },
             { data: 'part_no' },
             { data: 'part_qty', className: 'tabular-nums' },
@@ -975,18 +1266,29 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 searchable: false,
                 className: 'text-end',
                 render: function(data, type, row, meta) {
+                    const itemId = row.id || '';
+                    const pdfButtons = itemId ? `
+                        <a class="btn btn-sm btn-light text-danger border shadow-none" href="${BASE_URL}logistics/exportDocketPdf/${itemId}" target="_blank" title="Individual invoice PDF" aria-label="Individual invoice PDF"><i class="fas fa-file-pdf" aria-hidden="true"></i></a>
+                        <a class="btn btn-sm btn-light text-dark border shadow-none" href="${BASE_URL}logistics/printDocketPdf/${itemId}" target="_blank" title="Print invoice" aria-label="Print invoice"><i class="fas fa-print" aria-hidden="true"></i></a>
+                    ` : `
+                        <button type="button" class="btn btn-sm btn-light text-muted border shadow-none" disabled title="Save booking before printing"><i class="fas fa-file-pdf" aria-hidden="true"></i></button>
+                        <button type="button" class="btn btn-sm btn-light text-muted border shadow-none" disabled title="Save booking before printing"><i class="fas fa-print" aria-hidden="true"></i></button>
+                    `;
                     return `
-                        <button type="button" class="btn btn-sm btn-light text-primary border me-1 shadow-none" onclick="openItemModal(${meta.row})"><i class="fas fa-edit"></i></button>
-                        <button type="button" class="btn btn-sm btn-light text-danger border shadow-none" onclick="deleteItem(${meta.row})"><i class="fas fa-trash"></i></button>
+                        <div class="btn-group btn-group-sm shipment-actions" role="group">
+                            ${pdfButtons}
+                            <button type="button" class="btn btn-light text-primary border shadow-none" onclick="openItemModal(${meta.row})" title="Edit shipment item" aria-label="Edit shipment item"><i class="fas fa-edit" aria-hidden="true"></i></button>
+                            <button type="button" class="btn btn-light text-danger border shadow-none" onclick="deleteItem(${meta.row})" title="Delete shipment item" aria-label="Delete shipment item"><i class="fas fa-trash" aria-hidden="true"></i></button>
+                        </div>
                     `;
                 }
             }
         ]);
-        
+
         // Remove length/search controls to save space
         $('#manifestTable_wrapper .row:first').hide();
         $('#manifestTable_wrapper .row:last').hide();
-        
+
         if(initialShipments.length > 0) {
             // Load global parties from first item - match exactly the stored customer_name as the option value
             const storedCustName = initialShipments[0].customer_name || '';
@@ -1009,10 +1311,10 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     }
                 });
             }
-            
+
             $('#global_bill_to').val(initialShipments[0].bill_to || '');
             $('#global_consignee').val(initialShipments[0].consignee || '');
-            
+
             initialShipments.forEach(s => {
                 let customCharges = [];
                 if (s.custom_charges) {
@@ -1033,7 +1335,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     part_qty: parseInt(s.part_qty) || 0,
                     invoice_date: s.invoice_date || '',
                     contents: s.part_no || 'Goods',
-                    pcs: parseInt(s.pieces) || 1,
+                    pcs: Number.isNaN(parseInt(s.pieces)) ? 1 : parseInt(s.pieces),
                     act_wt: parseFloat(s.actual_weight) || 0,
                     l: parseFloat(s.length) || 0,
                     w: parseFloat(s.width) || 0,
@@ -1052,12 +1354,13 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     service_charges: s.service_charges || '',
                     misc_charges: s.misc_charges || '',
                     misc_charges_name: s.misc_charges_name || 'Misc Charges',
-                    custom_charges: customCharges
+                    custom_charges: customCharges,
+                    payment_type: s.payment_type || defaultPaymentType
                 });
             });
             renderGrid();
         }
-        
+
         if (Array.isArray(initialSalesCustomCharges) && initialSalesCustomCharges.length > 0) {
             initialSalesCustomCharges.forEach(sc => {
                 addCustomGlobalSurchargeRow(sc.label, sc.value);
@@ -1067,27 +1370,61 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         calcTotals();
     });
 
+    function checkAwbUnique() {
+        const awbNo = ($('#awb_no').val() || '').trim();
+        if (!awbNo) {
+            $('#awb_no').removeClass('is-invalid');
+            return;
+        }
+
+        $.ajax({
+            url: BASE_URL + 'logistics/check-awb-unique',
+            type: 'POST',
+            data: {
+                awb_no: awbNo,
+                booking_id: bookingIdForDraft,
+                <?= csrf_token() ?>: $('meta[name="csrf-token"]').attr('content')
+            },
+            dataType: 'json',
+            success: function(res) {
+                if (res.status === 'success' && res.unique === false) {
+                    $('#awb_no').addClass('is-invalid');
+                } else {
+                    $('#awb_no').removeClass('is-invalid');
+                }
+            },
+            error: function() {
+                $('#awb_no').removeClass('is-invalid');
+            }
+        });
+    }
+
     function saveAsDraft() {
         $('#booking_status').val('Draft');
+        saveLocalBookingDraft();
         $('#bookingForm').submit();
     }
 
     function autoFillShipperGlobal() {
         let name = $('#global_shipper').val();
         if(name) {
+            const defaults = resolveCustomerDefaults(name);
             const c = _customers.find(x => (x.name || '').trim().toLowerCase() === (name || '').trim().toLowerCase());
-            const newBillTo    = c ? (c.bill_to   || '') : '';
-            const newConsignee = c ? (c.consignee || '') : '';
-            
+            const newBillTo    = defaults.billTo;
+            const newConsignee = defaults.consignee;
+
             $('#global_bill_to').val(newBillTo);
             $('#global_consignee').val(newConsignee);
-            if (c && c.payment_type) $('#payment_type').val(c.payment_type);
-            
+            if (c && c.payment_type) {
+                $('#payment_type').val(c.payment_type);
+                setEntryPaymentTypeValue(c.payment_type);
+            }
+
             // CRITICAL: Update entry_customer so new items pick up the correct name
             $('#entry_customer').val(name);
-            $('#entry_bill_to').val(newBillTo);
-            $('#entry_consignee').val(newConsignee);
-            
+            setPartySelectValue('#entry_bill_to', newBillTo);
+            setPartySelectValue('#entry_consignee', newConsignee);
+
             // Also update ALL existing items: customer, bill_to, and consignee
             // This ensures the invoice is generated with the NEW customer's details
             if (items.length > 0) {
@@ -1095,6 +1432,9 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     s.customer  = name;
                     s.bill_to   = newBillTo;
                     s.consignee = newConsignee;
+                    if (c && c.payment_type) {
+                        s.payment_type = c.payment_type;
+                    }
                 });
                 renderGrid();
             }
@@ -1113,7 +1453,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             renderGrid();
         }
     });
-    
+
     function autoFillTransporter() {
         const opt = $('#transporter_name option:selected');
         if (opt.length) $('#transporter_mobile').val(opt.data('mobile') || '');
@@ -1169,78 +1509,83 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
 
     function openItemModal(index) {
         $('#entry_edit_index').val(index);
-        
+
         // Always use the currently selected global shipper
         const globalShipper = $('#global_shipper').val() || '';
         const globalBillTo  = $('#global_bill_to').val() || '';
         const globalConsignee = $('#global_consignee').val() || '';
-        
+
         const awbVal = $('input[name="awb_no"]').val() || '';
-        
+
         if (index === -1) {
             // New Item
             $('#itemModalLabel').html('<i class="fas fa-box-open me-2"></i> Add Shipment Item' + (awbVal ? ` - AWB: <b>${awbVal}</b>` : ''));
-            
+
             let prevPartNo = '';
             let prevInvoiceDate = '';
+            let prevPaymentType = $('#payment_type').val() || '';
             if (items.length > 0) {
                 const prev = items[items.length - 1];
                 prevPartNo = prev.part_no || '';
                 prevInvoiceDate = prev.invoice_date || '';
+                prevPaymentType = prev.payment_type || prevPaymentType;
             }
-            
+
             // Use global shipper if set, else fall back to last item
             if (globalShipper) {
                 $('#entry_customer').val(globalShipper);
-                $('#entry_bill_to').val(globalBillTo);
-                $('#entry_consignee').val(globalConsignee);
+                setPartySelectValue('#entry_bill_to', globalBillTo);
+                setPartySelectValue('#entry_consignee', globalConsignee);
             } else if (items.length > 0) {
                 const prev = items[items.length - 1];
                 $('#entry_customer').val(prev.customer);
-                $('#entry_bill_to').val(prev.bill_to);
-                $('#entry_consignee').val(prev.consignee);
+                setPartySelectValue('#entry_bill_to', prev.bill_to);
+                setPartySelectValue('#entry_consignee', prev.consignee);
             }
-            
+
             // Set input state & fetch docket if needed
             updateDocketInputState();
-            
+
             $('#entry_invoice').val('');
+            setEntryPaymentTypeValue(prevPaymentType);
             $('#entry_part_no').val(prevPartNo);
             $('#entry_invoice_date').val(prevInvoiceDate);
             $('#entry_part_qty').val('0');
-            
+
             $('#entry_contents').val('Goods');
             $('#entry_pcs').val('1');
             $('#entry_act_wt').val('');
             $('#entry_l, #entry_w, #entry_h, #entry_vol_wt').val('');
-            $('#entry_chg_wt').val('');            // Clear charges
+            $('#entry_chg_wt').val('');
+            // Clear charges
             $('#entry_eway_no, #entry_eway_date, #entry_rate, #entry_delivery, #entry_docket_chg, #entry_pickup, #entry_fuel, #entry_fov, #entry_handling, #entry_service').val('');
             $('#entry_misc').val('');
             $('#entry_misc_name').val('Misc Charges');
             $('#custom_item_charges_container').empty();
-            
+
         } else {
             // Edit Item
             $('#itemModalLabel').html('<i class="fas fa-box-open me-2"></i> Edit Shipment Item' + (awbVal ? ` - AWB: <b>${awbVal}</b>` : ''));
             const item = items[index];
-            
+
             $('#entry_customer').val(item.customer);
-            $('#entry_bill_to').val(item.bill_to);
-            $('#entry_consignee').val(item.consignee);
+            setPartySelectValue('#entry_bill_to', item.bill_to);
+            setPartySelectValue('#entry_consignee', item.consignee);
+            setEntryPaymentTypeValue(item.payment_type || $('#payment_type').val() || '');
             $('#entry_docket').val(item.docket || '').prop('readonly', false).css('color', '');
-            
+
             $('#entry_invoice').val(item.invoice_no);
             $('#entry_part_no').val(item.part_no || '');
             $('#entry_invoice_date').val(item.invoice_date || '');
             $('#entry_part_qty').val(item.part_qty || 0);
-            
+
             $('#entry_contents').val(item.contents || 'Goods');
             $('#entry_pcs').val(item.pcs);
             $('#entry_act_wt').val(item.act_wt);
             $('#entry_l').val(item.l || '');
             $('#entry_w').val(item.w || '');
             $('#entry_h').val(item.h || '');
-            
+
             // Render volumetric weight without overriding existing custom chargeable weight
             const l = parseFloat(item.l) || 0;
             const w = parseFloat(item.w) || 0;
@@ -1253,7 +1598,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 $('#entry_vol_wt').val('');
             }
             $('#entry_chg_wt').val(item.chg_wt ? parseFloat(item.chg_wt).toFixed(2) : '');
-            
+
             $('#entry_eway_no').val(item.eway_no);
             $('#entry_eway_date').val(item.eway_date);
             $('#entry_rate').val(item.rate);
@@ -1274,7 +1619,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             }
         }
         $('[maxlength]').trigger('sync-counter');
-        
+
         var modal = bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('itemModal'));
         modal.show();
     }
@@ -1283,14 +1628,15 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         const customer = $('#entry_customer').val();
         const contents = $('#entry_contents').val() || 'Goods';
         const act_wt = parseFloat($('#entry_act_wt').val()) || 0;
-        
+        const paymentType = getEntryPaymentTypeValue();
+
         // BUG FIX #2 & #8: Guard against NEW_ENTRY sentinel and enforce a valid selection
         if (!customer || customer === 'NEW_ENTRY') {
             ERPUtils.showWarning("Missing Data", "Please select a valid Shipper/Customer from the list.");
             return;
         }
-        if (act_wt <= 0) {
-            ERPUtils.showWarning("Missing Data", "Actual Weight is required.");
+        if (act_wt < 0) {
+            ERPUtils.showWarning("Invalid Weight", "Actual Weight cannot be negative.");
             return;
         }
         // Block save if docket is flagged as duplicate (exists in another AWB)
@@ -1301,7 +1647,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
 
         let docket = $('#entry_docket').val() || '';
         const editIndex = parseInt($('#entry_edit_index').val());
-        
+
         // Auto generate if checked and it's a new item
         const isAutoGen = $('#modal_auto_generate_docket').is(':checked');
         if (isAutoGen && editIndex === -1) {
@@ -1313,7 +1659,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     Swal.showLoading();
                 }
             });
-            
+
             try {
                 let activeDockets = [];
                 items.forEach((item, idx) => {
@@ -1336,25 +1682,26 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         const h = parseFloat($('#entry_h').val()) || 0;
         const formula = parseFloat($('#volumetric_formula').val()) || 6000;
         const vol_wt = (l*w*h)/formula;
-        const chg_wt = parseFloat($('#entry_chg_wt').val()) || Math.max(act_wt, vol_wt); 
+        const chg_wt = parseFloat($('#entry_chg_wt').val()) || Math.max(act_wt, vol_wt);
 
         const itemObj = {
             id: editIndex >= 0 ? items[editIndex].id : '',
             customer: $('#entry_customer').val(),
             bill_to: $('#entry_bill_to').val(),
             consignee: $('#entry_consignee').val(),
+            payment_type: paymentType,
             docket: docket,
             invoice_no: $('#entry_invoice').val(),
             part_no: $('#entry_part_no').val(),
             part_qty: parseInt($('#entry_part_qty').val()) || 0,
             invoice_date: $('#entry_invoice_date').val(),
             contents: contents,
-            pcs: parseInt($('#entry_pcs').val()) || 1,
+            pcs: parseInt($('#entry_pcs').val()) || 0,
             act_wt: act_wt,
             l: l, w: w, h: h,
             vol_wt: vol_wt,
             chg_wt: chg_wt,
-            
+
             eway_no: $('#entry_eway_no').val(),
             eway_date: $('#entry_eway_date').val(),
             rate: $('#entry_rate').val(),
@@ -1375,10 +1722,10 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         } else {
             items.push(itemObj);
         }
-        
+
         window.isDirty = true;
         renderGrid();
-        
+
         // Hide modal
         var modalEl = document.getElementById('itemModal');
         var modal = bootstrap.Offcanvas.getInstance(modalEl);
@@ -1420,7 +1767,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
 
     function renderGrid() {
         $('#hiddenInputsContainer').empty();
-        
+
         let sumPcs = 0, sumAct = 0, sumVol = 0, sumChg = 0;
 
         // Update DataTable
@@ -1432,17 +1779,19 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         });
 
         $('#items_json').val(JSON.stringify(items));
+        $('#payment_type').val(items.length > 0 ? (items[0].payment_type || '') : '');
+        saveLocalBookingDraft();
 
         // Update Footers
         $('#sumPcs').text(sumPcs);
         $('#sumActWt').text(sumAct.toFixed(2));
         $('#sumVolWt').text(sumVol.toFixed(2));
         $('#sumChgWt').text(sumChg.toFixed(2));
-        
+
         $('#input_total_pieces').val(sumPcs);
         $('#input_total_weight').val(sumChg.toFixed(2));
         $('#salesWeight').val(sumChg.toFixed(2));
-        
+
         // Auto-sync first item details to hidden global fields for GST checks
         if (items.length > 0) {
             $('#global_shipper').val(items[0].customer);
@@ -1454,7 +1803,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             $('#global_consignee').val('');
         }
         syncGstOptionsVisibility();
-        
+
         calcTotals();
     }
 
@@ -1480,7 +1829,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
 
         const isGstApplied = $('#gst_applied').is(':checked');
         const gstType = $('#gst_type').val();
-        
+
         let cgstRate = 0;
         let sgstRate = 0;
         let igstRate = 0;
@@ -1494,7 +1843,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             $('#cgst_rate').val('0.00');
             $('#sgst_rate').val('0.00');
         }
-        
+
         // Show live total percentage calculations applied to the booking
         const totalGstPercent = cgstRate + sgstRate + igstRate;
         $('#totalGstBadge').text('Total GST: ' + totalGstPercent.toFixed(2) + '%');
@@ -1512,7 +1861,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     $(document).on('change', '#gst_applied', function() {
         const rawName = $('#global_shipper').val();
         const name = (rawName || '').trim().toLowerCase();
-        
+
         if ($(this).is(':checked')) {
             if (!name) {
                 $(this).prop('checked', false);
@@ -1525,24 +1874,24 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     $(document).on('change', '#entry_customer', function() {
         const name = $(this).val();
         if (name && name !== 'NEW_ENTRY') {
+            const defaults = resolveCustomerDefaults(name);
             const c = _customers.find(x => (x.name || '').trim().toLowerCase() === (name || '').trim().toLowerCase());
-            if (c) {
-                $('#entry_bill_to').val(c.bill_to || '');
-                $('#entry_consignee').val(c.consignee || '');
-                
-                if (items.length === 0) {
-                    $('#global_shipper').val(name);
-                    $('#global_bill_to').val(c.bill_to || '');
-                    $('#global_consignee').val(c.consignee || '');
-                    if (c.payment_type) {
-                        $('#payment_type').val(c.payment_type);
-                    }
-                    syncGstOptionsVisibility();
+            setPartySelectValue('#entry_bill_to', defaults.billTo);
+            setPartySelectValue('#entry_consignee', defaults.consignee);
+
+            if (items.length === 0) {
+                $('#global_shipper').val(name);
+                $('#global_bill_to').val(defaults.billTo);
+                $('#global_consignee').val(defaults.consignee);
+                if (c && c.payment_type) {
+                    $('#payment_type').val(c.payment_type);
+                    setEntryPaymentTypeValue(c.payment_type);
                 }
+                syncGstOptionsVisibility();
             }
         } else if (!name) {
-            $('#entry_bill_to').val('');
-            $('#entry_consignee').val('');
+            setPartySelectValue('#entry_bill_to', '');
+            setPartySelectValue('#entry_consignee', '');
             if (items.length === 0) {
                 $('#global_shipper').val('');
                 $('#global_bill_to').val('');
@@ -1566,20 +1915,20 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 hasGst = true;
             }
         }
-        
+
         // Auto-check/uncheck GST Applied checkbox programmatically
         $('#gst_applied').prop('checked', hasGst);
-        
+
         // Show/hide red validation warning text (no GST number in customer master)
         if (name && !hasGst) {
             $('#gst_warning_msg').removeClass('d-none');
         } else {
             $('#gst_warning_msg').addClass('d-none');
         }
-        
+
         // Keep the GST Applied checkbox container hidden
         $('#gst_applied_container').addClass('d-none');
-        
+
         // Show/hide GST config card based on customer GST status
         if (hasGst) {
             $('#gst_config_card_container').removeClass('d-none');
@@ -1595,7 +1944,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             $('#cgst_col').removeClass('d-none');
             $('#sgst_col').removeClass('d-none');
             $('#igst_col').addClass('d-none');
-            
+
             if (!isInit) {
                 $('#cgst_rate').val('9.00');
                 $('#sgst_rate').val('9.00');
@@ -1605,7 +1954,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             $('#cgst_col').addClass('d-none');
             $('#sgst_col').addClass('d-none');
             $('#igst_col').removeClass('d-none');
-            
+
             if (!isInit) {
                 $('#cgst_rate').val('0.00');
                 $('#sgst_rate').val('0.00');
@@ -1657,7 +2006,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 document.getElementById('signatureBase64').value = "";
             });
         }
-        
+
         // Initialize GST mode dropdown state based on loaded values
         const initialIgst = parseFloat($('#igst_rate').val()) || 0;
         if (initialIgst > 0) {
@@ -1667,31 +2016,38 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         }
         handleGstTypeChange(true);
         syncGstOptionsVisibility();
-        
+
         // Initial GST calculations update
         calcTotals();
     });
 
     $('#bookingForm').on('submit', function() {
-        if(items.length === 0) {
+        const isDraftSave = $('#booking_status').val() === 'Draft';
+        if ($('#awb_no').hasClass('is-invalid')) {
+            ERPUtils.showWarning("Duplicate AWB", "Please use a unique AWB number before saving this booking.");
+            return false;
+        }
+
+        if(!isDraftSave && items.length === 0) {
             ERPUtils.showWarning("Missing Data", "Please add at least one shipment item.");
             return false;
         }
-        
+
         // Save drawn signature base64 if present
         if (signaturePad && !signaturePad.isEmpty()) {
             document.getElementById('signatureBase64').value = signaturePad.toDataURL('image/jpeg');
         }
-        
+
         // Re-render to ensure hidden inputs are fresh/current
         renderGrid();
-        
+
+        clearLocalBookingDraft();
         window.isDirty = false; // allow navigation without prompt
         $('#mainSubmitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
     });
 
     // --- QUICK INLINE MASTER CREATION ---
-    
+
     // Set up global CSRF handler for AJAX calls
     $.ajaxSetup({
         headers: {
@@ -1700,7 +2056,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
     });
 
     // BUG FIX #3: Restrict NEW_ENTRY handler to only known master dropdowns (prevents nested modal chaos)
-    const MASTER_QUICK_DROPDOWNS = ['origin','destination','mode_transport','payment_type','material_type','material_category','global_shipper','entry_customer','transporter_name','driver_name','airlines_select'];
+    const MASTER_QUICK_DROPDOWNS = ['origin','destination','mode_transport','entry_payment_type','material_type','material_category','global_shipper','entry_customer','transporter_name','driver_name','airlines_select'];
     $(document).on('change', 'select', function() {
         if ($(this).val() === 'NEW_ENTRY' && MASTER_QUICK_DROPDOWNS.includes($(this).attr('id'))) {
             const dropdownId = $(this).attr('id');
@@ -1712,10 +2068,10 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         let title = "Add New Entry";
         let fieldsHtml = "";
         let submitUrl = "";
-        
+
         // Store reference to the dropdown that triggered the modal
         $('#quickMasterModal').data('target-select-id', dropdownId);
-        
+
         if (dropdownId === 'origin' || dropdownId === 'destination') {
             const type = dropdownId;
             title = `Add New ${type === 'origin' ? 'Origin' : 'Destination'}`;
@@ -1741,9 +2097,10 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     <input type="hidden" name="is_active" value="1">
                 </div>
             `;
-        } else if (dropdownId === 'mode_transport' || dropdownId === 'payment_type' || dropdownId === 'material_type' || dropdownId === 'material_category') {
+        } else if (dropdownId === 'mode_transport' || dropdownId === 'entry_payment_type' || dropdownId === 'material_type' || dropdownId === 'material_category') {
             let type = dropdownId;
             if (type === 'mode_transport') type = 'mode';
+            if (type === 'entry_payment_type') type = 'payment_type';
             let displayType = type.replace('_', ' ');
             displayType = displayType.charAt(0).toUpperCase() + displayType.slice(1);
             title = `Add New ${displayType}`;
@@ -1760,12 +2117,12 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         } else if (dropdownId === 'global_shipper' || dropdownId === 'entry_customer') {
             title = "Add New Customer / Shipper";
             submitUrl = BASE_URL + 'masters/customers/create';
-            
+
             let paymentOptions = '<option value="">--Select--</option>';
             <?php foreach($lookups['payment_type'] ?? [] as $l): ?>
                 paymentOptions += `<option value="<?= esc($l['value']) ?>"><?= esc($l['value']) ?></option>`;
             <?php endforeach; ?>
-            
+
             fieldsHtml = `
                 <div class="row g-3">
                     <div class="col-md-8">
@@ -1869,7 +2226,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         $('#quickMasterModalLabel').html('<i class="fas fa-plus-circle me-2"></i> ' + title);
         $('#quickMasterFields').html(fieldsHtml);
         $('#quickMasterModal').data('submit-url', submitUrl);
-        
+
         // Show Modal
         const modal = new bootstrap.Modal(document.getElementById('quickMasterModal'));
         modal.show();
@@ -1887,19 +2244,19 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
 
     $('#btnSaveQuickMaster').on('click', function() {
         const $form = $('#quickMasterForm');
-        
+
         // Check form validity
         if (!$form[0].checkValidity()) {
             $form[0].reportValidity();
             return;
         }
-        
+
         const submitUrl = $('#quickMasterModal').data('submit-url');
         const targetSelectId = $('#quickMasterModal').data('target-select-id');
         const formData = $form.serialize();
-        
+
         $('#btnSaveQuickMaster').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i> Saving...');
-        
+
         $.ajax({
             url: submitUrl,
             type: 'POST',
@@ -1907,13 +2264,13 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             dataType: 'json',
             success: function(res) {
                 $('#btnSaveQuickMaster').prop('disabled', false).html('<i class="fas fa-check me-2"></i> Save Entry');
-                
+
                 // BUG FIX #4: Refresh CSRF token from response to prevent 403 on second save
                 if (res.csrf_hash) {
                     $('meta[name="csrf-token"]').attr('content', res.csrf_hash);
                     $('input[name="csrf_token_name"]').val(res.csrf_hash);
                 }
-                
+
                 if (res.status === 'success') {
                     Swal.fire({
                         title: 'Saved!',
@@ -1922,10 +2279,10 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                         timer: 1500,
                         showConfirmButton: false
                     });
-                    
+
                     let newId = res.id;
                     let newValue = res.value || res.name;
-                    
+
                     if (targetSelectId === 'global_shipper' || targetSelectId === 'entry_customer') {
                         _customers.push({
                             id: newId,
@@ -1937,16 +2294,16 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                             gst_number: res.gst_number,
                             gst_state: res.gst_state
                         });
-                        
+
                         const $globalShipper = $('#global_shipper');
                         const $entryCustomer = $('#entry_customer');
-                        
+
                         const newOptionGlobal = `<option value="${res.name}">${res.name} (${res.code || 'N/A'})</option>`;
                         const newOptionEntry = `<option value="${res.name}">${res.name} (${res.code || 'N/A'})</option>`;
-                        
+
                         $globalShipper.append(newOptionGlobal);
                         $entryCustomer.append(newOptionEntry);
-                        
+
                         if (targetSelectId === 'global_shipper') {
                             $globalShipper.val(res.name).trigger('change');
                             setTimeout(() => $('#global_bill_to').focus(), 100);
@@ -1957,37 +2314,37 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                     } else {
                         const $select = $('#' + targetSelectId);
                         let newOption = "";
-                        
+
                         if (targetSelectId === 'transporter_name') {
                             newOption = `<option value="${res.name}" data-mobile="${res.mobile || ''}">${res.name}</option>`;
                             $select.append(newOption);
                             $select.val(res.name).trigger('change');
                             setTimeout(() => $('#transporter_mobile').focus(), 100);
-                            
+
                         } else if (targetSelectId === 'driver_name') {
                             newOption = `<option value="${res.name}" data-mobile="${res.mobile || ''}" data-vehicle="${res.vehicle_no || ''}">${res.name}</option>`;
                             $select.append(newOption);
                             $select.val(res.name).trigger('change');
                             setTimeout(() => $('#driver_mobile').focus(), 100);
-                            
+
                         } else if (targetSelectId === 'airlines_select') {
                             newOption = `<option value="${res.name}" data-code="${res.code || ''}">${res.name}</option>`;
                             $select.append(newOption);
                             $select.val(res.name).trigger('change');
                             setTimeout(() => $('input[name="flight_number"]').focus(), 100);
-                            
+
                         } else {
                             newOption = `<option value="${res.value}">${res.value}</option>`;
                             $select.append(newOption);
                             $select.val(res.value).trigger('change');
-                            
+
                             if (targetSelectId === 'origin') {
                                 setTimeout(() => $('#destination').focus(), 100);
                             } else if (targetSelectId === 'destination') {
                                 setTimeout(() => $('#mode_transport').focus(), 100);
                             } else if (targetSelectId === 'mode_transport') {
-                                setTimeout(() => $('#payment_type').focus(), 100);
-                            } else if (targetSelectId === 'payment_type') {
+                                setTimeout(() => $('#material_type').focus(), 100);
+                            } else if (targetSelectId === 'entry_payment_type') {
                                 setTimeout(() => $('#material_type').focus(), 100);
                             } else if (targetSelectId === 'material_type') {
                                 setTimeout(() => $('#material_category').focus(), 100);
@@ -1996,7 +2353,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                             }
                         }
                     }
-                    
+
                     bootstrap.Modal.getInstance(document.getElementById('quickMasterModal')).hide();
                 } else {
                     ERPUtils.showError("Save Failed", res.message || "An error occurred.");
@@ -2019,7 +2376,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         const docketNo = $(this).val().trim();
         const editIndex = $('#entry_edit_index').val();
         const bookingId = <?= isset($bookingId) ? $bookingId : 0 ?>;
-        
+
         if (docketNo) {
             // Check against database for other bookings (allow duplicate within same AWB)
             $.ajax({
@@ -2048,7 +2405,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
         const inputId = selectEl.id + '_other';
         const inputEl = document.getElementById(inputId);
         if (!inputEl) return;
-        
+
         if (selectEl.value === 'Other') {
             inputEl.classList.remove('d-none');
             inputEl.setAttribute('name', selectEl.getAttribute('name'));

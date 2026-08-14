@@ -10,7 +10,7 @@ class ShipmentItemModel extends Model
     protected $useTimestamps = true;
     
     protected $allowedFields = [
-        'booking_id', 'customer_name', 'bill_to', 'consignee', 'docket_no',
+        'booking_id', 'customer_name', 'bill_to', 'consignee', 'payment_type', 'material_category', 'docket_no',
         'part_no', 'part_qty', 'invoice_no', 'invoice_date', 'actual_weight', 'length',
         'width', 'height', 'volumetric_weight', 'calculated_chargeable_weight', 'final_chargeable_weight', 'pieces', 
         'eway_bill_no', 'eway_bill_date', 'rate', 'delivery_charges',
@@ -22,7 +22,7 @@ class ShipmentItemModel extends Model
         'customer_name' => 'required|min_length[2]',
         'bill_to' => 'required|min_length[2]',
         'consignee' => 'required|min_length[2]',
-        'actual_weight' => 'required|greater_than[0]',
+        'actual_weight' => 'required|greater_than_equal_to[0]',
         'length' => 'permit_empty|numeric|greater_than_equal_to[0]',
         'width' => 'permit_empty|numeric|greater_than_equal_to[0]',
         'height' => 'permit_empty|numeric|greater_than_equal_to[0]',
@@ -36,6 +36,6 @@ class ShipmentItemModel extends Model
     {
         $volumetric = ($length * $width * $height) / 6000;
         $chargeable = max($actual_weight, $volumetric);
-        return max($chargeable, 45); // Minimum 45 KG
+        return $chargeable;
     }
 }

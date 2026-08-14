@@ -13,7 +13,7 @@ class BookingModel extends Model
         'material_category', 'status', 'transporter_name', 'transporter_mobile', 
         'driver_name', 'driver_mobile', 'driver_license_no', 
         'vehicle_no', 'total_pieces', 'total_weight', 'flight_number', 'airlines', 
-        'volumetric_formula', 'gst_applied', 'payment_type', 'narration', 'created_by',
+        'volumetric_formula', 'gst_applied', 'payment_type', 'narration', 'remarks', 'created_by',
         'gstin', 'pan', 'sac_code', 'cgst_rate', 'sgst_rate', 'igst_rate', 'signature_path'
     ];
     protected $useTimestamps = true;
@@ -34,7 +34,14 @@ class BookingModel extends Model
 
         return $query->groupStart()
         ->like('bookings.awb_no', $searchValue)
+        ->orLike('bookings.booking_date', $searchValue)
+        ->orLike('bookings.origin', $searchValue)
+        ->orLike('bookings.destination', $searchValue)
+        ->orLike('bookings.status', $searchValue)
         ->orLike('shipment_items.docket_no', $searchValue)
+        ->orLike('shipment_items.customer_name', $searchValue)
+        ->orLike('shipment_items.bill_to', $searchValue)
+        ->orLike('shipment_items.consignee', $searchValue)
         ->groupEnd()
         ->groupBy('bookings.id')
         ->orderBy('bookings.booking_date', 'DESC')
@@ -77,15 +84,17 @@ class BookingModel extends Model
 
    public function getCompanyBookings($companyId, $limit = 5)
    {
-       $query = $this->where('company_id', $companyId);
+       $query = $this->select('bookings.*, users.username as created_by_name')
+                     ->join('users', 'users.id = bookings.created_by', 'left')
+                     ->where('bookings.company_id', $companyId);
 
        $userRole = session()->get('role');
        if ($userRole !== 'admin') {
            $branchId = session()->get('branch_id') ?? 1;
-           $query = $query->where('branch_id', $branchId);
+           $query = $query->where('bookings.branch_id', $branchId);
        }
 
-       return $query->orderBy('id', 'DESC')
+       return $query->orderBy('bookings.id', 'DESC')
                     ->limit($limit)
                     ->findAll();
    }

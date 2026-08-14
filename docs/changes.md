@@ -2,6 +2,67 @@
 
 This file tracks every technical change, feature implementation, refactoring, and pending scope addition performed on the M.A. Logistics ERP project.
 
+## Latest Frontend Change
+
+### [CHG-018] Move Payment Type To Shipment Item Drawer
+* **Status**: Completed
+* **Priority**: High
+* **Requirement**: Move Payment Type out of Consignment Details and into the Shipment Item add/edit drawer while preserving the same behavior and values discussed in the client meeting.
+* **Implementation**:
+  - Replaced the visible Tab 1 Payment Type dropdown with a hidden legacy `payment_type` field so existing booking-level backend compatibility remains intact.
+  - Added Payment Type to the shipment item drawer and persisted each item value into `items_json` as `payment_type`.
+  - Updated add/edit item flows, validation restore, Customer Master autofill, quick master creation, and manifest grid display to understand item-level Payment Type.
+  - Aligned frontend item validation with the backend/client rule that pieces and actual weight may be zero.
+* **Files Modified**: `app/Views/logistics/booking_form.php`, `docs/*`
+* **QA**: PHP syntax check passed for the booking form.
+
+---
+
+## Latest Backend Change
+
+### [CHG-017] Hide Zero-Value Invoice Charges
+* **Status**: Completed
+* **Priority**: Medium
+* **Requirement**: Do not show surcharge columns on PDF invoices when the selected shipment set has zero/null values for those charges.
+* **Implementation**:
+  - Updated `InvoiceService::resolveActiveCharges()` to return only non-zero charge columns instead of falling back to default zero-value docket/pickup/delivery columns.
+  - Updated `invoice.php` fixed PDF layouts to suppress zero-value surcharge columns for default, NX Logistics, and Brembo invoice formats while expanding the total amount column to keep table widths stable.
+  - Kept row taxable/net totals unchanged; special NX/Brembo charge buckets now include custom charges where those amounts are part of the taxable row total.
+* **Files Modified**: `app/Services/InvoiceService.php`, `app/Views/pdfs/invoice.php`, `docs/*`
+* **QA**: PHP syntax checks passed for the service and PDF template.
+
+---
+
+### [CHG-016] Financial-Year Invoice Auto-Numbering
+* **Status**: Completed
+* **Priority**: High
+* **Requirement**: Replace manual consolidated invoice numbering with company-scoped financial-year sequences such as `MA-26-27/001`.
+* **Implementation**:
+  - Added migration `2026-08-13-000002_AddInvoiceSequences.php` to create `invoice_sequences` and optional `companies.invoice_prefix`.
+  - Added `InvoiceService::finalizeConsolidatedInvoiceNumber()` to reuse a previously finalized invoice number for reprints, or allocate the next company/prefix/FY number atomically with row locking.
+  - Persisted finalized invoice number/date back to selected `shipment_items` before consolidated PDF streaming, so the "All Invoices" grid and reprints show the same number.
+  - Prefix resolution now prefers `companies.invoice_prefix`, then a typed invoice prefix from the existing form field, then company-name initials.
+* **Files Modified**: `app/Database/Migrations/2026-08-13-000002_AddInvoiceSequences.php`, `app/Services/InvoiceService.php`, `app/Controllers/Logistics.php`, `docs/*`
+* **QA**: PHP syntax checks passed, `php spark routes` loaded the consolidated invoice routes, and the new migration applied successfully with `php spark migrate`.
+
+---
+
+### [CHG-015] Phase 1 Backend Gap Fixes — Item Metadata, Rate Snapshots, Remarks & Invoice Fallbacks
+* **Status**: Completed
+* **Priority**: High
+* **Requirement**: Close backend-only gaps from the Phase 1 client tracker without reworking completed frontend flows or Phase 2 items.
+* **Implementation**:
+  - Added migration `2026-08-13-000001_AddPhase1BackendGapFields.php` to add `shipment_items.payment_type`, `shipment_items.material_category`, `bookings.remarks`, and a new `customer_rates` table for date-wise/category-wise customer rates.
+  - Added `CustomerRateModel` with tenant-scoped lookup by customer, material category, and booking date.
+  - Updated `BookingService` to persist item-level payment type/material category when provided, fallback to booking-level values, auto-fill blank/zero item rates from `customer_rates`, and enforce backend sanity validation where total item actual weight must not be below declared master AWB weight.
+  - Relaxed `ShipmentItemModel` actual weight validation to allow zero because the client document explicitly permits zero pieces/actual weight.
+  - Updated `InvoiceService` and `Logistics` PDF paths to prefer Customer Master address/GST/PAN details where available, while preserving existing shipment free-text fallbacks.
+  - Added optional backend LR/docket clubbing support through `club_by_lr=1` or consolidated billing `billing_mode=docket`; default invoice behavior remains unchanged.
+  - Added remarks aliasing so both `remarks` and legacy `narration` can print on invoices.
+* **Follow-up Completed**: Financial-year invoice persistence and auto-number sequencing were completed separately in CHG-016.
+* **Files Modified**: `app/Database/Migrations/2026-08-13-000001_AddPhase1BackendGapFields.php`, `app/Models/CustomerRateModel.php`, `app/Models/ShipmentItemModel.php`, `app/Models/BookingModel.php`, `app/Services/BookingService.php`, `app/Services/InvoiceService.php`, `app/Controllers/Logistics.php`, `app/Views/pdfs/invoice.php`, `docs/*`
+* **QA**: PHP syntax checks passed for modified backend PHP files, `php spark routes` loaded successfully, and the new migration applied successfully with `php spark migrate`.
+
 ---
 
 ## 1. Completed Phase 1 Implementations

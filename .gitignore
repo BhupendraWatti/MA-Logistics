@@ -34,10 +34,25 @@ test_db.php
 drop_sort_order.php
 testsprite_tests/tmp/config.json
 
-# Graphify
+# Graphify - knowledge graph output and all build artifacts
 graphify-out/
 graphify_output.md
 .graphifyignore
+.graphify_detect.json
+.graphify_extract.json
+.graphify_ast.json
+.graphify_semantic.json
+.graphify_semantic_new.json
+.graphify_cached.json
+.graphify_uncached.txt
+.graphify_analysis.json
+.graphify_labels.json
+.graphify_transcripts.json
+.graphify_incremental.json
+.graphify_old.json
+.graphify_python
+.graphify_version
+.graphify_chunk_*.json
 
 # Antigravity IDE Metadata
 .antigravitycli/
@@ -54,3 +69,8 @@ docs/
 .playwright-mcp
 .antigravitycli
 .agent
+MALogistic phase 1 issues
+
+
+
+.gitignore docs/api.md docs/architecture.md docs/changes.md docs/database.md docs/functionality.md docs/gemini.md docs/known-issues.md docs/project_manager_update.md docs/project_summary.md docs/README.md docs/rules.md docs/testing.md docs/video_to_action_explanations.md

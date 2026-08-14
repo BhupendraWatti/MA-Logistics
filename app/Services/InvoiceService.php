@@ -41,6 +41,221 @@ class InvoiceService
         $this->bankModel     = new BankAccountModel();
     }
 
+    public function finalizeConsolidatedInvoiceNumber(
+        int $companyId,
+        array $shipments,
+        array $companyData,
+        string $invoiceDate,
+        ?string $requestedInvoiceNo = null
+    ): string {
+        $itemIds = array_values(array_filter(array_map(static fn ($item) => (int) ($item['id'] ?? 0), $shipments)));
+        if (empty($itemIds)) {
+            throw new InvalidArgumentException('No shipment items were selected for invoice finalization.');
+        }
+
+        $existingNumbers = [];
+        foreach ($shipments as $item) {
+            $invoiceNo = trim((string) ($item['invoice_no'] ?? ''));
+            if ($invoiceNo !== '') {
+                $existingNumbers[$invoiceNo] = true;
+            }
+        }
+
+        $db = \Config\Database::connect();
+
+        if (count($existingNumbers) === 1) {
+            $invoiceNo = array_key_first($existingNumbers);
+            $persistedInvoiceDate = $invoiceDate;
+            foreach ($shipments as $item) {
+                if (trim((string) ($item['invoice_no'] ?? '')) === $invoiceNo && !empty($item['invoice_date'])) {
+                    $persistedInvoiceDate = $item['invoice_date'];
+                    break;
+                }
+            }
+
+            $db->table('shipment_items')
+                ->whereIn('id', $itemIds)
+                ->update([
+                    'invoice_no'   => $invoiceNo,
+                    'invoice_date' => $persistedInvoiceDate,
+                    'updated_at'   => date('Y-m-d H:i:s'),
+                ]);
+
+            return $invoiceNo;
+        }
+
+        $db->transStart();
+
+        $prefix = $this->resolveInvoicePrefix($companyData, $requestedInvoiceNo);
+        $financialYear = $this->financialYearLabel($invoiceDate);
+        $now = date('Y-m-d H:i:s');
+
+        $db->query(
+            'INSERT INTO invoice_sequences (company_id, financial_year, prefix, last_number, created_at, updated_at)
+             VALUES (?, ?, ?, 0, ?, ?)
+             ON DUPLICATE KEY UPDATE updated_at = updated_at',
+            [$companyId, $financialYear, $prefix, $now, $now]
+        );
+
+        $sequence = $db->query(
+            'SELECT * FROM invoice_sequences WHERE company_id = ? AND financial_year = ? AND prefix = ? FOR UPDATE',
+            [$companyId, $financialYear, $prefix]
+        )->getRowArray();
+
+        if (!$sequence) {
+            throw new \RuntimeException('Invoice sequence row could not be locked.');
+        }
+
+        $nextNumber = ((int) ($sequence['last_number'] ?? 0)) + 1;
+        $invoiceNo = sprintf('%s-%s/%03d', $prefix, $financialYear, $nextNumber);
+
+        $db->table('invoice_sequences')
+            ->where('id', (int) $sequence['id'])
+            ->update([
+                'last_number' => $nextNumber,
+                'updated_at'  => $now,
+            ]);
+
+        $db->table('shipment_items')
+            ->whereIn('id', $itemIds)
+            ->update([
+                'invoice_no'   => $invoiceNo,
+                'invoice_date' => $invoiceDate,
+                'updated_at'   => $now,
+            ]);
+
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            throw new \RuntimeException('Failed to finalize the invoice number.');
+        }
+
+        return $invoiceNo;
+    }
+
+    public function applyInvoiceNumberToShipments(array $shipments, string $invoiceNo, string $invoiceDate): array
+    {
+        foreach ($shipments as &$item) {
+            $item['invoice_no'] = $invoiceNo;
+            $item['invoice_date'] = $invoiceDate;
+        }
+
+        return $shipments;
+    }
+
+    public function financialYearLabel(string $date): string
+    {
+        $timestamp = strtotime($date) ?: time();
+        $year = (int) date('Y', $timestamp);
+        $month = (int) date('n', $timestamp);
+        $startYear = $month >= 4 ? $year : $year - 1;
+        $endYear = $startYear + 1;
+
+        return sprintf('%02d-%02d', $startYear % 100, $endYear % 100);
+    }
+
+    private function resolveInvoicePrefix(array $companyData, ?string $requestedInvoiceNo = null): string
+    {
+        $configured = trim((string) ($companyData['invoice_prefix'] ?? ''));
+        if ($configured !== '') {
+            return $this->normalizeInvoicePrefix($configured);
+        }
+
+        $requestedPrefix = $this->extractRequestedInvoicePrefix((string) $requestedInvoiceNo);
+        if ($requestedPrefix !== '') {
+            return $requestedPrefix;
+        }
+
+        $companyName = trim((string) ($companyData['name'] ?? 'MA Logistics'));
+        preg_match_all('/[A-Za-z0-9]+/', $companyName, $parts);
+        $tokens = $parts[0] ?? [];
+
+        if (count($tokens) > 1) {
+            $initials = '';
+            foreach ($tokens as $token) {
+                $initials .= strtoupper($token[0]);
+            }
+            return substr($initials, 0, 8) ?: 'MA';
+        }
+
+        return substr($this->normalizeInvoicePrefix($companyName), 0, 8) ?: 'MA';
+    }
+
+    private function extractRequestedInvoicePrefix(string $requestedInvoiceNo): string
+    {
+        if (preg_match('/^([A-Za-z0-9]+)/', trim($requestedInvoiceNo), $matches)) {
+            return $this->normalizeInvoicePrefix($matches[1]);
+        }
+
+        return '';
+    }
+
+    private function normalizeInvoicePrefix(string $prefix): string
+    {
+        $normalized = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $prefix));
+        return substr($normalized ?: 'MA', 0, 20);
+    }
+
+    private function clubShipmentsByDocket(array $shipments): array
+    {
+        $grouped = [];
+
+        foreach ($shipments as $item) {
+            $docketNo = trim((string) ($item['docket_no'] ?? ''));
+            $key = $docketNo !== '' ? $docketNo : '__row_' . count($grouped);
+
+            if (!isset($grouped[$key])) {
+                $item['_freight_override'] = 0.0;
+                $item['_custom_charges_grouped'] = [];
+                $grouped[$key] = $item;
+                $grouped[$key]['pieces'] = 0;
+                $grouped[$key]['final_chargeable_weight'] = 0.0;
+
+                foreach (['fuel_surcharge', 'docket_charges', 'pickup_charges', 'delivery_charges', 'fov_charges', 'handling_charges', 'service_charges', 'misc_charges'] as $field) {
+                    $grouped[$key][$field] = 0.0;
+                }
+            }
+
+            $wt = (float) ($item['final_chargeable_weight'] ?? 0);
+            $rate = (float) ($item['rate'] ?? 0);
+            $grouped[$key]['pieces'] += (int) ($item['pieces'] ?? 0);
+            $grouped[$key]['final_chargeable_weight'] += $wt;
+            $grouped[$key]['_freight_override'] += $wt * $rate;
+
+            foreach (['fuel_surcharge', 'docket_charges', 'pickup_charges', 'delivery_charges', 'fov_charges', 'handling_charges', 'service_charges', 'misc_charges'] as $field) {
+                $grouped[$key][$field] += (float) ($item[$field] ?? 0);
+            }
+
+            if (!empty($item['custom_charges'])) {
+                $customList = is_string($item['custom_charges']) ? json_decode($item['custom_charges'], true) : $item['custom_charges'];
+                if (is_array($customList)) {
+                    foreach ($customList as $charge) {
+                        $label = strtoupper(trim($charge['label'] ?? 'EXTRA CHARGE'));
+                        $grouped[$key]['_custom_charges_grouped'][$label] = ($grouped[$key]['_custom_charges_grouped'][$label] ?? 0) + (float) ($charge['value'] ?? 0);
+                    }
+                }
+            }
+        }
+
+        foreach ($grouped as &$item) {
+            $weight = (float) ($item['final_chargeable_weight'] ?? 0);
+            $freight = (float) ($item['_freight_override'] ?? 0);
+            $item['rate'] = $weight > 0 ? round($freight / $weight, 2) : 0;
+
+            if (!empty($item['_custom_charges_grouped'])) {
+                $customCharges = [];
+                foreach ($item['_custom_charges_grouped'] as $label => $value) {
+                    $customCharges[] = ['label' => $label, 'value' => $value];
+                }
+                $item['custom_charges'] = json_encode($customCharges);
+            }
+
+            unset($item['_custom_charges_grouped']);
+        }
+
+        return array_values($grouped);
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // SECTION 1 — Charge Aggregation
     // ─────────────────────────────────────────────────────────────────────────
@@ -102,7 +317,6 @@ class InvoiceService
 
     /**
      * Build the map of active (non-zero) charge columns for dynamic PDF column display.
-     * Returns a default minimal set if all charges are zero.
      *
      * @param  array  $totals        Keyed totals from aggregateCharges()['totals']
      * @param  string $miscLabel     Label from aggregateCharges()['miscLabel']
@@ -130,13 +344,7 @@ class InvoiceService
             $all[$key] = ['label' => $lbl, 'sum' => $val, 'custom' => true, 'custom_label' => $lbl];
         }
 
-        $active = array_filter($all, fn ($c) => $c['sum'] > 0);
-
-        return $active ?: [
-            'docket'   => ['label' => 'DOCKET',   'field' => 'docket'],
-            'pickup'   => ['label' => 'PICKUP',   'field' => 'pickup'],
-            'delivery' => ['label' => 'DELIVERY', 'field' => 'delivery'],
-        ];
+        return array_filter($all, fn ($c) => $c['sum'] > 0);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -160,8 +368,13 @@ class InvoiceService
     public function buildShipmentRows(
         array  $shipments,
         string $fallbackOrigin = 'Pune',
-        string $fallbackDest   = ''
+        string $fallbackDest   = '',
+        bool   $clubByDocket   = false
     ): array {
+        if ($clubByDocket) {
+            $shipments = $this->clubShipmentsByDocket($shipments);
+        }
+
         $serial       = 1;
         $totalBoxes   = 0;
         $totalWt      = 0.0;
@@ -169,8 +382,8 @@ class InvoiceService
         $rows         = [];
 
         foreach ($shipments as $item) {
-            // Prefer invoice_date; fallback to booking_date
-            $rawDate = $item['invoice_date'] ?? $item['booking_date'] ?? null;
+            // Client invoice grid date must reflect the booking date.
+            $rawDate = $item['booking_date'] ?? $item['invoice_date'] ?? null;
             $date    = $rawDate ? date('d.m.y', strtotime($rawDate)) : '-';
 
             // Origin / Destination: use JOIN'd booking fields if present
@@ -182,7 +395,7 @@ class InvoiceService
             $wt       = (float) ($item['final_chargeable_weight']  ?? 0);
             $rate     = (float) ($item['rate']           ?? 0);
             $fuelSur  = (float) ($item['fuel_surcharge'] ?? 0);
-            $freight  = $wt * $rate;
+            $freight  = isset($item['_freight_override']) ? (float) $item['_freight_override'] : ($wt * $rate);
             $fuelAmt  = $fuelSur;
 
             $docket   = (float) ($item['docket_charges']   ?? 0);
@@ -304,12 +517,12 @@ class InvoiceService
      *
      * @param  string $customerName
      * @param  int    $companyId
-     * @return array  ['gst' => string, 'pan' => string]
+     * @return array  ['gst' => string, 'pan' => string, 'address' => string, 'state' => string]
      */
     public function resolveCustomerGstDetails(string $customerName, int $companyId): array
     {
         if (empty(trim($customerName))) {
-            return ['gst' => '', 'pan' => ''];
+            return ['gst' => '', 'pan' => '', 'address' => '', 'state' => ''];
         }
 
         $customer = $this->customerModel
@@ -328,6 +541,8 @@ class InvoiceService
         return [
             'gst' => $customer['gst_number'] ?? '',
             'pan' => $customer['pan']         ?? '',
+            'address' => $customer['address'] ?? '',
+            'state' => $customer['gst_state'] ?? ($customer['state'] ?? ''),
         ];
     }
 

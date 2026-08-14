@@ -1,9 +1,9 @@
-<?= $this->extend('layout') ?>
+﻿<?= $this->extend('layout') ?>
 
 <?= $this->section('content') ?>
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0 fw-bold">🧾 All Invoices (Consolidated Billing)</h4>
+        <h4 class="mb-0 fw-bold"><i class="fas fa-file-invoice-dollar text-primary me-2"></i> All Invoices (Consolidated Billing)</h4>
         <span class="badge bg-light text-secondary border px-3 py-2 fw-semibold"><i class="fas fa-building me-1"></i> <?= esc($company_name) ?></span>
     </div>
 
@@ -21,6 +21,22 @@
         </div>
     <?php endif; ?>
 
+    <ul class="nav nav-tabs invoice-workspace-tabs mb-3" id="invoiceWorkspaceTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="generateInvoiceTab" data-bs-toggle="tab" data-bs-target="#generateInvoicePane" type="button" role="tab" aria-controls="generateInvoicePane" aria-selected="true">
+                <i class="fas fa-file-invoice me-1"></i> Generate Invoice
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="downloadHistoryTab" data-bs-toggle="tab" data-bs-target="#downloadHistoryPane" type="button" role="tab" aria-controls="downloadHistoryPane" aria-selected="false">
+                <i class="fas fa-download me-1"></i> All Downloads
+                <span class="badge bg-light text-secondary border ms-1" id="downloadHistoryCount"><?= count($downloads ?? []) ?></span>
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="generateInvoicePane" role="tabpanel" aria-labelledby="generateInvoiceTab">
     <form id="invoiceForm" action="<?= base_url('logistics/all-invoices/generate') ?>" method="POST" target="_blank">
         <?= csrf_field() ?>
         <div class="row g-4">
@@ -58,6 +74,26 @@
                                 </select>
                             </div>
 
+                            <div class="col-12">
+                                <label class="form-label text-muted fs-7 fw-semibold">Billing Mode</label>
+                                <div class="btn-group w-100 invoice-segment" role="group" aria-label="Billing mode">
+                                    <input type="radio" class="btn-check" name="billing_mode" id="billingModeAwb" value="awb" autocomplete="off" checked>
+                                    <label class="btn btn-outline-primary btn-sm fw-semibold" for="billingModeAwb">AWB Wise</label>
+                                    <input type="radio" class="btn-check" name="billing_mode" id="billingModeDocket" value="docket" autocomplete="off">
+                                    <label class="btn btn-outline-primary btn-sm fw-semibold" for="billingModeDocket">Docket Wise</label>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label text-muted fs-7 fw-semibold">PDF Layout</label>
+                                <div class="btn-group w-100 invoice-segment" role="group" aria-label="PDF layout">
+                                    <input type="radio" class="btn-check" name="layout_orientation" id="layoutLandscape" value="landscape" autocomplete="off" checked>
+                                    <label class="btn btn-outline-secondary btn-sm fw-semibold" for="layoutLandscape">Landscape</label>
+                                    <input type="radio" class="btn-check" name="layout_orientation" id="layoutPortrait" value="portrait" autocomplete="off">
+                                    <label class="btn btn-outline-secondary btn-sm fw-semibold" for="layoutPortrait">Portrait</label>
+                                </div>
+                            </div>
+
                             <div class="col-6">
                                 <label class="form-label text-muted fs-7 fw-semibold">From Date <span class="text-danger">*</span></label>
                                 <input type="date" name="from_date" id="fFromDate" class="form-control form-control-sm shadow-none" required>
@@ -69,8 +105,8 @@
                             </div>
 
                             <div class="col-12">
-                                <label class="form-label text-muted fs-7 fw-semibold">Invoice Number <span class="text-danger">*</span></label>
-                                <input type="text" name="invoice_no" id="fInvoiceNo" class="form-control form-control-sm shadow-none fw-bold text-uppercase" placeholder="e.g. MAL/25-26/185" required>
+                                <label class="form-label text-muted fs-7 fw-semibold">Invoice Number</label>
+                                <input type="text" name="invoice_no" id="fInvoiceNo" class="form-control form-control-sm shadow-none fw-bold text-uppercase" placeholder="Optional">
                             </div>
 
                             <div class="col-6">
@@ -88,6 +124,13 @@
                                 <textarea name="remark" id="fRemark" class="form-control form-control-sm shadow-none" rows="3" placeholder="Any internal reference or notes..."></textarea>
                             </div>
 
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="club_by_lr" id="clubByLr" value="1">
+                                    <label class="form-check-label fw-semibold text-muted fs-7" for="clubByLr">Club same LR / Docket into one invoice line</label>
+                                </div>
+                            </div>
+
                             <!-- GST Options removed in favor of automated settings per booking -->
                         </div>
                     </div>
@@ -96,12 +139,12 @@
 
             <!-- Right Side: Shipment Records Table -->
             <div class="col-lg-8">
-                <div class="card border-0 shadow-sm h-100 d-flex flex-column">
+                <div class="card border-0 shadow-sm invoice-records-card">
                     <div class="card-header bg-white border-bottom pt-4 pb-3 d-flex justify-content-between align-items-center">
                         <h6 class="fw-bold text-primary mb-0"><i class="fas fa-truck-loading me-2"></i> Shipment Records</h6>
                         <span id="selectedCount" class="badge bg-primary rounded-pill">0 Selected</span>
                     </div>
-                    <div class="card-body p-0 flex-grow-1 position-relative" style="min-height: 350px;">
+                    <div class="card-body p-0 position-relative">
                         <!-- Loading Overlay -->
                         <div id="loadingOverlay" class="position-absolute top-0 start-0 w-100 h-100 bg-white bg-opacity-75 d-none align-items-center justify-content-center" style="z-index: 10;">
                             <div class="text-center">
@@ -111,15 +154,15 @@
                         </div>
 
                         <!-- Empty State -->
-                        <div id="emptyState" class="d-flex flex-column align-items-center justify-content-center h-100 p-5 text-center">
+                        <div id="emptyState" class="d-flex flex-column align-items-center justify-content-center p-5 text-center">
                             <i class="fas fa-folder-open text-muted mb-3 fs-1"></i>
                             <h6 class="fw-bold text-muted mb-1">No Records Loaded</h6>
                             <p class="text-secondary fs-7 mb-0">Select a customer and date range on the left to filter shipment records.</p>
                         </div>
 
                         <!-- Shipment Table -->
-                        <div id="tableContainer" class="d-none h-100 d-flex flex-column">
-                            <div class="table-responsive flex-grow-1" style="max-height: 500px; overflow-y: auto;">
+                        <div id="tableContainer" class="d-none">
+                            <div class="table-responsive invoice-records-scroll">
                                 <table class="table table-hover align-middle mb-0 text-nowrap">
                                     <thead class="table-light sticky-top" style="z-index: 5;">
                                         <tr>
@@ -140,7 +183,7 @@
                             </div>
 
                             <!-- Footer CTA -->
-                            <div class="p-3 bg-light border-top mt-auto d-flex justify-content-between align-items-center">
+                            <div class="p-3 bg-light border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
                                 <div class="fs-7 text-secondary fw-semibold">
                                     Total Weight: <span id="sumWeight" class="text-dark fw-bold">0.00</span> KG | 
                                     Total Boxes: <span id="sumBoxes" class="text-dark fw-bold">0</span>
@@ -162,15 +205,94 @@
 
         </div>
     </form>
+
+        </div>
+        <div class="tab-pane fade" id="downloadHistoryPane" role="tabpanel" aria-labelledby="downloadHistoryTab">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom pt-4 pb-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <h6 class="fw-bold text-primary mb-0"><i class="fas fa-download me-2"></i> All Downloads</h6>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <input type="search" id="downloadHistorySearch" class="form-control form-control-sm shadow-none" placeholder="Search downloads..." style="width: min(220px, 70vw);">
+                <span class="badge bg-light text-secondary border" id="downloadHistoryCardCount"><?= count($downloads ?? []) ?> Saved</span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 text-nowrap">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Downloaded At</th>
+                            <th>Invoice No</th>
+                            <th>Customer</th>
+                            <th>Bill To</th>
+                            <th>Period</th>
+                            <th>Layout</th>
+                            <th>User</th>
+                            <th class="text-end pe-3">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="downloadHistoryTableBody">
+                        <?php if (!empty($downloads ?? [])): ?>
+                            <?php foreach ($downloads as $download): ?>
+                                <tr class="download-history-row">
+                                    <td class="ps-3"><?= esc(date('d-M-Y H:i', strtotime($download['downloaded_at']))) ?></td>
+                                    <td class="fw-semibold text-primary"><?= esc($download['invoice_no']) ?></td>
+                                    <td><?= esc($download['customer_name']) ?></td>
+                                    <td><?= esc($download['bill_to'] ?: '-') ?></td>
+                                    <td>
+                                        <?= !empty($download['from_date']) ? esc(date('d-M-Y', strtotime($download['from_date']))) : '-' ?>
+                                        to
+                                        <?= !empty($download['to_date']) ? esc(date('d-M-Y', strtotime($download['to_date']))) : '-' ?>
+                                    </td>
+                                    <td><span class="badge bg-light text-dark border"><?= esc(ucfirst($download['layout_orientation'])) ?></span></td>
+                                    <td><?= esc($download['downloaded_by'] ?: 'Unknown') ?></td>
+                                    <td class="text-end pe-3">
+                                        <a class="btn btn-sm btn-outline-primary" target="_blank" href="<?= base_url('logistics/all-invoices/downloads/' . $download['id']) ?>">
+                                            <i class="fas fa-eye me-1"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="8" class="text-center py-4 text-muted">No consolidated invoice downloads saved yet.</td>
+                            </tr>
+                        <?php endif; ?>
+                        <tr id="downloadHistoryNoMatches" class="d-none">
+                            <td colspan="8" class="text-center py-4 text-muted">No matching downloads found.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
 </div>
 
 <style>
 .fs-7 { font-size: 0.85rem; }
+.fs-8 { font-size: 0.75rem; }
 .text-nowrap { white-space: nowrap; }
 .sticky-top { top: 0; }
+.invoice-segment .btn { min-height: 34px; }
+.invoice-segment .btn-check:checked + .btn {
+    box-shadow: inset 0 0 0 1px rgba(13, 110, 253, 0.15);
+}
+.invoice-workspace-tabs .nav-link {
+    font-weight: 700;
+}
+.invoice-records-scroll {
+    max-height: min(56vh, 520px);
+    overflow-y: auto;
+}
+#emptyState {
+    min-height: 350px;
+}
 </style>
 <?= $this->endSection() ?>
-
 <?= $this->section('scripts') ?>
 <script>
 const _customers = <?= json_encode($customers) ?>;
@@ -208,6 +330,23 @@ $(document).ready(function() {
     // Event listeners to fetch shipments
     $('#fCustomer, #fFromDate, #fToDate').on('change', function() {
         loadShipments();
+    });
+
+    $('input[name="billing_mode"]').on('change', function() {
+        if ($(this).val() === 'docket' && $(this).is(':checked')) {
+            $('#clubByLr').prop('checked', true);
+        }
+    });
+
+    $('#downloadHistorySearch').on('input', function() {
+        const needle = ($(this).val() || '').toLowerCase().trim();
+        let visibleRows = 0;
+        $('.download-history-row').each(function() {
+            const matches = $(this).text().toLowerCase().includes(needle);
+            $(this).toggle(matches);
+            if (matches) visibleRows++;
+        });
+        $('#downloadHistoryNoMatches').toggleClass('d-none', visibleRows > 0);
     });
 
     // Select all checkboxes helper
@@ -330,15 +469,86 @@ $(document).ready(function() {
             }).then((result) => {
                 if (result.isConfirmed) {
                     isSubmitting = true;
+                    scheduleDownloadHistoryRefresh();
                     $('#invoiceForm').submit();
                     isSubmitting = false;
                 }
             });
             return false;
         }
+        scheduleDownloadHistoryRefresh();
         return true;
     });
+
+    $(window).on('focus', function() {
+        refreshDownloadHistory();
+    });
 });
+
+function escapeHistoryHtml(value) {
+    if (typeof ERPUtils !== 'undefined' && typeof ERPUtils.escapeHtml === 'function') {
+        return ERPUtils.escapeHtml(value);
+    }
+    if (value === null || value === undefined) return '';
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function scheduleDownloadHistoryRefresh() {
+    if ($('#export_type').val() !== 'pdf') return;
+    setTimeout(refreshDownloadHistory, 1500);
+    setTimeout(refreshDownloadHistory, 4000);
+}
+
+function refreshDownloadHistory() {
+    $.ajax({
+        url: BASE_URL + 'logistics/all-invoices/downloads',
+        type: 'GET',
+        dataType: 'json',
+        success: function(res) {
+            if (!res || res.status !== 'success') return;
+            renderDownloadHistory(res.downloads || []);
+        }
+    });
+}
+
+function renderDownloadHistory(downloads) {
+    const tbody = $('#downloadHistoryTableBody');
+    tbody.empty();
+    $('#downloadHistoryCount').text(downloads.length);
+    $('#downloadHistoryCardCount').text(downloads.length + ' Saved');
+
+    if (!downloads.length) {
+        tbody.append('<tr><td colspan="8" class="text-center py-4 text-muted">No consolidated invoice downloads saved yet.</td></tr>');
+        tbody.append('<tr id="downloadHistoryNoMatches" class="d-none"><td colspan="8" class="text-center py-4 text-muted">No matching downloads found.</td></tr>');
+        return;
+    }
+
+    downloads.forEach(function(download) {
+        tbody.append(`
+            <tr class="download-history-row">
+                <td class="ps-3">${escapeHistoryHtml(download.downloaded_at_display || '-')}</td>
+                <td class="fw-semibold text-primary">${escapeHistoryHtml(download.invoice_no || '-')}</td>
+                <td>${escapeHistoryHtml(download.customer_name || '-')}</td>
+                <td>${escapeHistoryHtml(download.bill_to || '-')}</td>
+                <td>${escapeHistoryHtml(download.from_date_display || '-')} to ${escapeHistoryHtml(download.to_date_display || '-')}</td>
+                <td><span class="badge bg-light text-dark border">${escapeHistoryHtml((download.layout_orientation || '-').replace(/^./, c => c.toUpperCase()))}</span></td>
+                <td>${escapeHistoryHtml(download.downloaded_by || 'Unknown')}</td>
+                <td class="text-end pe-3">
+                    <a class="btn btn-sm btn-outline-primary" target="_blank" href="${escapeHistoryHtml(download.view_url || '#')}">
+                        <i class="fas fa-eye me-1"></i> View
+                    </a>
+                </td>
+            </tr>
+        `);
+    });
+    tbody.append('<tr id="downloadHistoryNoMatches" class="d-none"><td colspan="8" class="text-center py-4 text-muted">No matching downloads found.</td></tr>');
+    $('#downloadHistorySearch').trigger('input');
+}
 
 function loadShipments() {
     const customer = $('#fCustomer').val();

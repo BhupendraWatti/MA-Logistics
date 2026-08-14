@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\BookingModel;
+use App\Models\CustomerRateModel;
 use App\Models\ShipmentItemModel;
 use App\Models\SalesChargeModel;
 use Exception;
@@ -10,6 +11,7 @@ use Exception;
 class BookingService
 {
     protected $bookingModel;
+    protected $customerRateModel;
     protected $shipmentModel;
     protected $salesModel;
     protected $db;
@@ -17,6 +19,7 @@ class BookingService
     public function __construct()
     {
         $this->bookingModel = new BookingModel();
+        $this->customerRateModel = new CustomerRateModel();
         $this->shipmentModel = new ShipmentItemModel();
         $this->salesModel = new SalesChargeModel();
         $this->db = \Config\Database::connect();
@@ -90,7 +93,8 @@ class BookingService
             'volumetric_formula' => $postData['volumetric_formula'] ?? 6000,
             'gst_applied' => isset($postData['gst_applied']) ? 1 : 0,
             'payment_type' => $postData['payment_type'] ?? '',
-            'narration' => $postData['narration'] ?? '',
+            'narration' => $postData['narration'] ?? ($postData['remarks'] ?? ''),
+            'remarks' => $postData['remarks'] ?? ($postData['narration'] ?? ''),
             'flight_number' => $postData['flight_number'] ?? '',
             'airlines' => $postData['airlines'] ?? '',
             'created_by' => $userId,
@@ -109,7 +113,7 @@ class BookingService
 
         $bookingId = $this->bookingModel->getInsertID();
 
-        $this->processShipments($bookingId, $postData['items'] ?? [], $companyId);
+        $this->processShipments($bookingId, $postData['items'] ?? [], $companyId, $postData);
         $this->processSales($bookingId, $postData);
 
         // Insert audit log for created action
@@ -199,7 +203,8 @@ class BookingService
             'volumetric_formula' => $postData['volumetric_formula'] ?? 6000,
             'gst_applied' => isset($postData['gst_applied']) ? 1 : 0,
             'payment_type' => $postData['payment_type'] ?? '',
-            'narration' => $postData['narration'] ?? '',
+            'narration' => $postData['narration'] ?? ($postData['remarks'] ?? ''),
+            'remarks' => $postData['remarks'] ?? ($postData['narration'] ?? ''),
             'flight_number' => $postData['flight_number'] ?? '',
             'airlines' => $postData['airlines'] ?? '',
             'created_by' => $userId,
@@ -236,6 +241,8 @@ class BookingService
                     'customer_name' => $jsItem['customer'] ?? '',
                     'bill_to' => $jsItem['bill_to'] ?? '',
                     'consignee' => $jsItem['consignee'] ?? '',
+                    'payment_type' => $jsItem['payment_type'] ?? ($postData['payment_type'] ?? ''),
+                    'material_category' => $jsItem['material_category'] ?? ($postData['material_category'] ?? ''),
                     'docket_no' => $jsItem['docket'] ?? '',
                     'invoice_no' => $jsItem['invoice_no'] ?? '',
                     'part_no' => !empty($jsItem['part_no']) ? $jsItem['part_no'] : ($jsItem['contents'] ?? ''),
@@ -250,7 +257,7 @@ class BookingService
                     'chargeable_weight' => $jsItem['chg_wt'] ?? 0,
                     'eway_bill_no' => $jsItem['eway_no'] ?? '',
                     'eway_bill_date' => !empty($jsItem['eway_date']) ? $jsItem['eway_date'] : null,
-                    'rate' => $jsItem['rate'] ?? 0,
+                    'rate' => $this->resolveShipmentRate($companyId, $jsItem['customer'] ?? '', $jsItem['material_category'] ?? ($postData['material_category'] ?? ''), $postData['booking_date'] ?? '', $jsItem['rate'] ?? 0),
                     'delivery_charges' => $jsItem['delivery_charges'] ?? 0,
                     'docket_charges' => $jsItem['docket_charges'] ?? 0,
                     'pickup_charges' => $jsItem['pickup_charges'] ?? 0,
@@ -269,6 +276,8 @@ class BookingService
         }
         // --- NEW JSON MIGRATION BLOCK END ---
         
+        $this->validateItemWeightsAgainstBooking($items, $postData);
+
         // Enforce Docket number uniqueness against other bookings in the DB
         foreach ($items as $item) {
             $docketNo = trim($item['docket_no'] ?? '');
@@ -299,6 +308,8 @@ class BookingService
                     'customer_name' => $item['customer_name'],
                     'bill_to' => $item['bill_to'] ?? '',
                     'consignee' => $item['consignee'] ?? '',
+                    'payment_type' => $item['payment_type'] ?? ($postData['payment_type'] ?? ''),
+                    'material_category' => $item['material_category'] ?? ($postData['material_category'] ?? ''),
                     'docket_no' => $item['docket_no'] ?? '',
                     'part_no' => $item['part_no'] ?? '',
                     'part_qty' => intval($item['part_qty'] ?? 0),
@@ -314,7 +325,7 @@ class BookingService
                     'pieces' => intval($item['pieces'] ?? 1),
                     'eway_bill_no' => $item['eway_bill_no'] ?? '',
                     'eway_bill_date' => $item['eway_bill_date'] ?? null,
-                    'rate' => $this->validateNumeric($item['rate'] ?? 0),
+                    'rate' => $this->resolveShipmentRate($companyId, $item['customer_name'] ?? '', $item['material_category'] ?? ($postData['material_category'] ?? ''), $postData['booking_date'] ?? '', $item['rate'] ?? 0),
                     'delivery_charges' => $this->validateNumeric($item['delivery_charges'] ?? 0),
                     'docket_charges' => $this->validateNumeric($item['docket_charges'] ?? 0),
                     'pickup_charges' => $this->validateNumeric($item['pickup_charges'] ?? 0),
@@ -446,10 +457,10 @@ class BookingService
         return true;
     }
 
-    private function processShipments($bookingId, array $items, int $companyId)
+    private function processShipments($bookingId, array $items, int $companyId, array $postData = [])
     {
         // --- NEW JSON MIGRATION BLOCK START ---
-        $postData = service('request')->getPost();
+        $postData = !empty($postData) ? $postData : service('request')->getPost();
         if (!empty($postData['items_json'])) {
             $decoded = json_decode($postData['items_json'], true);
             if (json_last_error() !== JSON_ERROR_NONE) {
@@ -465,6 +476,8 @@ class BookingService
                     'customer_name' => $jsItem['customer'] ?? '',
                     'bill_to' => $jsItem['bill_to'] ?? '',
                     'consignee' => $jsItem['consignee'] ?? '',
+                    'payment_type' => $jsItem['payment_type'] ?? ($postData['payment_type'] ?? ''),
+                    'material_category' => $jsItem['material_category'] ?? ($postData['material_category'] ?? ''),
                     'docket_no' => $jsItem['docket'] ?? '',
                     'invoice_no' => $jsItem['invoice_no'] ?? '',
                     'part_no' => !empty($jsItem['part_no']) ? $jsItem['part_no'] : ($jsItem['contents'] ?? ''),
@@ -479,7 +492,7 @@ class BookingService
                     'chargeable_weight' => $jsItem['chg_wt'] ?? 0,
                     'eway_bill_no' => $jsItem['eway_no'] ?? '',
                     'eway_bill_date' => !empty($jsItem['eway_date']) ? $jsItem['eway_date'] : null,
-                    'rate' => $jsItem['rate'] ?? 0,
+                    'rate' => $this->resolveShipmentRate($companyId, $jsItem['customer'] ?? '', $jsItem['material_category'] ?? ($postData['material_category'] ?? ''), $postData['booking_date'] ?? '', $jsItem['rate'] ?? 0),
                     'delivery_charges' => $jsItem['delivery_charges'] ?? 0,
                     'docket_charges' => $jsItem['docket_charges'] ?? 0,
                     'pickup_charges' => $jsItem['pickup_charges'] ?? 0,
@@ -499,6 +512,8 @@ class BookingService
         if (!is_array($items)) {
             throw new Exception("Items must be an array");
         }
+
+        $this->validateItemWeightsAgainstBooking($items, $postData);
 
         // Enforce Docket number uniqueness against other bookings in the DB
         foreach ($items as $item) {
@@ -528,6 +543,8 @@ class BookingService
                     'customer_name' => $item['customer_name'],
                     'bill_to' => $item['bill_to'] ?? '',
                     'consignee' => $item['consignee'] ?? '',
+                    'payment_type' => $item['payment_type'] ?? ($postData['payment_type'] ?? ''),
+                    'material_category' => $item['material_category'] ?? ($postData['material_category'] ?? ''),
                     'docket_no' => $item['docket_no'] ?? '',
                     'part_no' => $item['part_no'] ?? '',
                     'part_qty' => intval($item['part_qty'] ?? 0),
@@ -543,7 +560,7 @@ class BookingService
                     'pieces' => intval($item['pieces'] ?? 1),
                     'eway_bill_no' => $item['eway_bill_no'] ?? '',
                     'eway_bill_date' => $item['eway_bill_date'] ?? null,
-                    'rate' => $this->validateNumeric($item['rate'] ?? 0),
+                    'rate' => $this->resolveShipmentRate($companyId, $item['customer_name'] ?? '', $item['material_category'] ?? ($postData['material_category'] ?? ''), $postData['booking_date'] ?? '', $item['rate'] ?? 0),
                     'delivery_charges' => $this->validateNumeric($item['delivery_charges'] ?? 0),
                     'docket_charges' => $this->validateNumeric($item['docket_charges'] ?? 0),
                     'pickup_charges' => $this->validateNumeric($item['pickup_charges'] ?? 0),
@@ -659,6 +676,38 @@ class BookingService
             }
         }
         return null;
+    }
+
+    private function resolveShipmentRate(int $companyId, string $customerName, ?string $category, ?string $bookingDate, $submittedRate): float
+    {
+        $rate = $this->validateNumeric($submittedRate);
+        if ($rate > 0 || empty($bookingDate)) {
+            return $rate;
+        }
+
+        $matchedRate = $this->customerRateModel->findRate($companyId, $customerName, $category, $bookingDate);
+        if (!$matchedRate) {
+            return $rate;
+        }
+
+        return $this->validateNumeric($matchedRate['rate'] ?? 0);
+    }
+
+    private function validateItemWeightsAgainstBooking(array $items, array $postData): void
+    {
+        $minimumWeight = $this->validateNumeric($postData['total_weight'] ?? 0);
+        if ($minimumWeight <= 0) {
+            return;
+        }
+
+        $actualWeightTotal = 0.0;
+        foreach ($items as $item) {
+            $actualWeightTotal += $this->validateNumeric($item['actual_weight'] ?? ($item['act_wt'] ?? 0));
+        }
+
+        if ($actualWeightTotal < $minimumWeight) {
+            throw new Exception('Total item actual weight must be equal to or greater than the master AWB weight.');
+        }
     }
 
     private function validateBasicData($data)

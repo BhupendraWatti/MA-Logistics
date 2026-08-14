@@ -50,6 +50,7 @@
                             <th>Origin → Dest</th>
                             <th>Customer</th>
                             <th class="consignee-cell">Consignee</th>
+                            <th>Remark</th>
                             <th>Status</th>
                             <th>Pieces</th>
                             <th>Total Wt</th>
@@ -153,6 +154,13 @@ $(document).ready(function() {
             className: 'consignee-cell',
             render: function(data) {
                 return `<span class="text-muted" style="font-size:0.85rem;">${data}</span>`;
+            }
+        },
+        {
+            data: null,
+            render: function(data, type, row) {
+                const remark = row.remarks || row.narration || '-';
+                return `<span class="text-muted" style="font-size:0.82rem;">${remark}</span>`;
             }
         },
         { 

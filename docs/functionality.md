@@ -2,6 +2,16 @@
 
 This document provides a comprehensive functional description of all modules, business workflows, mathematical calculations, form behaviors, and dropdown logic in the M.A. Logistics ERP system.
 
+## Current Backend Behavior Additions
+
+* **Date/category customer rates**: When a shipment item is saved with a blank or zero item rate, `BookingService` looks up `customer_rates` by active company, item customer, item/booking material category, and booking date. The matched rate is copied into `shipment_items.rate`, so later Customer Master or rate-table changes do not mutate old saved bills.
+* **Item metadata persistence**: `shipment_items.payment_type` and `shipment_items.material_category` are persisted when provided in `items_json`; if absent, the booking-level payment type and material category are stored as fallbacks.
+* **Zero weight allowance with AWB sanity guard**: Item actual weight may be zero. If a booking-level `total_weight` is declared, the backend rejects saves where summed item actual weight is below that master AWB weight.
+* **Invoice master-data fallback**: PDF invoice generation prefers Customer Master address, GSTIN, and PAN details when available, with shipment `bill_to`/`consignee` as fallback.
+* **Optional LR/docket clubbing**: Invoice row building supports grouping rows with the same LR/docket number when `club_by_lr=1` or consolidated billing posts `billing_mode=docket`; default invoice output remains per shipment item.
+* **Remarks compatibility**: New `bookings.remarks` and legacy `bookings.narration` both print in the invoice remarks block.
+* **Financial-year invoice numbering**: Consolidated PDF generation finalizes a company-scoped invoice number such as `MA-26-27/001`, persists it to selected shipment rows, and reuses that number on later reprints instead of allocating duplicates.
+
 ---
 
 ## 1. Logistics & Booking Module

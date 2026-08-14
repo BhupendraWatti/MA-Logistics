@@ -2,6 +2,28 @@
 
 This document details all database tables, columns, indexes, foreign key relationships, and related CodeIgniter models in M.A. Logistics ERP.
 
+## Current Backend Additions
+
+### `customer_rates`
+* **Purpose**: Tenant-scoped customer rate snapshots by date range and material category. `BookingService` uses this table to auto-fill blank/zero shipment item rates at save time while preserving historical saved rates on existing shipment rows.
+* **Primary Key**: `id` (INT, AUTO_INCREMENT)
+* **Foreign Key**: `company_id` to `companies.id`
+* **Columns**: `id`, `company_id`, `customer_id`, `customer_name`, `material_category`, `effective_from`, `effective_to`, `rate`, `created_at`, `updated_at`
+* **Index**: `idx_customer_rates_lookup (company_id, customer_name, material_category, effective_from)`
+* **Related Model**: `app/Models/CustomerRateModel.php`
+
+### `invoice_sequences`
+* **Purpose**: Tenant-scoped financial-year invoice sequence tracker for consolidated invoice finalization. `InvoiceService` locks the active company/prefix/FY row, increments `last_number`, and writes the formatted invoice number to selected shipment rows.
+* **Primary Key**: `id` (INT, AUTO_INCREMENT)
+* **Foreign Key**: `company_id` to `companies.id`
+* **Columns**: `id`, `company_id`, `financial_year`, `prefix`, `last_number`, `created_at`, `updated_at`
+* **Unique Key**: `uq_invoice_sequence_scope (company_id, financial_year, prefix)`
+
+### Added Columns
+* `shipment_items.payment_type` and `shipment_items.material_category` store item-level billing/category metadata when the form or API submits it; if omitted, `BookingService` falls back to booking-level `payment_type` and `material_category`.
+* `bookings.remarks` stores explicit client remarks while preserving legacy `bookings.narration` compatibility.
+* `companies.invoice_prefix` optionally overrides the generated invoice prefix; if blank, `InvoiceService` derives the prefix from the typed invoice field or company name.
+
 ---
 
 ## 1. Table Inventory

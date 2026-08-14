@@ -29,9 +29,12 @@
 
     <!-- Recent Bookings Table -->
     <div class="card border-0 shadow-sm mt-4">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 border-0">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 border-0 flex-wrap gap-2">
             <h6 class="mb-0 fw-bold text-dark">Recent Bookings</h6>
-            <a href="<?= base_url('logistics/manage') ?>" class="text-decoration-none fw-medium text-primary" style="font-size:0.9rem;">View All</a>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <input type="search" id="recentBookingSearch" class="form-control form-control-sm shadow-none" placeholder="Search records..." style="width: min(220px, 70vw);">
+                <a href="<?= base_url('logistics/manage') ?>" class="text-decoration-none fw-medium text-primary" style="font-size:0.9rem;">View All</a>
+            </div>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -44,6 +47,8 @@
                             <th>Origin &rarr; Dest</th>
                             <th>Customer</th>
                             <th class="consignee-cell">Consignee</th>
+                            <th>Created</th>
+                            <th>Created By</th>
                             <th>Pieces</th>
                             <th>Weight</th>
                             <th class="pe-4">Status</th>
@@ -53,7 +58,7 @@
                     <tbody>
                         <?php if (isset($recent_bookings) && !empty($recent_bookings)): ?>
                         <?php $i = 1; foreach($recent_bookings as $booking): ?>
-                        <tr>
+                        <tr class="recent-booking-row">
                             <td class="ps-4 text-muted"><?= $i++ ?></td>
                             <td><a href="<?= base_url('logistics/view/' . $booking['id']) ?>" class="fw-medium text-decoration-none"><?= esc($booking['awb_no']) ?></a></td>
                             <td>
@@ -77,6 +82,10 @@
                             <td class="consignee-cell">
                                 <span class="text-muted" style="font-size: 0.85rem;"><?= esc($booking['consignee'] ?? '-') ?></span>
                             </td>
+                            <td>
+                                <span class="fw-semibold"><?= !empty($booking['created_at']) ? esc(date('d-M-Y H:i', strtotime($booking['created_at']))) : '-' ?></span>
+                            </td>
+                            <td><?= esc($booking['created_by_name'] ?? 'Unknown') ?></td>
                             <td><span class="text-dark fw-medium"><?= $booking['total_pieces'] ?></span></td>
                             <td>
                                 <?= number_format((float)($booking['total_weight'] ?? 0), 1) ?> kg
@@ -100,9 +109,12 @@
                         <?php endforeach; ?>
                         <?php else: ?>
                         <tr>
-                            <td colspan="10" class="text-center py-5 text-muted">No recent bookings found.</td>
+                            <td colspan="12" class="text-center py-5 text-muted">No recent bookings found.</td>
                         </tr>
                         <?php endif; ?>
+                        <tr id="recentBookingNoMatches" class="d-none">
+                            <td colspan="12" class="text-center py-4 text-muted">No matching recent bookings found.</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -112,4 +124,19 @@
 
 <?= $this->include('logistics/pod_tracking_drawer') ?>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script>
+$(document).on('input', '#recentBookingSearch', function() {
+    const needle = ($(this).val() || '').toLowerCase().trim();
+    let visibleRows = 0;
+    $('.recent-booking-row').each(function() {
+        const matches = $(this).text().toLowerCase().includes(needle);
+        $(this).toggle(matches);
+        if (matches) visibleRows++;
+    });
+    $('#recentBookingNoMatches').toggleClass('d-none', visibleRows > 0);
+});
+</script>
 <?= $this->endSection() ?>

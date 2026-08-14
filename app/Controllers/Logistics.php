@@ -11,9 +11,52 @@ use App\Models\DriverModel;
 use App\Models\AirlineModel;
 use App\Models\LookupValueModel;
 use App\Models\SystemSettingsModel;
+use App\Models\InvoiceDownloadModel;
 
 class Logistics extends BaseController
 {
+    private function resolveInvoiceRecipientName(array $shipment, string $fallbackCustomer, array $companyData = []): string
+    {
+        $customerName = trim($fallbackCustomer ?: ($shipment['customer_name'] ?? ''));
+        $billToName   = trim($shipment['bill_to'] ?? '');
+
+        if ($billToName !== '' && !$this->isInternalLogisticsBillTo($billToName, $companyData)) {
+            return $billToName;
+        }
+
+        return $customerName !== '' ? $customerName : ($billToName ?: 'NA');
+    }
+
+    private function isInternalLogisticsBillTo(string $name, array $companyData = []): bool
+    {
+        $normalizedName = $this->normalizePartyName($name);
+        if ($normalizedName === '') {
+            return false;
+        }
+
+        $internalNames = array_filter([
+            session()->get('selected_company_name'),
+            $companyData['name'] ?? '',
+            $companyData['company_name'] ?? '',
+            'MA LOGISTICS',
+            'MARL EXPRESS',
+            'MARL EXPRESS PVT LTD',
+        ]);
+
+        foreach ($internalNames as $internalName) {
+            if ($normalizedName === $this->normalizePartyName($internalName)) {
+                return true;
+            }
+        }
+
+        return strpos($normalizedName, 'BLRLOG') === 0;
+    }
+
+    private function normalizePartyName(string $name): string
+    {
+        return preg_replace('/[^A-Z0-9]+/', '', strtoupper($name)) ?? '';
+    }
+
     private function checkPermission($permission)
     {
         $permissions = session()->get('permissions') ?? [];
@@ -56,6 +99,8 @@ public function index()
     // Fetch recent bookings and append customer name + weight from shipment_items
     $recent_bookings = $bookingModel->getCompanyBookings($companyId, 10);
     
+    $recentIds = array_column($recent_bookings, 'id');
+    $auditByBooking = !empty($recentIds) ? $bookingModel->getLatestAuditActions($recentIds) : [];
     foreach ($recent_bookings as &$b) {
         $db = \Config\Database::connect();
         
@@ -78,6 +123,7 @@ public function index()
                      ->get()->getRowArray();
 
         $b['total_weight'] = $wgtRow['total_weight'] ?? 0;
+        $b['created_by_name'] = $auditByBooking[$b['id']]['username'] ?? ($b['created_by_name'] ?? 'Unknown');
     }
     unset($b);
     
@@ -161,9 +207,6 @@ public function create()
         if (!$companyId) return redirect()->to('/company-selection');
         $bookingId = $bookingService->createBooking($this->request->getPost(), session()->get('user_id'), $companyId);
         $awb_no = $this->request->getPost('awb_no');
-        
-        session()->setFlashdata('export_pdf_booking_id', $bookingId);
-        session()->setFlashdata('export_pdf_action', 'create');
 
         $redirectTo = $this->request->getPost('redirect_to_booking_id');
         if (!empty($redirectTo)) {
@@ -186,6 +229,40 @@ public function create()
         $userMessage = $isSystemError ? 'A secure database or system error occurred. Technical logs have been updated safely.' : $msg;
         return redirect()->back()->withInput()->with('error', $userMessage);
     }
+  }
+
+  public function checkAwbUnique()
+  {
+    $companyId = session()->get('selected_company_id');
+    if (!$companyId) {
+        return $this->response->setStatusCode(401)->setJSON([
+            'status'  => 'error',
+            'message' => 'Please select a company first.',
+        ]);
+    }
+
+    $awbNo = trim((string) $this->request->getPost('awb_no'));
+    $bookingId = (int) ($this->request->getPost('booking_id') ?? 0);
+
+    if ($awbNo === '') {
+        return $this->response->setJSON([
+            'status' => 'success',
+            'unique' => true,
+        ]);
+    }
+
+    $builder = (new BookingModel())
+        ->where('company_id', $companyId)
+        ->where('awb_no', $awbNo);
+
+    if ($bookingId > 0) {
+        $builder->where('id !=', $bookingId);
+    }
+
+    return $this->response->setJSON([
+        'status' => 'success',
+        'unique' => $builder->first() === null,
+    ]);
   }
 
 
@@ -289,9 +366,6 @@ public function edit($id)
         
         $bookingService->updateBooking($id, $this->request->getPost(), session()->get('user_id'), $companyId);
         $awb_no = $this->request->getPost('awb_no');
-        
-        session()->setFlashdata('export_pdf_booking_id', $id);
-        session()->setFlashdata('export_pdf_action', 'update');
 
         $redirectTo = $this->request->getPost('redirect_to_booking_id');
         if (!empty($redirectTo)) {
@@ -552,14 +626,29 @@ public function companySelection()
 
     // Fast counts on bookings only (avoid double COUNT with heavy joins)
     $totalRecords = $db->table('bookings')->where('company_id', $companyId)->countAllResults();
+    $shipmentSummarySql = "SELECT booking_id,
+        GROUP_CONCAT(DISTINCT docket_no SEPARATOR ', ') AS dockets,
+        GROUP_CONCAT(DISTINCT customer_name SEPARATOR ', ') AS customers,
+        GROUP_CONCAT(DISTINCT consignee SEPARATOR ', ') AS consignees,
+        GROUP_CONCAT(DISTINCT bill_to SEPARATOR ', ') AS bill_tos
+        FROM shipment_items GROUP BY booking_id";
+
     if ($searchValue !== '') {
-        $filteredRecords = $db->table('bookings')
-            ->where('company_id', $companyId)
+        $filteredRecords = $db->table('bookings b')
+            ->join("({$shipmentSummarySql}) search_si", 'search_si.booking_id = b.id', 'left')
+            ->where('b.company_id', $companyId)
             ->groupStart()
-            ->like('awb_no', $searchValue)
-            ->orLike('origin', $searchValue)
-            ->orLike('destination', $searchValue)
-            ->orLike('status', $searchValue)
+            ->like('b.awb_no', $searchValue)
+            ->orLike('b.booking_date', $searchValue)
+            ->orLike('b.origin', $searchValue)
+            ->orLike('b.destination', $searchValue)
+            ->orLike('b.status', $searchValue)
+            ->orLike('b.narration', $searchValue)
+            ->orLike('b.remarks', $searchValue)
+            ->orLike('search_si.dockets', $searchValue)
+            ->orLike('search_si.customers', $searchValue)
+            ->orLike('search_si.consignees', $searchValue)
+            ->orLike('search_si.bill_tos', $searchValue)
             ->groupEnd()
             ->countAllResults();
     } else {
@@ -575,20 +664,30 @@ public function companySelection()
         b.origin,
         b.destination,
         b.status,
+        b.narration,
+        b.remarks,
         b.total_pieces,
         COALESCE(si.total_weight, 0) AS total_weight,
         COALESCE(sc.total_amount, 0) AS total_amount
     ");
     $builder->join("(SELECT booking_id, SUM(final_chargeable_weight) AS total_weight FROM shipment_items GROUP BY booking_id) si", "si.booking_id = b.id", "left");
     $builder->join("(SELECT booking_id, ((COALESCE(rate,0) * COALESCE(weight,0)) + COALESCE(ddc,0) + COALESCE(ssc,0) + COALESCE(btc,0) + COALESCE(flc,0) + COALESCE(doc,0) + COALESCE(inbound_tsp,0) + COALESCE(outbound_tsp,0) + COALESCE(tcp,0) + COALESCE(utility_charges,0) + COALESCE(xray_charges,0) + COALESCE(ado,0) + COALESCE(awb_fees_agent,0) + COALESCE(awb_fees_carrier,0) + COALESCE(admin_charges,0) + COALESCE(delivery_order_charges,0) + COALESCE(inbound_handling,0) + COALESCE(inbound_storage,0) + COALESCE(outbound_storage,0) + COALESCE(misc_charges,0)) AS total_amount FROM sales_charges) sc", "sc.booking_id = b.id", "left");
+    $builder->join("({$shipmentSummarySql}) search_si", 'search_si.booking_id = b.id', 'left');
     $builder->where('b.company_id', $companyId);
 
     if ($searchValue !== '') {
         $builder->groupStart()
             ->like('b.awb_no', $searchValue)
+            ->orLike('b.booking_date', $searchValue)
             ->orLike('b.origin', $searchValue)
             ->orLike('b.destination', $searchValue)
             ->orLike('b.status', $searchValue)
+            ->orLike('b.narration', $searchValue)
+            ->orLike('b.remarks', $searchValue)
+            ->orLike('search_si.dockets', $searchValue)
+            ->orLike('search_si.customers', $searchValue)
+            ->orLike('search_si.consignees', $searchValue)
+            ->orLike('search_si.bill_tos', $searchValue)
             ->groupEnd();
     }
 
@@ -685,23 +784,31 @@ public function exportPdf($id)
         // ── Master data lookups ──────────────────────────────────────────────
         $companyData   = $invoiceService->loadCompany($companyId);
         $customerName  = trim($shipments[0]['customer_name'] ?? '');
-        $customerInfo  = $invoiceService->resolveCustomerGstDetails($customerName, $companyId);
+        $recipientName = $this->resolveInvoiceRecipientName($shipments[0], $customerName, $companyData);
+        $customerInfo  = $invoiceService->resolveCustomerGstDetails($recipientName, $companyId);
+        if (empty($customerInfo['gst']) && $customerName !== '' && strcasecmp($customerName, $recipientName) !== 0) {
+            $customerInfo = $invoiceService->resolveCustomerGstDetails($customerName, $companyId);
+        }
         $bankDetails   = $invoiceService->resolveBankDetails($companyId, $companyData);
 
         // ── Invoice header metadata ──────────────────────────────────────────
         $invoiceNo    = $shipments[0]['invoice_no'] ?? 'AWB-' . $booking['awb_no'];
-        $invoiceDates = array_filter(array_column($shipments, 'invoice_date'));
-        sort($invoiceDates);
-        $invoiceStart  = !empty($invoiceDates) ? date('d.m.Y', strtotime(reset($invoiceDates))) : date('d.m.Y', strtotime($booking['booking_date']));
-        $invoiceEnd    = !empty($invoiceDates) ? date('d.m.Y', strtotime(end($invoiceDates)))   : date('d.m.Y', strtotime($booking['booking_date']));
+        $bookingDates = array_filter(array_column($shipments, 'booking_date'));
+        if (empty($bookingDates) && !empty($booking['booking_date'])) {
+            $bookingDates = [$booking['booking_date']];
+        }
+        sort($bookingDates);
+        $invoiceStart  = !empty($bookingDates) ? date('d.m.Y', strtotime(reset($bookingDates))) : date('d.m.Y');
+        $invoiceEnd    = !empty($bookingDates) ? date('d.m.Y', strtotime(end($bookingDates)))   : date('d.m.Y');
         $invoicePeriod = $invoiceStart . ' TO ' . $invoiceEnd;
-        $invoiceDate   = !empty($invoiceDates) ? date('d.m.Y', strtotime(end($invoiceDates)))   : date('d.m.Y');
+        $invoiceDate   = !empty($bookingDates) ? date('d.m.Y', strtotime(end($bookingDates)))   : date('d.m.Y');
 
         $billingBranch = trim(explode(',', $booking['origin'] ?: 'Pune')[0]);
         $modeTransport = strtoupper($booking['mode_transport'] ?: 'AIR');
 
-        $recipientName    = $customerName ?: 'NA';
-        $recipientAddress = $shipments[0]['bill_to'] ?? $shipments[0]['consignee'] ?? 'Address not available';
+        $recipientAddress = !empty($customerInfo['address'])
+            ? $customerInfo['address']
+            : ($shipments[0]['consignee'] ?? 'Address not available');
 
         // ── Business logic — delegated to InvoiceService ────────────────────
         $chargeAgg     = $invoiceService->aggregateCharges($shipments);
@@ -710,7 +817,8 @@ public function exportPdf($id)
         $rowData = $invoiceService->buildShipmentRows(
             $shipments,
             $booking['origin']      ?? 'Pune',
-            $booking['destination'] ?? ''
+            $booking['destination'] ?? '',
+            (bool) ($this->request->getGet('club_by_lr') ?? false)
         );
 
         $gstApplied = (bool) ($booking['gst_applied'] ?? false);
@@ -780,6 +888,99 @@ public function exportPdf($id)
 
 
 
+
+public function exportDocketPdf($itemId)
+{
+    return $this->streamDocketPdf((int) $itemId, false);
+}
+
+public function printDocketPdf($itemId)
+{
+    return $this->streamDocketPdf((int) $itemId, true);
+}
+
+private function streamDocketPdf(int $itemId, bool $autoPrint)
+{
+    $db = \Config\Database::connect();
+    $row = $db->table('shipment_items si')
+        ->select('si.*, b.awb_no, b.company_id, b.booking_date')
+        ->join('bookings b', 'b.id = si.booking_id')
+        ->where('si.id', $itemId)
+        ->get()
+        ->getRowArray();
+
+    if (!$row || (int) $row['company_id'] !== (int) session()->get('selected_company_id')) {
+        return redirect()->back()->with('error', 'Shipment item not found or access denied!');
+    }
+
+    $booking = (new BookingModel())->getFullBooking((int) $row['booking_id']);
+    if (!$booking) {
+        return redirect()->back()->with('error', 'Booking not found!');
+    }
+
+    try {
+        $invoiceService = new \App\Services\InvoiceService();
+        $pdfGenerator = new \App\Services\PdfInvoiceGenerator();
+        $shipments = [$row];
+        $companyId = (int) $booking['company_id'];
+        $companyData = $invoiceService->loadCompany($companyId);
+        $customerName = trim($shipments[0]['customer_name'] ?? '');
+        $recipientName = $this->resolveInvoiceRecipientName($shipments[0], $customerName, $companyData);
+        $customerInfo = $invoiceService->resolveCustomerGstDetails($recipientName, $companyId);
+        if (empty($customerInfo['gst']) && $customerName !== '' && strcasecmp($customerName, $recipientName) !== 0) {
+            $customerInfo = $invoiceService->resolveCustomerGstDetails($customerName, $companyId);
+        }
+        $bankDetails = $invoiceService->resolveBankDetails($companyId, $companyData);
+        $bookingDate = !empty($booking['booking_date']) ? strtotime($booking['booking_date']) : time();
+        $formattedBookingDate = date('d.m.Y', $bookingDate);
+        $invoiceNo = $shipments[0]['invoice_no'] ?? 'AWB-' . ($booking['awb_no'] ?? '');
+
+        $chargeAgg = $invoiceService->aggregateCharges($shipments);
+        $activeCharges = $invoiceService->resolveActiveCharges($chargeAgg['totals'], $chargeAgg['miscLabel'], $chargeAgg['customTotals'] ?? []);
+        $rowData = $invoiceService->buildShipmentRows($shipments, $booking['origin'] ?? 'Pune', $booking['destination'] ?? '', false);
+
+        $gstApplied = (bool) ($booking['gst_applied'] ?? false);
+        $rateSource = [
+            'cgst_rate' => (float) ($booking['cgst_rate'] ?? $companyData['cgst_rate'] ?? 9),
+            'sgst_rate' => (float) ($booking['sgst_rate'] ?? $companyData['sgst_rate'] ?? 9),
+            'igst_rate' => (float) ($booking['igst_rate'] ?? $companyData['igst_rate'] ?? 18),
+        ];
+        $isIgst = ($gstApplied && $rateSource['igst_rate'] > 0);
+        $gstData = $invoiceService->calculateGst($rowData['totalTaxable'], $gstApplied, $isIgst, $rateSource);
+
+        $viewData = $invoiceService->assembleViewData([
+            'company'              => $companyData,
+            'recipientName'        => $recipientName,
+            'recipientAddress'     => !empty($customerInfo['address']) ? $customerInfo['address'] : ($shipments[0]['consignee'] ?? 'Address not available'),
+            'customerGst'          => $customerInfo['gst'],
+            'customerPan'          => $customerInfo['pan'],
+            'invoiceNo'            => $invoiceNo,
+            'invoicePeriod'        => $formattedBookingDate . ' TO ' . $formattedBookingDate,
+            'invoiceDate'          => $formattedBookingDate,
+            'billingBranch'        => trim(explode(',', $booking['origin'] ?: 'Pune')[0]),
+            'modeTransport'        => strtoupper($booking['mode_transport'] ?: 'AIR'),
+            'shipmentRows'         => $rowData['rows'],
+            'totalBoxes'           => $rowData['totalBoxes'],
+            'totalWt'              => $rowData['totalWt'],
+            'totalTaxable'         => $rowData['totalTaxable'],
+            'gstData'              => $gstData,
+            'bankDetails'          => $bankDetails,
+            'bookingGstin'         => !empty($booking['gstin'])    ? $booking['gstin']    : ($companyData['gstin']    ?? ''),
+            'bookingPan'           => !empty($booking['pan'])      ? $booking['pan']      : ($companyData['pan']      ?? ''),
+            'bookingSacCode'       => !empty($booking['sac_code']) ? $booking['sac_code'] : ($companyData['sac_code'] ?? ''),
+            'bookingSignaturePath' => !empty($booking['signature_path']) ? $booking['signature_path'] : ($companyData['signature_path'] ?? ''),
+            'activeCharges'        => $activeCharges,
+            'dueDate'              => '',
+            'booking'              => $booking,
+        ]);
+
+        $fileSafe = preg_replace('/[^A-Za-z0-9_-]+/', '_', ($booking['awb_no'] ?? 'AWB') . '_' . ($row['docket_no'] ?? 'DOCKET'));
+        $pdfGenerator->stream($viewData, $fileSafe . '.pdf', 'L', $autoPrint);
+    } catch (\Throwable $e) {
+        log_message('error', '[Docket PDF Export Error] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+        return redirect()->back()->with('error', 'PDF Generation failed: ' . $e->getMessage());
+    }
+}
 
 public function export()
 {
@@ -1171,12 +1372,39 @@ public function exportExcel()
 
         $customers = (new CustomerModel())->getByCompany($companyId);
         $banks = (new \App\Models\BankAccountModel())->getByCompany($companyId);
+        $downloads = (new InvoiceDownloadModel())->getRecentByCompany((int) $companyId, 30);
 
         return view('logistics/all_invoices', [
             'user'         => session()->get(),
             'company_name' => session()->get('selected_company_name'),
             'customers'    => $customers,
             'banks'        => $banks,
+            'downloads'    => $downloads,
+        ]);
+    }
+
+    public function ajaxInvoiceDownloads()
+    {
+        $companyId = session()->get('selected_company_id');
+        if (!$companyId) {
+            return $this->response->setStatusCode(401)->setJSON([
+                'status'  => 'error',
+                'message' => 'Unauthorized',
+            ]);
+        }
+
+        $downloads = (new InvoiceDownloadModel())->getRecentByCompany((int) $companyId, 30);
+        foreach ($downloads as &$download) {
+            $download['downloaded_at_display'] = !empty($download['downloaded_at']) ? date('d-M-Y H:i', strtotime($download['downloaded_at'])) : '-';
+            $download['from_date_display'] = !empty($download['from_date']) ? date('d-M-Y', strtotime($download['from_date'])) : '-';
+            $download['to_date_display'] = !empty($download['to_date']) ? date('d-M-Y', strtotime($download['to_date'])) : '-';
+            $download['view_url'] = base_url('logistics/all-invoices/downloads/' . $download['id']);
+        }
+        unset($download);
+
+        return $this->response->setJSON([
+            'status'    => 'success',
+            'downloads' => $downloads,
         ]);
     }
 
@@ -1200,28 +1428,22 @@ public function exportExcel()
                       ->select('si.id, si.docket_no, si.invoice_no, si.invoice_date, si.actual_weight, si.final_chargeable_weight, si.pieces, si.rate, b.booking_date, b.origin as booking_origin, b.destination as booking_destination, b.gst_applied, b.cgst_rate, b.sgst_rate, b.igst_rate, b.awb_no')
                       ->join('bookings b', 'b.id = si.booking_id')
                       ->where('b.company_id', $companyId)
-                      ->where('si.customer_name', $customerName);
+                      ->groupStart()
+                          ->where('si.customer_name', $customerName)
+                          ->orWhere('si.bill_to', $customerName)
+                      ->groupEnd();
 
-        $builder->groupStart()
-                    ->groupStart()
-                        ->where("si.invoice_date >= ", $fromDate)
-                        ->where("si.invoice_date <= ", $toDate)
-                    ->groupEnd()
-                    ->orGroupStart()
-                        ->where("si.invoice_date IS NULL")
-                        ->where("b.booking_date >= ", $fromDate)
-                        ->where("b.booking_date <= ", $toDate)
-                    ->groupEnd()
-                ->groupEnd();
+        $builder->where("b.booking_date >= ", $fromDate)
+                ->where("b.booking_date <= ", $toDate);
 
-        $records = $builder->orderBy('si.invoice_date', 'ASC')
-                           ->orderBy('b.booking_date', 'ASC')
+        $records = $builder->orderBy('b.booking_date', 'ASC')
+                           ->orderBy('si.docket_no', 'ASC')
                            ->get()
                            ->getResultArray();
 
         // Format dates for UI
         foreach ($records as &$r) {
-            $dateVal = !empty($r['invoice_date']) ? $r['invoice_date'] : $r['booking_date'];
+            $dateVal = $r['booking_date'] ?? null;
             $r['display_date'] = date('d-M-Y', strtotime($dateVal));
         }
 
@@ -1241,11 +1463,13 @@ public function exportExcel()
         $bankId       = (int) ($post['bank_id'] ?? 0);
         $fromDate     = $post['from_date']     ?? '';
         $toDate       = $post['to_date']       ?? '';
-        $invoiceNo    = $post['invoice_no']    ?? '';
+        $invoiceNo    = trim($post['invoice_no'] ?? '');
         $invoiceDate  = $post['invoice_date']  ?? date('Y-m-d');
         $dueDate      = $post['due_date']      ?? '';
         $remark       = $post['remark']        ?? '';
         $itemIds      = $post['item_ids']      ?? [];
+        $exportType   = $post['export_type']   ?? 'pdf';
+        $orientation  = (($post['layout_orientation'] ?? 'landscape') === 'portrait') ? 'P' : 'L';
 
         if (empty($customerName) || empty($itemIds)) {
             return redirect()->back()->with('error', 'Please select a customer and at least one shipment record!');
@@ -1267,9 +1491,12 @@ public function exportExcel()
                 ->join('bookings b', 'b.id = si.booking_id')
                 ->whereIn('si.id', $itemIds)
                 ->where('b.company_id', (int) $companyId)
-                ->where('si.customer_name', $customerName)
-                ->orderBy('si.invoice_date', 'ASC')
+                ->groupStart()
+                    ->where('si.customer_name', $customerName)
+                    ->orWhere('si.bill_to', $customerName)
+                ->groupEnd()
                 ->orderBy('b.booking_date', 'ASC')
+                ->orderBy('si.docket_no', 'ASC')
                 ->get()
                 ->getResultArray();
 
@@ -1277,15 +1504,41 @@ public function exportExcel()
                 return redirect()->back()->with('error', 'Selected shipment items not found or access denied!');
             }
 
+            $bookingDates = array_filter(array_column($shipments, 'booking_date'));
+            sort($bookingDates);
+            $pdfInvoiceDateRaw = !empty($bookingDates) ? end($bookingDates) : $invoiceDate;
+
+            if ($exportType === 'pdf') {
+                $invoiceNo = $invoiceService->finalizeConsolidatedInvoiceNumber(
+                    (int) $companyId,
+                    $shipments,
+                    $companyData,
+                    $pdfInvoiceDateRaw,
+                    $invoiceNo
+                );
+                $shipments = $invoiceService->applyInvoiceNumberToShipments($shipments, $invoiceNo, $pdfInvoiceDateRaw);
+            }
+
             // ── Recipient ───────────────────────────────────────────────────
-            $recipientName    = $customerName;
-            $recipientAddress = $shipments[0]['bill_to'] ?? $shipments[0]['consignee'] ?? 'Address not available';
+            $recipientName    = $this->resolveInvoiceRecipientName($shipments[0], $customerName, $companyData);
+            $customerInfo     = $invoiceService->resolveCustomerGstDetails($recipientName, (int) $companyId);
+            if (empty($customerInfo['gst']) && strcasecmp($recipientName, $customerName) !== 0) {
+                $customerInfo = $invoiceService->resolveCustomerGstDetails($customerName, (int) $companyId);
+            }
+            $recipientAddress = !empty($customerInfo['address'])
+                ? $customerInfo['address']
+                : ($shipments[0]['consignee'] ?? 'Address not available');
 
             // ── Business logic — delegated to InvoiceService ────────────────
             $chargeAgg     = $invoiceService->aggregateCharges($shipments);
             $activeCharges = $invoiceService->resolveActiveCharges($chargeAgg['totals'], $chargeAgg['miscLabel'], $chargeAgg['customTotals'] ?? []);
 
-            $rowData = $invoiceService->buildShipmentRows($shipments);
+            $rowData = $invoiceService->buildShipmentRows(
+                $shipments,
+                'Pune',
+                '',
+                !empty($post['club_by_lr']) || (($post['billing_mode'] ?? '') === 'docket')
+            );
 
             // Determine GST application and IGST status from selected shipments' bookings (automated settings per booking)
             $gstApplied = false;
@@ -1312,7 +1565,6 @@ public function exportExcel()
             $isIgst = ($igstCount >= $cgstCount) && ($igstCount > 0);
 
             // ── Excel Export option ──────────────────────────────────────────
-            $exportType = $post['export_type'] ?? 'pdf';
             if ($exportType === 'excel') {
                 $bookingModel = new \App\Models\BookingModel();
                 $companyModel = new \App\Models\CompanyModel();
@@ -1528,7 +1780,7 @@ public function exportExcel()
                 'customerPan'          => $customerInfo['pan'],
                 'invoiceNo'            => $invoiceNo,
                 'invoicePeriod'        => $invoicePeriod,
-                'invoiceDate'          => date('d/m/Y', strtotime($invoiceDate)),
+                'invoiceDate'          => date('d/m/Y', strtotime($pdfInvoiceDateRaw)),
                 'billingBranch'        => trim(explode(',', $shipments[0]['booking_origin'] ?? 'PUNE')[0]),
                 'modeTransport'        => strtoupper($shipments[0]['booking_mode'] ?? 'AIR'),
                 'shipmentRows'         => $rowData['rows'],
@@ -1549,11 +1801,65 @@ public function exportExcel()
                 ],
             ]);
 
-            $pdfGenerator->stream($viewData, $invoiceNo . '.pdf');
+            $fileName = preg_replace('/[^A-Za-z0-9_.-]+/', '_', $invoiceNo) . '.pdf';
+            $relativeDir = 'invoice_downloads/' . date('Y/m');
+            $relativePath = $relativeDir . '/' . date('Ymd_His') . '_' . $fileName;
+            $absolutePath = WRITEPATH . $relativePath;
+            $pdfGenerator->save($viewData, $absolutePath, $orientation);
+
+            (new InvoiceDownloadModel())->insert([
+                'company_id'          => (int) $companyId,
+                'user_id'             => session()->get('user_id') ? (int) session()->get('user_id') : null,
+                'customer_name'       => $customerName,
+                'bill_to'             => $recipientName,
+                'invoice_no'          => $invoiceNo,
+                'invoice_date'        => date('Y-m-d', strtotime($pdfInvoiceDateRaw)),
+                'from_date'           => $fromDate,
+                'to_date'             => $toDate,
+                'layout_orientation'  => $orientation === 'P' ? 'portrait' : 'landscape',
+                'billing_mode'        => $post['billing_mode'] ?? 'awb',
+                'club_by_lr'          => (!empty($post['club_by_lr']) || (($post['billing_mode'] ?? '') === 'docket')) ? 1 : 0,
+                'item_ids'            => json_encode(array_values($itemIds)),
+                'file_path'           => $relativePath,
+                'file_name'           => $fileName,
+                'downloaded_at'       => date('Y-m-d H:i:s'),
+            ]);
+
+            $pdfGenerator->stream($viewData, $fileName, $orientation);
 
         } catch (\Throwable $e) {
             log_message('error', '[Consolidated PDF Error] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
             return redirect()->back()->with('error', 'PDF Generation failed: ' . $e->getMessage());
         }
+    }
+
+    public function viewInvoiceDownload($id)
+    {
+        $companyId = (int) session()->get('selected_company_id');
+        if (!$companyId) {
+            return redirect()->to('/company-selection');
+        }
+
+        $download = (new InvoiceDownloadModel())
+            ->where('id', (int) $id)
+            ->where('company_id', $companyId)
+            ->first();
+
+        if (!$download) {
+            return redirect()->back()->with('error', 'Invoice download not found or access denied!');
+        }
+
+        $absolutePath = WRITEPATH . $download['file_path'];
+        $resolvedPath = realpath($absolutePath);
+        $writeRoot = realpath(WRITEPATH);
+
+        if (!$resolvedPath || !$writeRoot || strpos($resolvedPath, $writeRoot . DIRECTORY_SEPARATOR) !== 0 || !is_file($resolvedPath)) {
+            return redirect()->back()->with('error', 'Saved invoice PDF file is missing from storage.');
+        }
+
+        return $this->response
+            ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Content-Disposition', 'inline; filename="' . basename($download['file_name']) . '"')
+            ->setBody(file_get_contents($resolvedPath));
     }
 }

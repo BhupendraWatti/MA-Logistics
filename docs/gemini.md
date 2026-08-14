@@ -10,14 +10,15 @@ Welcome to the **M.A. Logistics ERP (MARL EXPRESS ERP)** persistent project know
 > **READING ORDER DIRECTIVE**: Before performing any task, analysis, code modification, debugging, refactoring, or testing, **YOU MUST READ AND REVIEW THE PROJECT DOCUMENTATION IN THE EXACT FOLLOWING ORDER**:
 >
 > 1. [README.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/README.md) — Project Documentation Entry Point
-> 2. [rules.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/rules.md) — Permanent Rules & Development Constraints
-> 3. [architecture.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/architecture.md) — System Architecture & Layered Design
-> 4. [functionality.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/functionality.md) — Complete Module Workflows & Business Logic
-> 5. [changes.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/changes.md) — Living Implementation & Change Log
-> 6. [database.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/database.md) — Database Schemas, Tables & Model Mappings
-> 7. [api.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/api.md) — Public & Internal REST/JSON API Specifications
-> 8. [known-issues.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/known-issues.md) — Known Bugs, Limitations & Workarounds
-> 9. [testing.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/testing.md) — Testing Framework, Performance & Load Test Guides
+> 2. [project_summary.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/project_summary.md) — Full Project Summary & Inter-File Linkage Map
+> 3. [rules.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/rules.md) — Permanent Rules & Development Constraints
+> 4. [architecture.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/architecture.md) — System Architecture & Layered Design
+> 5. [functionality.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/functionality.md) — Complete Module Workflows & Business Logic
+> 6. [changes.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/changes.md) — Living Implementation & Change Log
+> 7. [database.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/database.md) — Database Schemas, Tables & Model Mappings
+> 8. [api.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/api.md) — Public & Internal REST/JSON API Specifications
+> 9. [known-issues.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/known-issues.md) — Known Bugs, Limitations & Workarounds
+> 10. [testing.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/testing.md) — Testing Framework, Performance & Load Test Guides
 >
 > **NO IMPLEMENTATION OR CODE MODIFICATION SHOULD BEGIN UNTIL THESE FILES HAVE BEEN REVIEWED.**
 

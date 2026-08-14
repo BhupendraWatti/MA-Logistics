@@ -13,6 +13,7 @@ $totalPickup = 0;
 $totalDelivery = 0;
 $totalOtherChg = 0;
 $totalFsc = 0;
+$totalBremboDocket = 0;
 $totalRowCgst = 0;
 $totalRowSgst = 0;
 $totalRowIgst = 0;
@@ -27,6 +28,9 @@ foreach ($shipmentRows as $row) {
     
     $rowOtherChg = floatval($row['pickup'] ?? 0) + floatval($row['delivery'] ?? 0) + floatval($row['fov'] ?? 0) + floatval($row['handling'] ?? 0) + floatval($row['service'] ?? 0) + floatval($row['misc'] ?? 0) + array_sum($row['itemCustomMap'] ?? []);
     $totalOtherChg += $rowOtherChg;
+
+    $rowBremboDocket = floatval($row['docket'] ?? 0) + floatval($row['fuelAmt'] ?? 0) + floatval($row['fov'] ?? 0) + floatval($row['handling'] ?? 0) + floatval($row['service'] ?? 0) + floatval($row['misc'] ?? 0) + array_sum($row['itemCustomMap'] ?? []);
+    $totalBremboDocket += $rowBremboDocket;
     
     $rowFsc = floatval($row['fuelAmt'] ?? 0) + $rowOtherChg;
     $totalFsc += $rowFsc;
@@ -40,6 +44,27 @@ foreach ($shipmentRows as $row) {
     $totalRowIgst += $rowIgst;
     $totalRowTotal += ($row['taxable'] + $rowCgst + $rowSgst + $rowIgst);
 }
+
+$activeChargeKeys = array_keys($activeCharges ?? []);
+$hasActiveCharge = static function (array $keys) use ($activeChargeKeys): bool {
+    return count(array_intersect($keys, $activeChargeKeys)) > 0;
+};
+$hasActiveCustomCharge = count(array_filter($activeChargeKeys, static fn ($key) => strpos($key, 'custom_') === 0)) > 0;
+
+$showDocketCharge = $hasActiveCharge(['docket']) || $totalDocket > 0;
+$showFuelCharge = $hasActiveCharge(['fuel_rate', 'fuel_amt']) || $totalFuelAmt > 0;
+$showOtherCharge = $hasActiveCharge(['pickup', 'delivery', 'fov', 'handling', 'service', 'misc']) || $hasActiveCustomCharge || $totalOtherChg > 0;
+
+$showNxDocCharge = $showDocketCharge;
+$showNxFscCharge = $showFuelCharge || $showOtherCharge || $totalFsc > 0;
+$nxTotalWidth = 12 + ($showNxDocCharge ? 0 : 5) + ($showNxFscCharge ? 0 : 5);
+
+$showBremboDocketCharge = $hasActiveCharge(['docket', 'fuel_rate', 'fuel_amt', 'fov', 'handling', 'service', 'misc']) || $hasActiveCustomCharge || $totalBremboDocket > 0;
+$showBremboPickupCharge = $hasActiveCharge(['pickup']) || $totalPickup > 0;
+$showBremboDeliveryCharge = $hasActiveCharge(['delivery']) || $totalDelivery > 0;
+$bremboTotalWidth = 15 + ($showBremboDocketCharge ? 0 : 8) + ($showBremboPickupCharge ? 0 : 7) + ($showBremboDeliveryCharge ? 0 : 8);
+
+$defaultTotalWidth = 15 + ($showDocketCharge ? 0 : 7) + ($showFuelCharge ? 0 : 7) + ($showOtherCharge ? 0 : 9);
 ?>
 <?php if ($renderSection === 'header'): ?>
 <table border="1" cellpadding="2" cellspacing="0" style="width:100%; font-size:8px; border-collapse:collapse; font-family:helvetica;">
@@ -72,7 +97,7 @@ foreach ($shipmentRows as $row) {
         $rightColspan = $totalCols - $leftColspan;
         ?>
         <td colspan="<?= $leftColspan ?>" style="vertical-align:top;">
-            <strong>TO : <?= htmlspecialchars($recipientName, ENT_QUOTES, 'UTF-8') ?></strong><br>
+            <strong>Bill TO : <?= htmlspecialchars($recipientName, ENT_QUOTES, 'UTF-8') ?></strong><br>
             <?= htmlspecialchars($recipientAddress, ENT_QUOTES, 'UTF-8') ?>
             <?php if (!empty($customerGst)): ?><br>
                 <strong>GSTIN : <?= htmlspecialchars($customerGst, ENT_QUOTES, 'UTF-8') ?></strong>
@@ -116,13 +141,13 @@ foreach ($shipmentRows as $row) {
                 <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">WT</td>
                 <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">RATE</td>
                 <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">FREIGHT</td>
-                <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">DOC</td>
-                <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">FSC</td>
+                <?php if ($showNxDocCharge): ?><td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">DOC</td><?php endif; ?>
+                <?php if ($showNxFscCharge): ?><td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">FSC</td><?php endif; ?>
                 <td style="width:7%; border-top:1px solid #000; border-bottom:1px solid #000;">GROSS</td>
                 <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">C.GST <?= (float)$cgstRate ?> %</td>
                 <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">S.GST <?= (float)$sgstRate ?> %</td>
                 <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">I.GST <?= (float)$igstRate ?> %</td>
-                <td style="width:12%; border-top:1px solid #000; border-bottom:1px solid #000;">TOTAL Amt.</td>
+                <td style="width:<?= $nxTotalWidth ?>%; border-top:1px solid #000; border-bottom:1px solid #000;">TOTAL Amt.</td>
             <?php elseif ($isBrembo): ?>
                 <td style="width:3%; border-top:1px solid #000; border-bottom:1px solid #000;">SR NO</td>
                 <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">DATE</td>
@@ -134,10 +159,10 @@ foreach ($shipmentRows as $row) {
                 <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">WT</td>
                 <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">RATE</td>
                 <td style="width:7%; border-top:1px solid #000; border-bottom:1px solid #000;">FREIGHT</td>
-                <td style="width:8%; border-top:1px solid #000; border-bottom:1px solid #000;">DOCKET CHG</td>
-                <td style="width:7%; border-top:1px solid #000; border-bottom:1px solid #000;">PICKUP</td>
-                <td style="width:8%; border-top:1px solid #000; border-bottom:1px solid #000;">DELIVERY</td>
-                <td style="width:15%; border-top:1px solid #000; border-bottom:1px solid #000;">TOTAL Amt.</td>
+                <?php if ($showBremboDocketCharge): ?><td style="width:8%; border-top:1px solid #000; border-bottom:1px solid #000;">DOCKET CHG</td><?php endif; ?>
+                <?php if ($showBremboPickupCharge): ?><td style="width:7%; border-top:1px solid #000; border-bottom:1px solid #000;">PICKUP</td><?php endif; ?>
+                <?php if ($showBremboDeliveryCharge): ?><td style="width:8%; border-top:1px solid #000; border-bottom:1px solid #000;">DELIVERY</td><?php endif; ?>
+                <td style="width:<?= $bremboTotalWidth ?>%; border-top:1px solid #000; border-bottom:1px solid #000;">TOTAL Amt.</td>
             <?php else: ?>
                 <td style="width:3%; border-top:1px solid #000; border-bottom:1px solid #000;">SR NO</td>
                 <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">DATE</td>
@@ -149,10 +174,10 @@ foreach ($shipmentRows as $row) {
                 <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">WT</td>
                 <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">RATE</td>
                 <td style="width:7%; border-top:1px solid #000; border-bottom:1px solid #000;">FREIGHT</td>
-                <td style="width:7%; border-top:1px solid #000; border-bottom:1px solid #000;">DOCKET</td>
-                <td style="width:7%; border-top:1px solid #000; border-bottom:1px solid #000;">FUEL AMT</td>
-                <td style="width:9%; border-top:1px solid #000; border-bottom:1px solid #000;">OTHER CHG</td>
-                <td style="width:15%; border-top:1px solid #000; border-bottom:1px solid #000;">TOTAL Amt.</td>
+                <?php if ($showDocketCharge): ?><td style="width:7%; border-top:1px solid #000; border-bottom:1px solid #000;">DOCKET</td><?php endif; ?>
+                <?php if ($showFuelCharge): ?><td style="width:7%; border-top:1px solid #000; border-bottom:1px solid #000;">FUEL AMT</td><?php endif; ?>
+                <?php if ($showOtherCharge): ?><td style="width:9%; border-top:1px solid #000; border-bottom:1px solid #000;">OTHER CHG</td><?php endif; ?>
+                <td style="width:<?= $defaultTotalWidth ?>%; border-top:1px solid #000; border-bottom:1px solid #000;">TOTAL Amt.</td>
             <?php endif; ?>
         </tr>
     </thead>
@@ -162,7 +187,7 @@ foreach ($shipmentRows as $row) {
         <?php if ($isNx): ?>
             <?php
             $rowDoc = floatval($row['docket'] ?? 0);
-            $rowFsc = floatval($row['fuelAmt'] ?? 0) + floatval($row['pickup'] ?? 0) + floatval($row['delivery'] ?? 0) + floatval($row['fov'] ?? 0) + floatval($row['handling'] ?? 0) + floatval($row['service'] ?? 0) + floatval($row['misc'] ?? 0);
+            $rowFsc = floatval($row['fuelAmt'] ?? 0) + floatval($row['pickup'] ?? 0) + floatval($row['delivery'] ?? 0) + floatval($row['fov'] ?? 0) + floatval($row['handling'] ?? 0) + floatval($row['service'] ?? 0) + floatval($row['misc'] ?? 0) + array_sum($row['itemCustomMap'] ?? []);
             $rowGross = floatval($row['freight'] ?? 0) + $rowDoc + $rowFsc;
             $rowCgst = ($cgstRate > 0 && isset($booking['gst_applied']) && $booking['gst_applied'] == 1) ? round($rowGross * $cgstRate / 100, 2) : 0.0;
             $rowSgst = ($sgstRate > 0 && isset($booking['gst_applied']) && $booking['gst_applied'] == 1) ? round($rowGross * $sgstRate / 100, 2) : 0.0;
@@ -178,16 +203,16 @@ foreach ($shipmentRows as $row) {
             <td nowrap="nowrap" style="width:5%; white-space: nowrap; text-align:center;"><?= (float)$row['wt'] ?></td>
             <td nowrap="nowrap" style="width:5%; white-space: nowrap; text-align:center;"><?= (float)$row['rate'] ?></td>
             <td nowrap="nowrap" style="width:6%; white-space: nowrap; text-align:center;"><?= (float)$row['freight'] ?></td>
-            <td nowrap="nowrap" style="width:5%; white-space: nowrap; text-align:center;"><?= (float)$rowDoc ?></td>
-            <td nowrap="nowrap" style="width:5%; white-space: nowrap; text-align:center;"><?= (float)$rowFsc ?></td>
+            <?php if ($showNxDocCharge): ?><td nowrap="nowrap" style="width:5%; white-space: nowrap; text-align:center;"><?= (float)$rowDoc ?></td><?php endif; ?>
+            <?php if ($showNxFscCharge): ?><td nowrap="nowrap" style="width:5%; white-space: nowrap; text-align:center;"><?= (float)$rowFsc ?></td><?php endif; ?>
             <td nowrap="nowrap" style="width:7%; white-space: nowrap; text-align:center;"><?= (float)$rowGross ?></td>
             <td nowrap="nowrap" style="width:6%; white-space: nowrap; text-align:center;"><?= (float)$rowCgst ?></td>
             <td nowrap="nowrap" style="width:6%; white-space: nowrap; text-align:center;"><?= (float)$rowSgst ?></td>
             <td nowrap="nowrap" style="width:6%; white-space: nowrap; text-align:center;"><?= (float)$rowIgst ?></td>
-            <td nowrap="nowrap" style="width:12%; white-space: nowrap; text-align:center;"><?= (float)$rowTotal ?></td>
+            <td nowrap="nowrap" style="width:<?= $nxTotalWidth ?>%; white-space: nowrap; text-align:center;"><?= (float)$rowTotal ?></td>
         <?php elseif ($isBrembo): ?>
             <?php
-            $rowDocket = floatval($row['docket'] ?? 0) + floatval($row['fuelAmt'] ?? 0) + floatval($row['fov'] ?? 0) + floatval($row['handling'] ?? 0) + floatval($row['service'] ?? 0) + floatval($row['misc'] ?? 0);
+            $rowDocket = floatval($row['docket'] ?? 0) + floatval($row['fuelAmt'] ?? 0) + floatval($row['fov'] ?? 0) + floatval($row['handling'] ?? 0) + floatval($row['service'] ?? 0) + floatval($row['misc'] ?? 0) + array_sum($row['itemCustomMap'] ?? []);
             $rowPickup = floatval($row['pickup'] ?? 0);
             $rowDelivery = floatval($row['delivery'] ?? 0);
             $rowTotal = floatval($row['taxable'] ?? 0);
@@ -202,10 +227,10 @@ foreach ($shipmentRows as $row) {
             <td nowrap="nowrap" style="width:5%; white-space: nowrap; text-align:center;"><?= (float)$row['wt'] ?></td>
             <td nowrap="nowrap" style="width:5%; white-space: nowrap; text-align:center;"><?= (float)$row['rate'] ?></td>
             <td nowrap="nowrap" style="width:7%; white-space: nowrap; text-align:center;"><?= (float)$row['freight'] ?></td>
-            <td nowrap="nowrap" style="width:8%; white-space: nowrap; text-align:center;"><?= (float)$rowDocket ?></td>
-            <td nowrap="nowrap" style="width:7%; white-space: nowrap; text-align:center;"><?= (float)$rowPickup ?></td>
-            <td nowrap="nowrap" style="width:8%; white-space: nowrap; text-align:center;"><?= (float)$rowDelivery ?></td>
-            <td nowrap="nowrap" style="width:15%; white-space: nowrap; text-align:center;"><?= (float)$rowTotal ?></td>
+            <?php if ($showBremboDocketCharge): ?><td nowrap="nowrap" style="width:8%; white-space: nowrap; text-align:center;"><?= (float)$rowDocket ?></td><?php endif; ?>
+            <?php if ($showBremboPickupCharge): ?><td nowrap="nowrap" style="width:7%; white-space: nowrap; text-align:center;"><?= (float)$rowPickup ?></td><?php endif; ?>
+            <?php if ($showBremboDeliveryCharge): ?><td nowrap="nowrap" style="width:8%; white-space: nowrap; text-align:center;"><?= (float)$rowDelivery ?></td><?php endif; ?>
+            <td nowrap="nowrap" style="width:<?= $bremboTotalWidth ?>%; white-space: nowrap; text-align:center;"><?= (float)$rowTotal ?></td>
         <?php else: ?>
             <?php
             $rowDocket = floatval($row['docket'] ?? 0);
@@ -223,10 +248,10 @@ foreach ($shipmentRows as $row) {
             <td nowrap="nowrap" style="width:5%; white-space: nowrap; text-align:center;"><?= (float)$row['wt'] ?></td>
             <td nowrap="nowrap" style="width:5%; white-space: nowrap; text-align:center;"><?= (float)$row['rate'] ?></td>
             <td nowrap="nowrap" style="width:7%; white-space: nowrap; text-align:center;"><?= (float)$row['freight'] ?></td>
-            <td nowrap="nowrap" style="width:7%; white-space: nowrap; text-align:center;"><?= (float)$rowDocket ?></td>
-            <td nowrap="nowrap" style="width:7%; white-space: nowrap; text-align:center;"><?= (float)$rowFuelAmt ?></td>
-            <td nowrap="nowrap" style="width:9%; white-space: nowrap; text-align:center;"><?= (float)$rowOtherChg ?></td>
-            <td nowrap="nowrap" style="width:15%; white-space: nowrap; text-align:center;"><?= (float)$rowTotal ?></td>
+            <?php if ($showDocketCharge): ?><td nowrap="nowrap" style="width:7%; white-space: nowrap; text-align:center;"><?= (float)$rowDocket ?></td><?php endif; ?>
+            <?php if ($showFuelCharge): ?><td nowrap="nowrap" style="width:7%; white-space: nowrap; text-align:center;"><?= (float)$rowFuelAmt ?></td><?php endif; ?>
+            <?php if ($showOtherCharge): ?><td nowrap="nowrap" style="width:9%; white-space: nowrap; text-align:center;"><?= (float)$rowOtherChg ?></td><?php endif; ?>
+            <td nowrap="nowrap" style="width:<?= $defaultTotalWidth ?>%; white-space: nowrap; text-align:center;"><?= (float)$rowTotal ?></td>
         <?php endif; ?>
     </tr>
     <?php endforeach; ?>
@@ -238,33 +263,33 @@ foreach ($shipmentRows as $row) {
             <td style="width:5%; text-align:center;"><?= (float)$totalWt ?></td>
             <td style="width:5%;"></td>
             <td style="width:6%; text-align:center;"><?= (float)$totalFreight ?></td>
-            <td style="width:5%; text-align:center;"><?= (float)$totalDocket ?></td>
-            <td style="width:5%; text-align:center;"><?= (float)$totalFsc ?></td>
+            <?php if ($showNxDocCharge): ?><td style="width:5%; text-align:center;"><?= (float)$totalDocket ?></td><?php endif; ?>
+            <?php if ($showNxFscCharge): ?><td style="width:5%; text-align:center;"><?= (float)$totalFsc ?></td><?php endif; ?>
             <td style="width:7%; text-align:center;"><?= round($totalTaxable) ?></td>
             <td style="width:6%; text-align:center;"><?= (float)$totalRowCgst ?></td>
             <td style="width:6%; text-align:center;"><?= (float)$totalRowSgst ?></td>
             <td style="width:6%; text-align:center;"><?= (float)$totalRowIgst ?></td>
-            <td style="width:12%; text-align:center;"><?= round($totalRowTotal) ?></td>
+            <td style="width:<?= $nxTotalWidth ?>%; text-align:center;"><?= round($totalRowTotal) ?></td>
         <?php elseif ($isBrembo): ?>
             <td colspan="6" style="width:40%;">TOTAL</td>
             <td style="width:5%; text-align:center;"><?= $totalBoxes ?></td>
             <td style="width:5%; text-align:center;"><?= (float)$totalWt ?></td>
             <td style="width:5%;"></td>
             <td style="width:7%; text-align:center;"><?= (float)$totalFreight ?></td>
-            <td style="width:8%; text-align:center;"><?= (float)$totalDocket ?></td>
-            <td style="width:7%; text-align:center;"><?= (float)$totalPickup ?></td>
-            <td style="width:8%; text-align:center;"><?= (float)$totalDelivery ?></td>
-            <td style="width:15%; text-align:center;"><?= round($totalTaxable) ?></td>
+            <?php if ($showBremboDocketCharge): ?><td style="width:8%; text-align:center;"><?= (float)$totalBremboDocket ?></td><?php endif; ?>
+            <?php if ($showBremboPickupCharge): ?><td style="width:7%; text-align:center;"><?= (float)$totalPickup ?></td><?php endif; ?>
+            <?php if ($showBremboDeliveryCharge): ?><td style="width:8%; text-align:center;"><?= (float)$totalDelivery ?></td><?php endif; ?>
+            <td style="width:<?= $bremboTotalWidth ?>%; text-align:center;"><?= round($totalTaxable) ?></td>
         <?php else: ?>
             <td colspan="6" style="width:40%;">TOTAL</td>
             <td style="width:5%; text-align:center;"><?= $totalBoxes ?></td>
             <td style="width:5%; text-align:center;"><?= (float)$totalWt ?></td>
             <td style="width:5%;"></td>
             <td style="width:7%; text-align:center;"><?= (float)$totalFreight ?></td>
-            <td style="width:7%; text-align:center;"><?= (float)$totalDocket ?></td>
-            <td style="width:7%; text-align:center;"><?= (float)$totalFuelAmt ?></td>
-            <td style="width:9%; text-align:center;"><?= (float)$totalOtherChg ?></td>
-            <td style="width:15%; text-align:center;"><?= round($totalTaxable) ?></td>
+            <?php if ($showDocketCharge): ?><td style="width:7%; text-align:center;"><?= (float)$totalDocket ?></td><?php endif; ?>
+            <?php if ($showFuelCharge): ?><td style="width:7%; text-align:center;"><?= (float)$totalFuelAmt ?></td><?php endif; ?>
+            <?php if ($showOtherCharge): ?><td style="width:9%; text-align:center;"><?= (float)$totalOtherChg ?></td><?php endif; ?>
+            <td style="width:<?= $defaultTotalWidth ?>%; text-align:center;"><?= round($totalTaxable) ?></td>
         <?php endif; ?>
     </tr>
 </table>
@@ -273,9 +298,10 @@ foreach ($shipmentRows as $row) {
     <!-- Row 1: Remarks (colspan 12) & Net Payable (colspan 8) -->
     <tr>
         <td colspan="12" style="width:60%; vertical-align:top; border-right:1px solid #000; padding: 5px;">
-            <?php if (!empty($booking['narration'])): ?>
+            <?php $invoiceRemarks = $booking['remarks'] ?? ($booking['narration'] ?? ''); ?>
+            <?php if (!empty($invoiceRemarks)): ?>
                 <strong>Remarks / Narration:</strong><br>
-                <?= nl2br(htmlspecialchars($booking['narration'], ENT_QUOTES, 'UTF-8')) ?>
+                <?= nl2br(htmlspecialchars($invoiceRemarks, ENT_QUOTES, 'UTF-8')) ?>
             <?php endif; ?>
         </td>
         <td colspan="8" style="width:40%; padding:0; vertical-align:top;">

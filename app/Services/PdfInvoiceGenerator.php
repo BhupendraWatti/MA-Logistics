@@ -7,7 +7,7 @@ use TCPDF;
 /**
  * PdfInvoiceGenerator
  *
- * Encapsulates all TCPDF-specific logic for generating A4 Landscape invoice PDFs.
+ * Encapsulates all TCPDF-specific logic for generating A4 invoice PDFs.
  * Decouples the PDF framework from the controller and InvoiceService, so swapping
  * the PDF library in the future only requires changes here.
  *
@@ -26,10 +26,38 @@ class PdfInvoiceGenerator
      * @param  string $fileName     Desired download filename (without path), e.g. "AWB_12345.pdf"
      * @throws \Throwable           Propagates TCPDF exceptions to the caller for logging
      */
-    public function stream(array $viewData, string $fileName): void
+    public function stream(array $viewData, string $fileName, string $orientation = 'L', bool $autoPrint = false): void
     {
-        $pdf = $this->createPdfInstance();
+        $pdf = $this->buildPdf($viewData, $orientation, $autoPrint);
+        $pdf->SetTitle(pathinfo($fileName, PATHINFO_FILENAME) ?: 'Invoice');
 
+        // Flush any stale output buffers to prevent PDF binary corruption
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        if (!headers_sent()) {
+            http_response_code(200);
+            header('Content-Type: application/pdf');
+        }
+
+        $pdf->Output($fileName, $autoPrint ? 'I' : 'D');
+        exit;
+    }
+
+    public function save(array $viewData, string $absolutePath, string $orientation = 'L'): void
+    {
+        $pdf = $this->buildPdf($viewData, $orientation, false);
+        $dir = dirname($absolutePath);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
+        $pdf->Output($absolutePath, 'F');
+    }
+
+    private function buildPdf(array $viewData, string $orientation = 'L', bool $autoPrint = false): TCPDF
+    {
+        $pdf = $this->createPdfInstance($orientation);
         $topMargin = $this->calculateTopMargin($viewData);
         $pdf->SetMargins(8, $topMargin, 8);
         $pdf->SetAutoPageBreak(true, 15);
@@ -45,22 +73,21 @@ class PdfInvoiceGenerator
         $pdf->SetFont('helvetica', '', 8);
         $pdf->writeHTML($bodyHtml, true, false, true, false, '');
 
-        // Flush any stale output buffers to prevent PDF binary corruption
-        while (ob_get_level() > 0) {
-            ob_end_clean();
+        if ($autoPrint && method_exists($pdf, 'IncludeJS')) {
+            $pdf->IncludeJS('print(true);');
         }
 
-        $pdf->Output($fileName, 'D');
-        exit;
+        return $pdf;
     }
 
     /**
      * Instantiate and configure the TCPDF object.
      * Using an anonymous class so TCPDF's Header() callback can inject our custom HTML.
      */
-    private function createPdfInstance(): TCPDF
+    private function createPdfInstance(string $orientation = 'L'): TCPDF
     {
-        $pdf = new class('L', 'mm', 'A4') extends TCPDF {
+        $orientation = strtoupper($orientation) === 'P' ? 'P' : 'L';
+        $pdf = new class($orientation, 'mm', 'A4') extends TCPDF {
             /** @var string  HTML string rendered by InvoiceService and injected before AddPage() */
             public string $headerHtml = '';
 

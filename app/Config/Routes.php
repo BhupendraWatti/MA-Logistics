@@ -30,16 +30,21 @@ $routes->get('logistics/search', 'Logistics::search');
 $routes->post('logistics/searchResult', 'Logistics::searchResult');
 $routes->match(['get', 'post'], 'logistics/create', 'Logistics::create');
 $routes->post('logistics/store', 'Logistics::store');
+$routes->post('logistics/check-awb-unique', 'Logistics::checkAwbUnique');
 $routes->get('logistics/view/(:num)', 'Logistics::view/$1');
 $routes->get('logistics/edit/(:num)', 'Logistics::edit/$1');
 $routes->post('logistics/update/(:num)', 'Logistics::update/$1');
 $routes->post('logistics/delete/(:num)', 'Logistics::delete/$1');
 $routes->get('logistics/deleteSignature/(:num)', 'Logistics::deleteSignature/$1');
 $routes->get('logistics/consolidation', 'Logistics::consolidation');
+$routes->get('logistics/exportDocketPdf/(:num)', 'Logistics::exportDocketPdf/$1');
+$routes->get('logistics/printDocketPdf/(:num)', 'Logistics::printDocketPdf/$1');
 
 $routes->get('logistics/all-invoices', 'Logistics::allInvoices');
+$routes->get('logistics/all-invoices/downloads', 'Logistics::ajaxInvoiceDownloads');
 $routes->post('logistics/all-invoices/search', 'Logistics::ajaxSearchShipmentRecords');
 $routes->post('logistics/all-invoices/generate', 'Logistics::generateConsolidatedInvoice');
+$routes->get('logistics/all-invoices/downloads/(:num)', 'Logistics::viewInvoiceDownload/$1');
 
 $routes->get('logistics/clearCompany', 'Logistics::clearCompany');
 

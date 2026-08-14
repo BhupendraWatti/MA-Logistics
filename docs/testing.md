@@ -2,6 +2,19 @@
 
 This document outlines the testing strategy, manual smoke test procedures, performance load-testing suite, and regression testing criteria for M.A. Logistics ERP.
 
+## Current Backend Regression Additions
+
+| Test Case | Scenario | Expected Result | Status |
+| :--- | :--- | :--- | :---: |
+| **TC016** | Customer Rate Snapshot Fallback | Save an item with blank/zero rate where `customer_rates` contains a matching company/customer/category/date row; `shipment_items.rate` stores the matched rate. | PASS |
+| **TC017** | Zero Actual Weight Allowed | Save a shipment item with `actual_weight = 0` and no positive booking-level master weight. | PASS |
+| **TC018** | Master AWB Weight Guard | Save a booking with `total_weight` greater than summed item actual weights; backend rejects the save with a clear validation message. | PASS |
+| **TC019** | Customer Master Invoice Fallback | Generate PDF for a customer with master address/GST/PAN populated; invoice header uses master data before shipment free-text fallback. | PASS |
+| **TC020** | Optional LR/Docket Clubbing | Generate invoice with `club_by_lr=1` or `billing_mode=docket` for repeated docket numbers; matching LR rows consolidate while default invoices stay per item. | PASS |
+| **TC021** | FY Invoice Auto-Number Finalization | Generate a consolidated PDF for blank invoice rows; backend allocates the next company/prefix/FY number, persists it to selected shipment rows, and reuses it on reprint. | PASS |
+| **TC022** | Hide Zero-Value Invoice Charges | Generate PDF invoices where docket/fuel/other/pickup/delivery charges are zero; zero-value surcharge columns are omitted and non-zero charge columns still total correctly. | PASS |
+| **TC023** | Item-Level Payment Type UI | Add/edit shipment items with Payment Type in the item drawer; values persist in `items_json`, display in the grid, and keep booking-level compatibility through the hidden field. | PASS |
+
 ---
 
 ## 1. Manual Smoke Test Plan (Production / Staging)
