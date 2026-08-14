@@ -5,11 +5,13 @@ This document details all database tables, columns, indexes, foreign key relatio
 ## Current Backend Additions
 
 ### `customer_rates`
-* **Purpose**: Tenant-scoped customer rate snapshots by date range and material category. `BookingService` uses this table to auto-fill blank/zero shipment item rates at save time while preserving historical saved rates on existing shipment rows.
+* **Purpose**: Immutable, tenant-scoped customer rate versions by origin/destination, date range, and optional material category. `BookingService` uses the version applicable on the booking date; Customer Master changes close old versions rather than deleting them.
 * **Primary Key**: `id` (INT, AUTO_INCREMENT)
 * **Foreign Key**: `company_id` to `companies.id`
-* **Columns**: `id`, `company_id`, `customer_id`, `customer_name`, `material_category`, `effective_from`, `effective_to`, `rate`, `created_at`, `updated_at`
-* **Index**: `idx_customer_rates_lookup (company_id, customer_name, material_category, effective_from)`
+* **Columns**: `id`, `company_id`, `customer_id`, `customer_name`, `origin`, `destination`, `material_category`, `effective_from`, `effective_to`, `rate`, `is_active`, `active_scope_key`, `created_at`, `updated_at`
+* **Indexes**: `idx_customer_rates_lookup (company_id, customer_name, material_category, effective_from)`, `idx_customer_rates_od_lookup (company_id, customer_name, origin, destination, effective_from)`, unique `uq_customer_rates_active_scope (company_id, customer_id, active_scope_key)`
+* **Invariant**: Exactly one active row may exist for a normalized customer/O&D/category scope. Active rows hold the SHA-256 `active_scope_key`; closed rows set it to `NULL`, allowing unlimited immutable history.
+* **Backfill**: Migration `2026-08-14-000004_VersionCustomerRates.php` keeps the newest `effective_from`, then highest `id`, active and closes older duplicates without deleting them.
 * **Related Model**: `app/Models/CustomerRateModel.php`
 
 ### `invoice_sequences`
@@ -18,6 +20,16 @@ This document details all database tables, columns, indexes, foreign key relatio
 * **Foreign Key**: `company_id` to `companies.id`
 * **Columns**: `id`, `company_id`, `financial_year`, `prefix`, `last_number`, `created_at`, `updated_at`
 * **Unique Key**: `uq_invoice_sequence_scope (company_id, financial_year, prefix)`
+
+### `invoice_templates`
+* **Purpose**: Company-scoped Invoice Master rows that classify invoice prefixes as GST or Non-GST.
+* **Columns**: `id`, `company_id`, `name`, `gst_type`, `prefix`, `is_active`, `created_at`, `updated_at`
+* **Unique Key**: `uq_invoice_template_prefix (company_id, prefix)`
+
+### `docket_series`
+* **Purpose**: Company-scoped Docket Master prefix policies. Auto rows allocate docket numbers with a locked `current_number`; manual rows only guide user entry.
+* **Columns**: `id`, `company_id`, `name`, `prefix`, `entry_mode`, `current_number`, `is_active`, `created_at`, `updated_at`
+* **Unique Key**: `uq_docket_series_prefix (company_id, prefix)`
 
 ### Added Columns
 * `shipment_items.payment_type` and `shipment_items.material_category` store item-level billing/category metadata when the form or API submits it; if omitted, `BookingService` falls back to booking-level `payment_type` and `material_category`.

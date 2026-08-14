@@ -1,4 +1,10 @@
-<?php $c = $customer ?? []; ?>
+<?php
+$c = $customer ?? [];
+$customerRates = $customer_rates ?? [];
+$customerRateHistory = $customer_rate_history ?? [];
+$originOptions = $lookups['origin'] ?? [];
+$destinationOptions = $lookups['destination'] ?? [];
+?>
 
 <div class="row g-4">
     <!-- LEFT COLUMN: Customer & FINANCE DETAILS -->
@@ -89,6 +95,131 @@
             </div>
         </div>
         
+        <!-- Location Wise Item Rates -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold text-primary mb-0"><i class="fas fa-route me-2"></i> Location Wise Item Rates</h6>
+                <button type="button" class="btn btn-sm btn-outline-primary add-customer-rate-row">
+                    <i class="fas fa-plus me-1"></i> Add Rate
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-2 customer-rate-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Origin</th>
+                                <th>Destination</th>
+                                <th>Category</th>
+                                <th>Item Rate</th>
+                                <th>Effective From</th>
+                                <th style="width: 44px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="customer-rate-rows">
+                            <?php if (!empty($customerRates)): ?>
+                                <?php foreach ($customerRates as $rate): ?>
+                                    <tr>
+                                        <td>
+                                            <?php $selectedOrigin = $rate['origin'] ?? ''; ?>
+                                            <select name="rate_origin[]" class="form-select form-select-sm shadow-none">
+                                                <option value="">Origin</option>
+                                                <?php if ($selectedOrigin !== '' && !in_array($selectedOrigin, array_column($originOptions, 'value'), true)): ?>
+                                                    <option value="<?= esc($selectedOrigin) ?>" selected><?= esc($selectedOrigin) ?></option>
+                                                <?php endif; ?>
+                                                <?php foreach ($originOptions as $origin): ?>
+                                                    <option value="<?= esc($origin['value']) ?>" <?= $selectedOrigin === $origin['value'] ? 'selected' : '' ?>><?= esc($origin['value']) ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <?php $selectedDestination = $rate['destination'] ?? ''; ?>
+                                            <select name="rate_destination[]" class="form-select form-select-sm shadow-none">
+                                                <option value="">Destination</option>
+                                                <?php if ($selectedDestination !== '' && !in_array($selectedDestination, array_column($destinationOptions, 'value'), true)): ?>
+                                                    <option value="<?= esc($selectedDestination) ?>" selected><?= esc($selectedDestination) ?></option>
+                                                <?php endif; ?>
+                                                <?php foreach ($destinationOptions as $destination): ?>
+                                                    <option value="<?= esc($destination['value']) ?>" <?= $selectedDestination === $destination['value'] ? 'selected' : '' ?>><?= esc($destination['value']) ?></option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </td>
+                                        <td><input type="text" name="rate_material_category[]" class="form-control form-control-sm shadow-none" value="<?= esc($rate['material_category'] ?? '') ?>" placeholder="Optional"></td>
+                                        <td><input type="number" step="0.01" min="0" name="rate_value[]" class="form-control form-control-sm shadow-none tabular-nums" value="<?= esc($rate['rate'] ?? '') ?>" placeholder="0.00"></td>
+                                        <td><input type="date" name="rate_effective_from[]" class="form-control form-control-sm shadow-none" value="<?= esc($rate['effective_from'] ?? date('Y-m-d')) ?>"></td>
+                                        <td><button type="button" class="btn btn-sm btn-outline-danger remove-customer-rate-row"><i class="fas fa-trash"></i></button></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td>
+                                        <select name="rate_origin[]" class="form-select form-select-sm shadow-none">
+                                            <option value="">Origin</option>
+                                            <?php foreach ($originOptions as $origin): ?>
+                                                <option value="<?= esc($origin['value']) ?>"><?= esc($origin['value']) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select name="rate_destination[]" class="form-select form-select-sm shadow-none">
+                                            <option value="">Destination</option>
+                                            <?php foreach ($destinationOptions as $destination): ?>
+                                                <option value="<?= esc($destination['value']) ?>"><?= esc($destination['value']) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </td>
+                                    <td><input type="text" name="rate_material_category[]" class="form-control form-control-sm shadow-none" placeholder="Optional"></td>
+                                    <td><input type="number" step="0.01" min="0" name="rate_value[]" class="form-control form-control-sm shadow-none tabular-nums" placeholder="0.00"></td>
+                                    <td><input type="date" name="rate_effective_from[]" class="form-control form-control-sm shadow-none" value="<?= date('Y-m-d') ?>"></td>
+                                    <td><button type="button" class="btn btn-sm btn-outline-danger remove-customer-rate-row"><i class="fas fa-trash"></i></button></td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-muted fs-8">Leave a row blank to ignore it. Booking item entry uses the matching customer + origin + destination rate.</div>
+            </div>
+        </div>
+
+        <?php if (!empty($customerRateHistory)): ?>
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                <h6 class="fw-bold text-secondary mb-0"><i class="fas fa-history me-2"></i> Rate History</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Origin</th>
+                                <th>Destination</th>
+                                <th>Category</th>
+                                <th>Item Rate</th>
+                                <th>Effective From</th>
+                                <th>Effective To</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($customerRateHistory as $historyRate): ?>
+                                <tr>
+                                    <td><?= esc($historyRate['origin'] ?? '') ?></td>
+                                    <td><?= esc($historyRate['destination'] ?? '') ?></td>
+                                    <td><?= esc($historyRate['material_category'] ?: 'All categories') ?></td>
+                                    <td class="tabular-nums"><?= number_format((float) ($historyRate['rate'] ?? 0), 2) ?></td>
+                                    <td><?= esc($historyRate['effective_from'] ?? '') ?></td>
+                                    <td><?= esc($historyRate['effective_to'] ?? '') ?></td>
+                                    <td><span class="badge bg-secondary-subtle text-secondary">Closed</span></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-muted fs-8 mt-2">Closed versions are retained for audit and past-date rate lookup.</div>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <!-- Legacy / Generic Fields -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
@@ -215,3 +346,47 @@
         </div>
     </div>
 </div>
+
+<template id="customerRateRowTemplate">
+    <tr>
+        <td>
+            <select name="rate_origin[]" class="form-select form-select-sm shadow-none">
+                <option value="">Origin</option>
+                <?php foreach ($originOptions as $origin): ?>
+                    <option value="<?= esc($origin['value']) ?>"><?= esc($origin['value']) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </td>
+        <td>
+            <select name="rate_destination[]" class="form-select form-select-sm shadow-none">
+                <option value="">Destination</option>
+                <?php foreach ($destinationOptions as $destination): ?>
+                    <option value="<?= esc($destination['value']) ?>"><?= esc($destination['value']) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </td>
+        <td><input type="text" name="rate_material_category[]" class="form-control form-control-sm shadow-none" placeholder="Optional"></td>
+        <td><input type="number" step="0.01" min="0" name="rate_value[]" class="form-control form-control-sm shadow-none tabular-nums" placeholder="0.00"></td>
+        <td><input type="date" name="rate_effective_from[]" class="form-control form-control-sm shadow-none" value="<?= date('Y-m-d') ?>"></td>
+        <td><button type="button" class="btn btn-sm btn-outline-danger remove-customer-rate-row"><i class="fas fa-trash"></i></button></td>
+    </tr>
+</template>
+
+<script>
+document.addEventListener('click', function (event) {
+    const addBtn = event.target.closest('.add-customer-rate-row');
+    if (addBtn) {
+        const table = addBtn.closest('.card').querySelector('.customer-rate-rows');
+        const template = document.getElementById('customerRateRowTemplate');
+        if (table && template) {
+            table.insertAdjacentHTML('beforeend', template.innerHTML.trim());
+        }
+    }
+
+    const removeBtn = event.target.closest('.remove-customer-rate-row');
+    if (removeBtn) {
+        const row = removeBtn.closest('tr');
+        if (row) row.remove();
+    }
+});
+</script>

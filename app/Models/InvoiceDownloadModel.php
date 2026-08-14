@@ -23,6 +23,7 @@ class InvoiceDownloadModel extends Model
         'billing_mode',
         'club_by_lr',
         'item_ids',
+        'total_amount',
         'file_path',
         'file_name',
         'downloaded_at',
@@ -33,6 +34,21 @@ class InvoiceDownloadModel extends Model
         return $this->select('invoice_downloads.*, users.username as downloaded_by')
             ->join('users', 'users.id = invoice_downloads.user_id', 'left')
             ->where('invoice_downloads.company_id', $companyId)
+            ->orderBy('invoice_downloads.downloaded_at', 'DESC')
+            ->limit($limit)
+            ->findAll();
+    }
+
+    public function getByCompanyMonth(int $companyId, string $month, int $limit = 100): array
+    {
+        $start = $month . '-01 00:00:00';
+        $end = date('Y-m-t 23:59:59', strtotime($month . '-01'));
+
+        return $this->select('invoice_downloads.*, users.username as downloaded_by')
+            ->join('users', 'users.id = invoice_downloads.user_id', 'left')
+            ->where('invoice_downloads.company_id', $companyId)
+            ->where('invoice_downloads.downloaded_at >=', $start)
+            ->where('invoice_downloads.downloaded_at <=', $end)
             ->orderBy('invoice_downloads.downloaded_at', 'DESC')
             ->limit($limit)
             ->findAll();

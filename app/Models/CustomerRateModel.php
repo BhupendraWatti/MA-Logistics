@@ -11,8 +11,8 @@ class CustomerRateModel extends Model
     protected $useTimestamps = true;
 
     protected $allowedFields = [
-        'company_id', 'customer_id', 'customer_name', 'material_category',
-        'effective_from', 'effective_to', 'rate', 'created_at', 'updated_at',
+        'company_id', 'customer_id', 'customer_name', 'origin', 'destination', 'material_category',
+        'effective_from', 'effective_to', 'rate', 'is_active', 'active_scope_key', 'created_at', 'updated_at',
     ];
 
     protected $validationRules = [
@@ -23,7 +23,14 @@ class CustomerRateModel extends Model
         'rate'            => 'required|numeric|greater_than_equal_to[0]',
     ];
 
-    public function findRate(int $companyId, string $customerName, ?string $category, string $bookingDate): ?array
+    public function findRate(
+        int $companyId,
+        string $customerName,
+        ?string $category,
+        string $bookingDate,
+        ?string $origin = null,
+        ?string $destination = null
+    ): ?array
     {
         $customerName = trim($customerName);
         if ($customerName === '' || $bookingDate === '') {
@@ -44,10 +51,34 @@ class CustomerRateModel extends Model
                 ->orWhere('material_category', null)
                 ->orWhere('material_category', '')
             ->groupEnd();
+        } else {
+            $builder = $builder->groupStart()
+                ->where('material_category', null)
+                ->orWhere('material_category', '')
+            ->groupEnd();
         }
 
-        return $builder->orderBy('material_category IS NULL', 'ASC', false)
+        $origin = trim((string) $origin);
+        $destination = trim((string) $destination);
+        if (($origin === '') xor ($destination === '')) {
+            return null;
+        }
+
+        if ($origin !== '' && $destination !== '') {
+            $builder = $builder
+                ->where('LOWER(origin)', strtolower($origin))
+                ->where('LOWER(destination)', strtolower($destination));
+        } else {
+            $builder = $builder
+                ->groupStart()->where('origin', null)->orWhere('origin', '')->groupEnd()
+                ->groupStart()->where('destination', null)->orWhere('destination', '')->groupEnd();
+        }
+
+        return $builder
+            ->orderBy("CASE WHEN material_category IS NULL OR material_category = '' THEN 1 ELSE 0 END", 'ASC', false)
+            ->orderBy('is_active', 'DESC')
             ->orderBy('effective_from', 'DESC')
+            ->orderBy('id', 'DESC')
             ->first();
     }
 }

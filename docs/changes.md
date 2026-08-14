@@ -4,6 +4,66 @@ This file tracks every technical change, feature implementation, refactoring, an
 
 ## Latest Frontend Change
 
+### [CHG-023] Immutable Customer Rates, Exact Route Lookup, Safe Save Picker, Session Path Repair
+* **Status**: Implemented; browser smoke verification pending
+* **Priority**: High
+* **Requirement**: Preserve customer-rate history, serialize concurrent rate changes, prevent generic route fallback, invoke the native PDF picker from a user action, and restore the configured file-session path.
+* **Implementation**:
+  - Added forward migration `2026-08-14-000004_VersionCustomerRates.php` with `is_active`, nullable `active_scope_key`, duplicate backfill/closure, and unique active-scope enforcement by company/customer/normalized O&D/category.
+  - Added `CustomerRateService` so customer writes and rate synchronization share one transaction and lock the tenant-scoped customer row. Changed and removed rates are closed, never deleted; repeated same-rate saves are idempotent; stale competing writes return HTTP `409`.
+  - Made supplied origin and destination exact, case-insensitive lookup criteria. Generic route rows are considered only when neither location is supplied; exact category still precedes blank category.
+  - Customer Master edits only active rows and displays closed versions in a read-only Rate History table.
+  - PDF generation now finishes before an explicit “Choose save location” action. Picker cancellation is informational, while unsupported/insecure contexts use normal download and retain All Downloads history.
+  - Removed the blank `.env` `session.savePath` override so `Config\Session::$savePath` resolves to `writable/session`.
+* **QA**: 8 PHPUnit tests / 30 assertions pass on disposable MySQL databases, including migration backfill, exact lookup, history, tenant isolation, idempotency, stale-connection conflict, and database uniqueness. PHP syntax, routes, and `git diff --check` pass. Chrome/Edge/unsupported-browser manual cases remain explicitly pending.
+
+---
+
+### [CHG-022] Invoice Booking Date, Save-As PDF Download, Location Wise Customer Item Rates
+* **Status**: Completed
+* **Priority**: High
+* **Requirement**: Show booking-date based invoice dates in PDF output, ask the browser where to save generated invoice PDFs, and implement customer item rates by origin/destination.
+* **Implementation**:
+  - Consolidated invoice PDF period/date now derives from the selected shipment booking dates instead of the manually entered invoice-date field.
+  - PDF generation can return JSON for the web UI; All Invoices fetches the generated PDF and uses the browser save-file picker when available, with normal browser download fallback.
+  - Extended `customer_rates` with `origin` and `destination`, added Customer Master location-wise rate rows, added runtime lookup/save endpoints, and wired booking item entry to auto-fill Item Rate by Customer + Origin + Destination.
+  - Save Item now warns when no master rate exists and asks whether a typed rate should be saved to Customer Master or used one time only. If a master rate exists but the typed value differs, it asks whether to update the master.
+* **Files Modified**: `app/Database/Migrations/2026-08-14-000003_AddOriginDestinationToCustomerRates.php`, `app/Models/CustomerRateModel.php`, `app/Controllers/MasterController.php`, `app/Controllers/Logistics.php`, `app/Services/BookingService.php`, `app/Views/masters/_customer_form_fields.php`, `app/Views/masters/customers.php`, `app/Views/masters/customer_form.php`, `app/Views/logistics/all_invoices.php`, `app/Views/logistics/booking_form.php`, `app/Config/Routes.php`, `docs/*`
+* **QA**: PHP syntax checks passed, `php spark routes` registered the rate endpoints, and `php spark migrate` applied the customer-rate origin/destination migration.
+
+---
+
+### [CHG-021] Invoice Master and Docket Prefix Master
+* **Status**: Completed
+* **Priority**: High
+* **Requirement**: Add selectable GST/Non-GST invoice prefixes and selectable auto/manual docket prefixes, while warning users about invoice GST mismatches without blocking them.
+* **Implementation**:
+  - Added `invoice_templates` for company-scoped Invoice Master rows with Name, GST/Non-GST type, Prefix, and Active state.
+  - Added `docket_series` for company-scoped Docket Master rows with Name, Prefix, Auto Increment/Manual mode, and Active state.
+  - Added admin master screens and sidebar links for Invoice Master and Docket Master.
+  - Booking item entry now lets staff select an Invoice Master beside the Invoice No field. The selected prefix is applied at shipment-entry time, keeping All Invoices focused on customer/date selection and download generation.
+  - All Invoices detects GST/Non-GST mismatches from the saved shipment invoice prefix and still shows a proceed/cancel warning without asking staff to pick an Invoice Master there.
+  - Booking item entry now lets staff select a docket prefix. Auto series generate using row-locked `docket_series.current_number`; manual series keep the docket input editable.
+* **Concurrency Note**: Consolidated invoice numbers still lock `invoice_sequences` by company + financial year + prefix. Docket auto generation locks the selected `docket_series` row before incrementing, so parallel users do not receive the same generated docket number.
+* **Files Modified**: `app/Database/Migrations/2026-08-14-000002_CreateInvoiceTemplatesAndDocketSeries.php`, `app/Models/InvoiceTemplateModel.php`, `app/Models/DocketSeriesModel.php`, `app/Controllers/MasterController.php`, `app/Controllers/Logistics.php`, `app/Services/InvoiceService.php`, `app/Views/masters/invoice_templates.php`, `app/Views/masters/docket_series.php`, `app/Views/logistics/all_invoices.php`, `app/Views/logistics/booking_form.php`, `app/Views/layout.php`, `docs/*`
+* **QA**: PHP syntax checks passed, `php spark migrate` applied the new tables, and `php spark routes` registered the new master routes.
+
+---
+
+### [CHG-020] Booking Table Widths, Download Calendar Summary, Download Delete, Draft Recovery Hardening
+* **Status**: Completed
+* **Priority**: High
+* **Requirement**: Prevent the Customer column from forcing unnecessary horizontal scroll, show month-wise invoice download/billing history, allow deleting saved invoice downloads, and reduce draft data-loss risk when Save Draft is rejected.
+* **Implementation**:
+  - Added wrapping Customer cells with constrained width in Dashboard Recent Bookings and All Bookings while preserving horizontal scroll when the whole column set exceeds the screen.
+  - Added a month selector and month summary to All Downloads, including invoice count and saved billing amount.
+  - Added `invoice_downloads.total_amount`, persisted consolidated invoice totals during PDF generation, and added a tenant-scoped delete route that removes the saved PDF and history row.
+  - Kept local booking drafts after draft submits so shipment rows can still be recovered if server-side validation rejects a draft save.
+* **Files Modified**: `app/Views/logistics/manage_bookings.php`, `app/Views/logistics/dashboard.php`, `app/Views/logistics/all_invoices.php`, `app/Controllers/Logistics.php`, `app/Models/InvoiceDownloadModel.php`, `app/Config/Routes.php`, `app/Database/Migrations/2026-08-14-000001_AddTotalAmountToInvoiceDownloads.php`, `docs/*`
+* **QA**: PHP syntax checks passed, `php spark routes` registered the delete route, `git diff --check` passed, and `php spark migrate` applied the new total amount migration.
+
+---
+
 ### [CHG-019] Booking Autosave, Invoice Charge Overflow, Runtime Uniqueness, Default Bank Selection, Boxes Wording
 * **Status**: Completed
 * **Priority**: High

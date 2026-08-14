@@ -4,7 +4,7 @@ This document provides a comprehensive functional description of all modules, bu
 
 ## Current Backend Behavior Additions
 
-* **Date/category customer rates**: When a shipment item is saved with a blank or zero item rate, `BookingService` looks up `customer_rates` by active company, item customer, item/booking material category, and booking date. The matched rate is copied into `shipment_items.rate`, so later Customer Master or rate-table changes do not mutate old saved bills.
+* **Date/category/location customer rates**: When a shipment item is saved with a blank or zero item rate, `BookingService` looks up `customer_rates` by active company, item customer, booking origin, booking destination, optional item/booking material category, and booking date. The matched rate is copied into `shipment_items.rate`, so later Customer Master or rate-table changes do not mutate old saved bills.
 * **Item metadata persistence**: `shipment_items.payment_type` and `shipment_items.material_category` are persisted when provided in `items_json`; if absent, the booking-level payment type and material category are stored as fallbacks.
 * **Zero weight allowance with AWB sanity guard**: Item actual weight may be zero. If a booking-level `total_weight` is declared, the backend rejects saves where summed item actual weight is below that master AWB weight.
 * **Invoice master-data fallback**: PDF invoice generation prefers Customer Master address, GSTIN, and PAN details when available, with shipment `bill_to`/`consignee` as fallback.
@@ -15,6 +15,13 @@ This document provides a comprehensive functional description of all modules, bu
 * **Invoice charge overflow rule**: The default invoice layout shows at most the first four active item-specific charge columns in the order Delivery, Docket, Pickup, Fuel, then later charges/custom charges. Any remaining active charges are summed into the Other Charges column so totals still match the taxable row amount.
 * **Runtime uniqueness feedback**: AWB uniqueness is checked while the AWB field is edited. Docket uniqueness is checked while editing the item drawer and again before Save Item accepts the row, preventing late save-time validation from discarding filled form data.
 * **Default invoice bank selection**: The All Invoices generator preselects the company default bank account when one is configured; backend invoice generation still falls back to the default bank, then first bank, then legacy company bank fields.
+* **Month-wise invoice download history**: All Downloads filters saved consolidated PDFs by selected month, shows the month billing total from `invoice_downloads.total_amount`, shows who generated each bill, and allows permitted users to delete a saved PDF/history row.
+* **Draft recovery hardening**: Draft saves keep the local browser recovery copy until a non-draft booking save succeeds, reducing data-loss risk when a draft submit is rejected by server validation.
+* **Invoice Master prefixes**: Admins manage company-scoped invoice types with Name, GST/Non-GST type, and Prefix. Booking item entry exposes those prefixes beside Invoice No so staff assign the intended GST/Non-GST invoice series during shipment entry. All Invoices reads the saved prefix to warn about GST mismatches without blocking invoice generation.
+* **Docket Master prefixes**: Admins manage company-scoped docket prefixes as Auto Increment or Manual. Booking item entry exposes the configured prefixes; auto prefixes generate with a locked sequence row, while manual prefixes leave the docket number editable.
+* **Location-wise customer item rates**: Customer Master edits one active version per Customer + Origin + Destination + optional material category and shows closed versions read-only. Changes and removals close prior date ranges; they do not erase rate history. Supplied O&D must match exactly (case-insensitive), while category-specific rates retain precedence over blank-category rates.
+* **Concurrent customer-rate saves**: Customer/rate writes use one transaction and a tenant-scoped customer-row lock. Repeated same-rate saves return the current version; stale differing saves return a reload-required conflict instead of silently overwriting another user.
+* **Invoice PDF save picker**: All Invoices generates and records the PDF first, then shows an explicit “Choose save location” action. Supported Chromium secure contexts invoke `showSaveFilePicker()` directly from that click. Cancellation is not an error; unsupported/insecure contexts use normal download and show a fallback notice.
 
 ---
 

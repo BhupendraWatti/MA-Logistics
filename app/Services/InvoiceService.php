@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\BankAccountModel;
 use App\Models\CompanyModel;
 use App\Models\CustomerModel;
+use App\Models\InvoiceTemplateModel;
 use InvalidArgumentException;
 
 /**
@@ -33,12 +34,14 @@ class InvoiceService
     protected CompanyModel     $companyModel;
     protected CustomerModel    $customerModel;
     protected BankAccountModel $bankModel;
+    protected InvoiceTemplateModel $invoiceTemplateModel;
 
     public function __construct()
     {
         $this->companyModel  = new CompanyModel();
         $this->customerModel = new CustomerModel();
         $this->bankModel     = new BankAccountModel();
+        $this->invoiceTemplateModel = new InvoiceTemplateModel();
     }
 
     public function finalizeConsolidatedInvoiceNumber(
@@ -46,7 +49,8 @@ class InvoiceService
         array $shipments,
         array $companyData,
         string $invoiceDate,
-        ?string $requestedInvoiceNo = null
+        ?string $requestedInvoiceNo = null,
+        int $invoiceTemplateId = 0
     ): string {
         $itemIds = array_values(array_filter(array_map(static fn ($item) => (int) ($item['id'] ?? 0), $shipments)));
         if (empty($itemIds)) {
@@ -86,7 +90,7 @@ class InvoiceService
 
         $db->transStart();
 
-        $prefix = $this->resolveInvoicePrefix($companyData, $requestedInvoiceNo);
+        $prefix = $this->resolveInvoicePrefix($companyData, $requestedInvoiceNo, $companyId, $invoiceTemplateId);
         $financialYear = $this->financialYearLabel($invoiceDate);
         $now = date('Y-m-d H:i:s');
 
@@ -154,8 +158,19 @@ class InvoiceService
         return sprintf('%02d-%02d', $startYear % 100, $endYear % 100);
     }
 
-    private function resolveInvoicePrefix(array $companyData, ?string $requestedInvoiceNo = null): string
+    private function resolveInvoicePrefix(array $companyData, ?string $requestedInvoiceNo = null, int $companyId = 0, int $invoiceTemplateId = 0): string
     {
+        if ($invoiceTemplateId > 0 && $companyId > 0) {
+            $template = $this->invoiceTemplateModel
+                ->where('id', $invoiceTemplateId)
+                ->where('company_id', $companyId)
+                ->where('is_active', 1)
+                ->first();
+            if ($template && trim((string) ($template['prefix'] ?? '')) !== '') {
+                return $this->normalizeInvoicePrefix((string) $template['prefix']);
+            }
+        }
+
         $configured = trim((string) ($companyData['invoice_prefix'] ?? ''));
         if ($configured !== '') {
             return $this->normalizeInvoicePrefix($configured);

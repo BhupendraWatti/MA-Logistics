@@ -257,7 +257,7 @@ class BookingService
                     'chargeable_weight' => $jsItem['chg_wt'] ?? 0,
                     'eway_bill_no' => $jsItem['eway_no'] ?? '',
                     'eway_bill_date' => !empty($jsItem['eway_date']) ? $jsItem['eway_date'] : null,
-                    'rate' => $this->resolveShipmentRate($companyId, $jsItem['customer'] ?? '', $jsItem['material_category'] ?? ($postData['material_category'] ?? ''), $postData['booking_date'] ?? '', $jsItem['rate'] ?? 0),
+                    'rate' => $this->resolveShipmentRate($companyId, $jsItem['customer'] ?? '', $jsItem['material_category'] ?? ($postData['material_category'] ?? ''), $postData['booking_date'] ?? '', $jsItem['rate'] ?? 0, $postData['origin'] ?? '', $postData['destination'] ?? ''),
                     'delivery_charges' => $jsItem['delivery_charges'] ?? 0,
                     'docket_charges' => $jsItem['docket_charges'] ?? 0,
                     'pickup_charges' => $jsItem['pickup_charges'] ?? 0,
@@ -325,7 +325,7 @@ class BookingService
                     'pieces' => intval($item['pieces'] ?? 1),
                     'eway_bill_no' => $item['eway_bill_no'] ?? '',
                     'eway_bill_date' => $item['eway_bill_date'] ?? null,
-                    'rate' => $this->resolveShipmentRate($companyId, $item['customer_name'] ?? '', $item['material_category'] ?? ($postData['material_category'] ?? ''), $postData['booking_date'] ?? '', $item['rate'] ?? 0),
+                    'rate' => $this->resolveShipmentRate($companyId, $item['customer_name'] ?? '', $item['material_category'] ?? ($postData['material_category'] ?? ''), $postData['booking_date'] ?? '', $item['rate'] ?? 0, $postData['origin'] ?? '', $postData['destination'] ?? ''),
                     'delivery_charges' => $this->validateNumeric($item['delivery_charges'] ?? 0),
                     'docket_charges' => $this->validateNumeric($item['docket_charges'] ?? 0),
                     'pickup_charges' => $this->validateNumeric($item['pickup_charges'] ?? 0),
@@ -492,7 +492,7 @@ class BookingService
                     'chargeable_weight' => $jsItem['chg_wt'] ?? 0,
                     'eway_bill_no' => $jsItem['eway_no'] ?? '',
                     'eway_bill_date' => !empty($jsItem['eway_date']) ? $jsItem['eway_date'] : null,
-                    'rate' => $this->resolveShipmentRate($companyId, $jsItem['customer'] ?? '', $jsItem['material_category'] ?? ($postData['material_category'] ?? ''), $postData['booking_date'] ?? '', $jsItem['rate'] ?? 0),
+                    'rate' => $this->resolveShipmentRate($companyId, $jsItem['customer'] ?? '', $jsItem['material_category'] ?? ($postData['material_category'] ?? ''), $postData['booking_date'] ?? '', $jsItem['rate'] ?? 0, $postData['origin'] ?? '', $postData['destination'] ?? ''),
                     'delivery_charges' => $jsItem['delivery_charges'] ?? 0,
                     'docket_charges' => $jsItem['docket_charges'] ?? 0,
                     'pickup_charges' => $jsItem['pickup_charges'] ?? 0,
@@ -560,7 +560,7 @@ class BookingService
                     'pieces' => intval($item['pieces'] ?? 1),
                     'eway_bill_no' => $item['eway_bill_no'] ?? '',
                     'eway_bill_date' => $item['eway_bill_date'] ?? null,
-                    'rate' => $this->resolveShipmentRate($companyId, $item['customer_name'] ?? '', $item['material_category'] ?? ($postData['material_category'] ?? ''), $postData['booking_date'] ?? '', $item['rate'] ?? 0),
+                    'rate' => $this->resolveShipmentRate($companyId, $item['customer_name'] ?? '', $item['material_category'] ?? ($postData['material_category'] ?? ''), $postData['booking_date'] ?? '', $item['rate'] ?? 0, $postData['origin'] ?? '', $postData['destination'] ?? ''),
                     'delivery_charges' => $this->validateNumeric($item['delivery_charges'] ?? 0),
                     'docket_charges' => $this->validateNumeric($item['docket_charges'] ?? 0),
                     'pickup_charges' => $this->validateNumeric($item['pickup_charges'] ?? 0),
@@ -678,14 +678,14 @@ class BookingService
         return null;
     }
 
-    private function resolveShipmentRate(int $companyId, string $customerName, ?string $category, ?string $bookingDate, $submittedRate): float
+    private function resolveShipmentRate(int $companyId, string $customerName, ?string $category, ?string $bookingDate, $submittedRate, ?string $origin = null, ?string $destination = null): float
     {
         $rate = $this->validateNumeric($submittedRate);
         if ($rate > 0 || empty($bookingDate)) {
             return $rate;
         }
 
-        $matchedRate = $this->customerRateModel->findRate($companyId, $customerName, $category, $bookingDate);
+        $matchedRate = $this->customerRateModel->findRate($companyId, $customerName, $category, substr((string) $bookingDate, 0, 10), $origin, $destination);
         if (!$matchedRate) {
             return $rate;
         }

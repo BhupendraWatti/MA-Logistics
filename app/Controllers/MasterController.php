@@ -8,6 +8,10 @@ use App\Models\DriverModel;
 use App\Models\AirlineModel;
 use App\Models\LookupValueModel;
 use App\Models\CompanyModel;
+use App\Models\InvoiceTemplateModel;
+use App\Models\DocketSeriesModel;
+use App\Models\CustomerRateModel;
+use App\Services\CustomerRateService;
 
 class MasterController extends BaseController
 {
@@ -86,11 +90,14 @@ class MasterController extends BaseController
         
         $lookups = [
             'payment_type' => (new LookupValueModel())->getByType($companyId, 'payment_type'),
+            'origin'       => (new LookupValueModel())->getByType($companyId, 'origin'),
+            'destination'  => (new LookupValueModel())->getByType($companyId, 'destination'),
         ];
         
         return view('masters/customers', [
             'customers' => (new CustomerModel())->getByCompany($companyId),
             'contacts'  => (new \App\Models\ContactsMasterModel())->getByCompany($companyId),
+            'customer_rates' => [],
             'lookups'   => $lookups,
             'user'      => session()->get(),
         ]);
@@ -104,9 +111,10 @@ class MasterController extends BaseController
         // SECURITY FIX: Enforce session company_id (prevent IDOR)
         $post['company_id'] = $this->companyId();
 
-        $model = new CustomerModel();
-        if (!$model->insert($post)) {
-            $errors = implode(', ', $model->errors());
+        try {
+            $customerId = (new CustomerRateService())->createCustomer((int) $post['company_id'], $post);
+        } catch (\Throwable $e) {
+            $errors = $e->getMessage();
             if ($this->request->isAJAX()) {
                 return $this->response->setJSON(['status' => 'error', 'message' => $errors]);
             }
@@ -117,7 +125,7 @@ class MasterController extends BaseController
             return $this->response->setJSON([
                 'status'      => 'success',
                 'message'     => 'Customer created!',
-                'id'          => $model->getInsertID(),
+                'id'          => $customerId,
                 'name'        => $post['name'],
                 'code'        => $post['code'] ?? '',
                 'bill_to'     => $post['bill_to'] ?? '',
@@ -140,10 +148,26 @@ class MasterController extends BaseController
         
         $lookups = [
             'payment_type' => (new LookupValueModel())->getByType($companyId, 'payment_type'),
+            'origin'       => (new LookupValueModel())->getByType($companyId, 'origin'),
+            'destination'  => (new LookupValueModel())->getByType($companyId, 'destination'),
         ];
         
         return view('masters/customer_form', [
             'customer' => $customer,
+            'customer_rates' => (new CustomerRateModel())
+                ->where('company_id', $companyId)
+                ->where('customer_id', (int) $customer['id'])
+                ->where('is_active', 1)
+                ->orderBy('origin', 'ASC')
+                ->orderBy('destination', 'ASC')
+                ->findAll(),
+            'customer_rate_history' => (new CustomerRateModel())
+                ->where('company_id', $companyId)
+                ->where('customer_id', (int) $customer['id'])
+                ->where('is_active', 0)
+                ->orderBy('effective_from', 'DESC')
+                ->orderBy('id', 'DESC')
+                ->findAll(),
             'contacts' => (new \App\Models\ContactsMasterModel())->getByCompany($companyId),
             'lookups'  => $lookups,
             'user'     => session()->get()
@@ -158,9 +182,10 @@ class MasterController extends BaseController
         // SECURITY FIX: Enforce session company_id (prevent IDOR)
         $post['company_id'] = $this->companyId();
 
-        $model = new CustomerModel();
-        if (!$model->where('id', $id)->where('company_id', $post['company_id'])->set($post)->update()) {
-            return redirect()->back()->with('error', implode(', ', $model->errors()));
+        try {
+            (new CustomerRateService())->updateCustomer((int) $post['company_id'], $id, $post);
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
         return redirect()->to('/masters/customers')->with('success', 'Customer updated!');
     }
@@ -170,6 +195,92 @@ class MasterController extends BaseController
         if ($r = $this->requireAdmin()) return $r;
         (new CustomerModel())->where('id', $id)->where('company_id', $this->companyId())->delete();
         return $this->response->setJSON(['success' => true]);
+    }
+
+    public function lookupCustomerRate()
+    {
+        $companyId = $this->companyId();
+        if (!$companyId) {
+            return $this->response->setStatusCode(401)->setJSON(['status' => 'error', 'message' => 'Unauthorized']);
+        }
+
+        $customerName = trim((string) $this->request->getPost('customer_name'));
+        $origin = trim((string) $this->request->getPost('origin'));
+        $destination = trim((string) $this->request->getPost('destination'));
+        $bookingDate = substr(trim((string) $this->request->getPost('booking_date')), 0, 10) ?: date('Y-m-d');
+        $category = trim((string) $this->request->getPost('material_category'));
+
+        $rate = (new CustomerRateModel())->findRate($companyId, $customerName, $category, $bookingDate, $origin, $destination);
+        if (!$rate) {
+            return $this->response->setJSON([
+                'status' => 'success',
+                'found' => false,
+                'csrf_hash' => csrf_hash(),
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'found' => true,
+            'id' => (int) ($rate['id'] ?? 0),
+            'rate' => (float) ($rate['rate'] ?? 0),
+            'origin' => $rate['origin'] ?? '',
+            'destination' => $rate['destination'] ?? '',
+            'material_category' => $rate['material_category'] ?? '',
+            'csrf_hash' => csrf_hash(),
+        ]);
+    }
+
+    public function saveCustomerRate()
+    {
+        $companyId = $this->companyId();
+        if (!$companyId) {
+            return $this->response->setStatusCode(401)->setJSON(['status' => 'error', 'message' => 'Unauthorized']);
+        }
+
+        $customerName = trim((string) $this->request->getPost('customer_name'));
+        $origin = trim((string) $this->request->getPost('origin'));
+        $destination = trim((string) $this->request->getPost('destination'));
+        $category = trim((string) $this->request->getPost('material_category'));
+        $rate = (float) $this->request->getPost('rate');
+        $rateId = (int) ($this->request->getPost('rate_id') ?? 0);
+
+        if ($customerName === '' || $origin === '' || $destination === '' || $rate <= 0) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'status' => 'error',
+                'message' => 'Customer, origin, destination, and item rate are required.',
+                'csrf_hash' => csrf_hash(),
+            ]);
+        }
+
+        try {
+            $saved = (new CustomerRateService())->saveRuntimeRate(
+                $companyId,
+                $customerName,
+                $origin,
+                $destination,
+                $category,
+                $rate,
+                $rateId
+            );
+        } catch (\Throwable $e) {
+            $statusCode = in_array($e->getCode(), [404, 409], true) ? $e->getCode() : 422;
+            return $this->response->setStatusCode($statusCode)->setJSON([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'csrf_hash' => csrf_hash(),
+            ]);
+        }
+
+        $rateId = (int) $saved['id'];
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => 'Customer item rate saved.',
+            'id' => $rateId,
+            'rate' => $rate,
+            'csrf_hash' => csrf_hash(),
+        ]);
     }
 
     // ============================================================
@@ -378,6 +489,108 @@ class MasterController extends BaseController
         ]);
     }
 
+    public function invoiceTemplates()
+    {
+        if ($r = $this->requireAdmin()) return $r;
+        return view('masters/invoice_templates', [
+            'user' => session()->get(),
+        ]);
+    }
+
+    public function createInvoiceTemplate()
+    {
+        if ($r = $this->requireAdmin()) return $r;
+        $post = $this->request->getPost();
+        $post['company_id'] = $this->companyId();
+        $post['gst_type'] = ($post['gst_type'] ?? '') === 'non_gst' ? 'non_gst' : 'gst';
+        $post['prefix'] = strtoupper(trim((string) ($post['prefix'] ?? '')));
+        $post['is_active'] = isset($post['is_active']) ? 1 : 0;
+
+        $model = new InvoiceTemplateModel();
+        if (!$model->insert($post)) {
+            return redirect()->back()->with('error', implode(', ', $model->errors()));
+        }
+
+        return redirect()->to('/masters/invoice-templates')->with('success', 'Invoice master saved!');
+    }
+
+    public function updateInvoiceTemplate(int $id)
+    {
+        if ($r = $this->requireAdmin()) return $r;
+        $post = $this->request->getPost();
+        $companyId = $this->companyId();
+        $post['company_id'] = $companyId;
+        $post['gst_type'] = ($post['gst_type'] ?? '') === 'non_gst' ? 'non_gst' : 'gst';
+        $post['prefix'] = strtoupper(trim((string) ($post['prefix'] ?? '')));
+        $post['is_active'] = isset($post['is_active']) ? 1 : 0;
+
+        $model = new InvoiceTemplateModel();
+        if (!$model->where('id', $id)->where('company_id', $companyId)->set($post)->update()) {
+            return redirect()->back()->with('error', implode(', ', $model->errors()));
+        }
+
+        return redirect()->to('/masters/invoice-templates')->with('success', 'Invoice master updated!');
+    }
+
+    public function deleteInvoiceTemplate(int $id)
+    {
+        if ($r = $this->requireAdmin()) return $r;
+        (new InvoiceTemplateModel())->where('id', $id)->where('company_id', $this->companyId())->delete();
+        return $this->response->setJSON(['success' => true]);
+    }
+
+    public function docketSeries()
+    {
+        if ($r = $this->requireAdmin()) return $r;
+        return view('masters/docket_series', [
+            'user' => session()->get(),
+        ]);
+    }
+
+    public function createDocketSeries()
+    {
+        if ($r = $this->requireAdmin()) return $r;
+        $post = $this->request->getPost();
+        $post['company_id'] = $this->companyId();
+        $post['entry_mode'] = ($post['entry_mode'] ?? '') === 'manual' ? 'manual' : 'auto';
+        $post['prefix'] = strtoupper(trim((string) ($post['prefix'] ?? '')));
+        $post['current_number'] = 10000;
+        $post['is_active'] = isset($post['is_active']) ? 1 : 0;
+
+        $model = new DocketSeriesModel();
+        if (!$model->insert($post)) {
+            return redirect()->back()->with('error', implode(', ', $model->errors()));
+        }
+
+        return redirect()->to('/masters/docket-series')->with('success', 'Docket master saved!');
+    }
+
+    public function updateDocketSeries(int $id)
+    {
+        if ($r = $this->requireAdmin()) return $r;
+        $post = $this->request->getPost();
+        $companyId = $this->companyId();
+        $post['company_id'] = $companyId;
+        $post['entry_mode'] = ($post['entry_mode'] ?? '') === 'manual' ? 'manual' : 'auto';
+        $post['prefix'] = strtoupper(trim((string) ($post['prefix'] ?? '')));
+        $post['is_active'] = isset($post['is_active']) ? 1 : 0;
+        unset($post['current_number']);
+
+        $model = new DocketSeriesModel();
+        if (!$model->where('id', $id)->where('company_id', $companyId)->set($post)->update()) {
+            return redirect()->back()->with('error', implode(', ', $model->errors()));
+        }
+
+        return redirect()->to('/masters/docket-series')->with('success', 'Docket master updated!');
+    }
+
+    public function deleteDocketSeries(int $id)
+    {
+        if ($r = $this->requireAdmin()) return $r;
+        (new DocketSeriesModel())->where('id', $id)->where('company_id', $this->companyId())->delete();
+        return $this->response->setJSON(['success' => true]);
+    }
+
     public function createBankAccount()
     {
         if ($r = $this->requireAdmin()) return $r;
@@ -557,6 +770,14 @@ class MasterController extends BaseController
                 $model = new \App\Models\BankAccountModel();
                 $searchFields = ['account_name', 'bank_name', 'account_number', 'branch_name', 'ifsc_code'];
                 break;
+            case 'invoice-templates':
+                $model = new InvoiceTemplateModel();
+                $searchFields = ['name', 'gst_type', 'prefix'];
+                break;
+            case 'docket-series':
+                $model = new DocketSeriesModel();
+                $searchFields = ['name', 'prefix', 'entry_mode'];
+                break;
             default:
                 return $this->response->setJSON(['error' => 'Invalid type']);
         }
@@ -673,9 +894,75 @@ class MasterController extends BaseController
             $excludeDockets = [];
         }
         $excludeDockets = array_map('trim', $excludeDockets);
+        $seriesId = (int) ($this->request->getPost('docket_series_id') ?? 0);
 
         try {
             $db = \Config\Database::connect();
+            $series = null;
+            if ($seriesId > 0) {
+                $series = $db->table('docket_series')
+                    ->where('id', $seriesId)
+                    ->where('company_id', $companyId)
+                    ->where('entry_mode', 'auto')
+                    ->where('is_active', 1)
+                    ->get()
+                    ->getRowArray();
+            }
+
+            if ($series) {
+                $db->transStart();
+                $locked = $db->query(
+                    'SELECT * FROM docket_series WHERE id = ? AND company_id = ? FOR UPDATE',
+                    [$seriesId, $companyId]
+                )->getRowArray();
+                if (!$locked) {
+                    throw new \RuntimeException('Docket series row could not be locked.');
+                }
+
+                $prefix = (string) ($locked['prefix'] ?? 'DCK-');
+                $prefixLen = strlen($prefix) + 1;
+                $maxMaster = (int) (($db->table('docket_master')
+                    ->select("MAX(CAST(SUBSTRING(docket_no, {$prefixLen}) AS UNSIGNED)) AS max_num", false)
+                    ->where('company_id', $companyId)
+                    ->where('docket_no LIKE', $prefix . '%')
+                    ->get()->getRowArray())['max_num'] ?? 0);
+                $maxItems = (int) (($db->table('shipment_items')
+                    ->select("MAX(CAST(SUBSTRING(shipment_items.docket_no, {$prefixLen}) AS UNSIGNED)) AS max_num", false)
+                    ->join('bookings', 'bookings.id = shipment_items.booking_id')
+                    ->where('bookings.company_id', $companyId)
+                    ->where('shipment_items.docket_no LIKE', $prefix . '%')
+                    ->get()->getRowArray())['max_num'] ?? 0);
+
+                $nextVal = max((int) ($locked['current_number'] ?? 10000), $maxMaster, $maxItems) + 1;
+                $docketNo = $prefix . $nextVal;
+
+                $checkExists = function($no) use ($db, $companyId, $excludeDockets) {
+                    $existsInMaster = $db->table('docket_master')->where('company_id', $companyId)->where('docket_no', $no)->get()->getRowArray();
+                    if ($existsInMaster) return true;
+                    $existsInItems = $db->table('shipment_items')->join('bookings', 'bookings.id = shipment_items.booking_id')->where('bookings.company_id', $companyId)->where('shipment_items.docket_no', $no)->get()->getRowArray();
+                    if ($existsInItems) return true;
+                    return in_array($no, $excludeDockets, true);
+                };
+
+                while ($checkExists($docketNo)) {
+                    $nextVal++;
+                    $docketNo = $prefix . $nextVal;
+                }
+
+                $db->table('docket_series')
+                    ->where('id', $seriesId)
+                    ->where('company_id', $companyId)
+                    ->update(['current_number' => $nextVal, 'updated_at' => date('Y-m-d H:i:s')]);
+
+                $db->transComplete();
+                if ($db->transStatus() === false) {
+                    throw new \RuntimeException('Docket series transaction failed.');
+                }
+
+                session_write_close();
+                return $this->response->setJSON(['status' => 'success', 'docket_no' => $docketNo]);
+            }
+
             $db->transStart(); // Start atomic transaction
 
             // Locks sequence row for exclusive update
@@ -789,9 +1076,57 @@ class MasterController extends BaseController
             $excludeDockets = [];
         }
         $excludeDockets = array_map('trim', $excludeDockets);
+        $seriesId = (int) ($this->request->getPost('docket_series_id') ?? 0);
 
         try {
             $db  = \Config\Database::connect();
+            if ($seriesId > 0) {
+                $series = $db->table('docket_series')
+                    ->where('id', $seriesId)
+                    ->where('company_id', $companyId)
+                    ->where('entry_mode', 'auto')
+                    ->where('is_active', 1)
+                    ->get()
+                    ->getRowArray();
+
+                if ($series) {
+                    $prefix = (string) ($series['prefix'] ?? 'DCK-');
+                    $prefixLen = strlen($prefix) + 1;
+                    $maxMaster = (int) (($db->table('docket_master')
+                        ->select("MAX(CAST(SUBSTRING(docket_no, {$prefixLen}) AS UNSIGNED)) AS max_num", false)
+                        ->where('company_id', $companyId)
+                        ->where('docket_no LIKE', $prefix . '%')
+                        ->get()->getRowArray())['max_num'] ?? 0);
+                    $maxItems = (int) (($db->table('shipment_items')
+                        ->select("MAX(CAST(SUBSTRING(shipment_items.docket_no, {$prefixLen}) AS UNSIGNED)) AS max_num", false)
+                        ->join('bookings', 'bookings.id = shipment_items.booking_id')
+                        ->where('bookings.company_id', $companyId)
+                        ->where('shipment_items.docket_no LIKE', $prefix . '%')
+                        ->get()->getRowArray())['max_num'] ?? 0);
+                    $nextVal = max((int) ($series['current_number'] ?? 10000), $maxMaster, $maxItems) + 1;
+                    $docketNo = $prefix . $nextVal;
+
+                    $checkExists = function($no) use ($db, $companyId, $excludeDockets) {
+                        $existsInMaster = $db->table('docket_master')->where('company_id', $companyId)->where('docket_no', $no)->get()->getRowArray();
+                        if ($existsInMaster) return true;
+                        $existsInItems = $db->table('shipment_items')->join('bookings', 'bookings.id = shipment_items.booking_id')->where('bookings.company_id', $companyId)->where('shipment_items.docket_no', $no)->get()->getRowArray();
+                        if ($existsInItems) return true;
+                        return in_array($no, $excludeDockets, true);
+                    };
+
+                    while ($checkExists($docketNo)) {
+                        $nextVal++;
+                        $docketNo = $prefix . $nextVal;
+                    }
+
+                    session_write_close();
+                    return $this->response->setJSON([
+                        'status'    => 'success',
+                        'docket_no' => $docketNo
+                    ]);
+                }
+            }
+
             $seq = $db->table('sys_sequences')
                       ->where('company_id',    $companyId)
                       ->where('branch_id',     $branchId)

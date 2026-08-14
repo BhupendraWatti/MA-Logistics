@@ -12,7 +12,12 @@
         <?= csrf_field() ?>
         <input type="hidden" name="company_id" value="<?= session()->get('selected_company_id') ?>">
         
-        <?= view('masters/_customer_form_fields', ['customer' => $customer, 'lookups' => $lookups]) ?>
+        <?= view('masters/_customer_form_fields', [
+            'customer' => $customer,
+            'lookups' => $lookups,
+            'customer_rates' => $customer_rates ?? [],
+            'customer_rate_history' => $customer_rate_history ?? [],
+        ]) ?>
         
         <div class="row mt-4">
             <div class="col-12 text-end">

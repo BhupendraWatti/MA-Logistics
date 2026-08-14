@@ -816,12 +816,28 @@ foreach ($customers ?? [] as $c) {
                                 for="modal_auto_generate_docket">Auto</label>
                         </div>
                     </div>
+                    <select id="entry_docket_series" class="form-select form-select-sm shadow-none mb-1">
+                        <option value="" data-mode="auto" data-prefix="DCK-">Default Auto (DCK-)</option>
+                        <?php foreach (($docket_series ?? []) as $series): ?>
+                            <option value="<?= (int) $series['id'] ?>" data-mode="<?= esc($series['entry_mode']) ?>" data-prefix="<?= esc($series['prefix']) ?>">
+                                <?= esc($series['name']) ?> - <?= esc($series['prefix']) ?> (<?= $series['entry_mode'] === 'manual' ? 'Manual' : 'Auto' ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                     <input type="text" id="entry_docket" class="form-control form-control-sm shadow-none"
                         placeholder="Enter Docket No manually">
                 </div>
                 <div class="col-md-3">
-                    <label class="fs-8 text-muted fw-semibold">Invoice No</label>
-                    <input type="text" id="entry_invoice" class="form-control form-control-sm">
+                    <label class="fs-8 text-muted fw-semibold">Invoice Master</label>
+                    <select id="entry_invoice_template" class="form-select form-select-sm shadow-none mb-1">
+                        <option value="">Manual Invoice No</option>
+                        <?php foreach (($invoice_templates ?? []) as $tpl): ?>
+                            <option value="<?= (int) $tpl['id'] ?>" data-prefix="<?= esc($tpl['prefix']) ?>" data-gst-type="<?= esc($tpl['gst_type']) ?>">
+                                <?= esc($tpl['name']) ?> - <?= $tpl['gst_type'] === 'non_gst' ? 'Non-GST' : 'GST' ?> (<?= esc($tpl['prefix']) ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <input type="text" id="entry_invoice" class="form-control form-control-sm" placeholder="Invoice No">
                 </div>
                 <div class="col-md-3">
                     <label class="fs-8 text-muted fw-semibold">Part NO.</label>
@@ -985,18 +1001,30 @@ foreach ($customers ?? [] as $c) {
     function updateDocketInputState() {
         const isAutoGen = $('#modal_auto_generate_docket').is(':checked');
         const editIndex = $('#entry_edit_index').val();
+        let selectedSeries = getSelectedDocketSeries();
+        if (selectedSeries.entry_mode === 'manual' && isAutoGen) {
+            selectFirstDocketSeriesForMode('auto');
+            selectedSeries = getSelectedDocketSeries();
+        } else if (selectedSeries.entry_mode !== 'manual' && !isAutoGen) {
+            selectFirstDocketSeriesForMode('manual');
+            selectedSeries = getSelectedDocketSeries();
+        }
+        const prefix = selectedSeries.prefix || 'DCK-';
 
         // Only apply auto-gen preview/manual carryover if we are adding a NEW item
         if (editIndex === '-1') {
-            if (isAutoGen) {
+            if ($('#modal_auto_generate_docket').is(':checked')) {
                 // Show "DCK-XXXXX" instead of empty/fetching message while calling the preview endpoint
-                $('#entry_docket').val('DCK-XXXXX').prop('readonly', true).css('color', '#888888');
+                $('#entry_docket').val(prefix + 'XXXXX').prop('readonly', true).css('color', '#888888');
 
                 let previewDockets = items.map(i => i.docket).filter(d => d);
                 $.ajax({
                     url: BASE_URL + 'masters/dockets/preview',
                     type: 'POST',
-                    data: { exclude_dockets: previewDockets },
+                    data: {
+                        exclude_dockets: previewDockets,
+                        docket_series_id: $('#entry_docket_series').val()
+                    },
                     dataType: 'json',
                     success: function (res) {
                         if (res.status === 'success' && $('#entry_edit_index').val() === '-1' && $('#modal_auto_generate_docket').is(':checked')) {
@@ -1011,7 +1039,7 @@ foreach ($customers ?? [] as $c) {
                             error: error,
                             response: xhr.responseText
                         });
-                        $('#entry_docket').val('DCK-XXXXX').css('color', '#888888');
+                        $('#entry_docket').val(prefix + 'XXXXX').css('color', '#888888');
                     }
                 });
             } else {
@@ -1024,6 +1052,219 @@ foreach ($customers ?? [] as $c) {
             }
         }
     }
+
+    function getSelectedDocketSeries() {
+        const selectedId = String($('#entry_docket_series').val() || '');
+        const selected = docketSeriesOptions.find(s => String(s.id) === selectedId);
+        if (selected) return selected;
+
+        const $option = $('#entry_docket_series option:selected');
+        return {
+            id: selectedId,
+            entry_mode: $option.data('mode') || 'auto',
+            prefix: $option.data('prefix') || 'DCK-'
+        };
+    }
+
+    function selectFirstDocketSeriesForMode(mode) {
+        const $matching = $('#entry_docket_series option').filter(function () {
+            return ($(this).data('mode') || '') === mode;
+        }).first();
+        if ($matching.length) {
+            $('#entry_docket_series').val($matching.val());
+        }
+    }
+
+    function getSelectedInvoiceTemplate() {
+        const selectedId = String($('#entry_invoice_template').val() || '');
+        return invoiceTemplateOptions.find(t => String(t.id) === selectedId) || null;
+    }
+
+    function findInvoiceTemplateForNumber(invoiceNo) {
+        const value = String(invoiceNo || '').trim().toUpperCase();
+        if (value === '') return null;
+
+        return invoiceTemplateOptions.find(t => {
+            const prefix = String(t.prefix || '').trim().toUpperCase();
+            return prefix !== '' && value.indexOf(prefix) === 0;
+        }) || null;
+    }
+
+    function setInvoiceTemplateFromInvoiceNo(invoiceNo) {
+        const template = findInvoiceTemplateForNumber(invoiceNo);
+        $('#entry_invoice_template').val(template ? String(template.id) : '');
+        updateInvoiceTemplatePlaceholder();
+    }
+
+    function updateInvoiceTemplatePlaceholder() {
+        const template = getSelectedInvoiceTemplate();
+        const prefix = template && template.prefix ? String(template.prefix) : '';
+        $('#entry_invoice').attr('placeholder', prefix ? prefix + '...' : 'Invoice No');
+    }
+
+    function applyInvoiceTemplateToInvoiceField() {
+        const template = getSelectedInvoiceTemplate();
+        updateInvoiceTemplatePlaceholder();
+
+        if (!template || !template.prefix) {
+            return;
+        }
+
+        const current = String($('#entry_invoice').val() || '').trim();
+        const hasKnownPrefix = findInvoiceTemplateForNumber(current) !== null;
+        if (current === '' || hasKnownPrefix) {
+            $('#entry_invoice').val(template.prefix);
+        }
+    }
+
+    function getBookingDateOnly() {
+        return String($('input[name="booking_date"]').val() || '').slice(0, 10);
+    }
+
+    function getSelectedOriginDestination() {
+        let origin = $('#origin').val() || '';
+        let destination = $('#destination').val() || '';
+        if (origin === 'Other') origin = $('#origin_other').val() || '';
+        if (destination === 'Other') destination = $('#destination_other').val() || '';
+        return {
+            origin: String(origin || '').trim(),
+            destination: String(destination || '').trim()
+        };
+    }
+
+    function lookupCustomerItemRate(customerName) {
+        const route = getSelectedOriginDestination();
+        customerName = String(customerName || $('#entry_customer').val() || '').trim();
+        if (!customerName || customerName === 'NEW_ENTRY' || !route.origin || !route.destination) {
+            $('#entry_rate').removeData('master-rate-id master-rate-value master-rate-found');
+            return Promise.resolve({ found: false });
+        }
+
+        return $.ajax({
+            url: BASE_URL + 'masters/customers/rate-lookup',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                customer_name: customerName,
+                origin: route.origin,
+                destination: route.destination,
+                booking_date: getBookingDateOnly(),
+                material_category: $('#material_category').val() || '',
+                <?= csrf_token() ?>: $('meta[name="csrf-token"]').attr('content')
+            }
+        }).then(function (res) {
+            updateCsrfToken(res.csrf_hash);
+            const $rate = $('#entry_rate');
+            if (res && res.found) {
+                const value = parseFloat(res.rate || 0);
+                $rate.data('master-rate-id', res.id || 0);
+                $rate.data('master-rate-value', value);
+                $rate.data('master-rate-found', true);
+                if (!$rate.val()) {
+                    $rate.val(value.toFixed(2));
+                }
+            } else {
+                $rate.removeData('master-rate-id master-rate-value');
+                $rate.data('master-rate-found', false);
+            }
+            return res || { found: false };
+        }).catch(function () {
+            $('#entry_rate').removeData('master-rate-id master-rate-value master-rate-found');
+            return { found: false };
+        });
+    }
+
+    function saveCustomerItemRateToMaster(customerName, rateId) {
+        const route = getSelectedOriginDestination();
+        return $.ajax({
+            url: BASE_URL + 'masters/customers/rate-save',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                customer_name: customerName,
+                origin: route.origin,
+                destination: route.destination,
+                material_category: $('#material_category').val() || '',
+                rate: $('#entry_rate').val(),
+                rate_id: rateId || 0,
+                <?= csrf_token() ?>: $('meta[name="csrf-token"]').attr('content')
+            }
+        }).then(function (res) {
+            updateCsrfToken(res.csrf_hash);
+            if (res && res.status === 'success') {
+                $('#entry_rate')
+                    .data('master-rate-id', res.id || 0)
+                    .data('master-rate-value', parseFloat(res.rate || $('#entry_rate').val() || 0))
+                    .data('master-rate-found', true);
+            }
+            return res;
+        });
+    }
+
+    async function handleCustomerItemRateBeforeSave(customerName) {
+        const route = getSelectedOriginDestination();
+        const rateValue = parseFloat($('#entry_rate').val() || 0);
+        if (!route.origin || !route.destination) {
+            return true;
+        }
+
+        const lookup = await lookupCustomerItemRate(customerName);
+        const found = !!(lookup && lookup.found);
+        const masterRate = found ? parseFloat(lookup.rate || 0) : 0;
+        const rateId = found ? parseInt(lookup.id || 0) : 0;
+
+        if (rateValue <= 0 && !found) {
+            ERPUtils.showWarning(
+                'Item Rate Missing',
+                `No item rate is saved for ${customerName} from ${route.origin} to ${route.destination}. Please enter the Item Rate in this shipment item.`
+            );
+            return false;
+        }
+
+        if (rateValue <= 0 && found) {
+            $('#entry_rate').val(masterRate.toFixed(2));
+            return true;
+        }
+
+        if (!found) {
+            const result = await Swal.fire({
+                title: 'Save Item Rate?',
+                html: `<div class="text-start fs-7">No Customer Master rate exists for <strong>${escapeHtmlStr(customerName)}</strong><br>${escapeHtmlStr(route.origin)} to ${escapeHtmlStr(route.destination)}.<br><br>Save <strong>${rateValue.toFixed(2)}</strong> to Customer Master?</div>`,
+                icon: 'question',
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: 'Save to Master',
+                denyButtonText: 'One Time Only',
+                cancelButtonText: 'Cancel'
+            });
+            if (result.isConfirmed) {
+                await saveCustomerItemRateToMaster(customerName, 0);
+                return true;
+            }
+            return result.isDenied;
+        }
+
+        if (Math.abs(rateValue - masterRate) > 0.009) {
+            const result = await Swal.fire({
+                title: 'Update Master Rate?',
+                html: `<div class="text-start fs-7">Master rate is <strong>${masterRate.toFixed(2)}</strong>, but this shipment item has <strong>${rateValue.toFixed(2)}</strong>.<br><br>Update Customer Master for ${escapeHtmlStr(route.origin)} to ${escapeHtmlStr(route.destination)}?</div>`,
+                icon: 'question',
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: 'Update Master',
+                denyButtonText: 'One Time Only',
+                cancelButtonText: 'Cancel'
+            });
+            if (result.isConfirmed) {
+                await saveCustomerItemRateToMaster(customerName, rateId);
+                return true;
+            }
+            return result.isDenied;
+        }
+
+        return true;
+    }
+
     const _customers = <?= json_encode($customers ?? []) ?>;
     const defaultPaymentType = <?= json_encode($booking['payment_type'] ?? '') ?>;
     const _companyGst = {
@@ -1032,6 +1273,8 @@ foreach ($customers ?? [] as $c) {
         igst: <?= isset($company['igst_rate']) && $company['igst_rate'] !== '' ? $company['igst_rate'] : 0 ?>
     };
     const initialShipments = <?= json_encode($shipments ?? []) ?>;
+    const docketSeriesOptions = <?= json_encode($docket_series ?? []) ?>;
+    const invoiceTemplateOptions = <?= json_encode($invoice_templates ?? []) ?>;
     <?php
     $salesCustomChargesRaw = $sales['custom_charges'] ?? [];
     if (is_string($salesCustomChargesRaw)) {
@@ -1309,18 +1552,14 @@ foreach ($customers ?? [] as $c) {
             const $results = $('#awb_search_results');
             $results.empty();
 
-            if (!query) {
-                $results.addClass('d-none');
-                return;
-            }
-
-            const matches = awbSearchRows
-                .filter(row => (row.awb_no || '').toLowerCase().includes(query))
-                .slice(0, 80);
+            const matches = (query
+                ? awbSearchRows.filter(row => (row.awb_no || '').toLowerCase().includes(query))
+                : awbSearchRows
+            ).slice(0, 80);
 
             if (!matches.length) {
                 $results
-                    .append('<div class="list-group-item text-muted small">No AWB found</div>')
+                    .append(`<div class="list-group-item text-muted small">${query ? 'No AWB found' : 'No AWBs available'}</div>`)
                     .removeClass('d-none');
                 return;
             }
@@ -1335,7 +1574,7 @@ foreach ($customers ?? [] as $c) {
             $results.removeClass('d-none');
         }
 
-        $('#awb_search_top').on('input focus', renderAwbSearchResults);
+        $('#awb_search_top').on('input focus click', renderAwbSearchResults);
         $('#awb_search_top').on('keydown', function (e) {
             if (e.key !== 'Enter') {
                 return;
@@ -1363,7 +1602,7 @@ foreach ($customers ?? [] as $c) {
             renderAwbSearchResults();
         });
         $(document).on('click', function (e) {
-            if (!$(e.target).closest('#awb_search_top, #awb_search_results').length) {
+            if (!$(e.target).closest('#awb_search_top, #awb_search_results, #awb_search_clear').length) {
                 $('#awb_search_results').addClass('d-none');
             }
         });
@@ -1394,7 +1633,20 @@ foreach ($customers ?? [] as $c) {
 
         // Handle auto-generate docket checkbox change
         $('#modal_auto_generate_docket').on('change', function () {
+            selectFirstDocketSeriesForMode($(this).is(':checked') ? 'auto' : 'manual');
             updateDocketInputState();
+        });
+
+        $('#entry_docket_series').on('change', function () {
+            const mode = getSelectedDocketSeries().entry_mode || 'auto';
+            $('#modal_auto_generate_docket').prop('checked', mode !== 'manual');
+            updateDocketInputState();
+        });
+
+        $('#entry_invoice_template').on('change', applyInvoiceTemplateToInvoiceField);
+
+        $('#origin, #destination, #origin_other, #destination_other, #material_category, input[name="booking_date"]').on('change input', function () {
+            lookupCustomerItemRate();
         });
 
         // Dynamic visual character counters for fields with maxlength attribute
@@ -1783,7 +2035,10 @@ foreach ($customers ?? [] as $c) {
             $.ajax({
                 url: BASE_URL + 'masters/dockets/generate',
                 type: 'POST',
-                data: { exclude_dockets: activeDockets },
+                data: {
+                    exclude_dockets: activeDockets,
+                    docket_series_id: $('#entry_docket_series').val()
+                },
                 dataType: 'json',
                 success: function (response) {
                     if (response.status === 'success') {
@@ -1839,6 +2094,8 @@ foreach ($customers ?? [] as $c) {
             updateDocketInputState();
 
             $('#entry_invoice').val('');
+            $('#entry_invoice_template').val('');
+            updateInvoiceTemplatePlaceholder();
             setEntryPaymentTypeValue(prevPaymentType);
             $('#entry_part_no').val(prevPartNo);
             $('#entry_invoice_date').val(prevInvoiceDate);
@@ -1854,6 +2111,7 @@ foreach ($customers ?? [] as $c) {
             $('#entry_misc').val('');
             $('#entry_misc_name').val('Misc Charges');
             $('#custom_item_charges_container').empty();
+            lookupCustomerItemRate();
 
         } else {
             // Edit Item
@@ -1867,6 +2125,7 @@ foreach ($customers ?? [] as $c) {
             $('#entry_docket').val(item.docket || '').prop('readonly', false).css('color', '');
 
             $('#entry_invoice').val(item.invoice_no);
+            setInvoiceTemplateFromInvoiceNo(item.invoice_no || '');
             $('#entry_part_no').val(item.part_no || '');
             $('#entry_invoice_date').val(item.invoice_date || '');
             $('#entry_part_qty').val(item.part_qty || 0);
@@ -1909,6 +2168,7 @@ foreach ($customers ?? [] as $c) {
                     addCustomItemChargeRow(cc.label, cc.value);
                 });
             }
+            lookupCustomerItemRate(item.customer);
         }
         $('[maxlength]').trigger('sync-counter');
 
@@ -1929,6 +2189,10 @@ foreach ($customers ?? [] as $c) {
         }
         if (act_wt < 0) {
             ERPUtils.showWarning("Invalid Weight", "Actual Weight cannot be negative.");
+            return;
+        }
+        const rateAllowed = await handleCustomerItemRateBeforeSave(customer);
+        if (!rateAllowed) {
             return;
         }
         const docketIsUnique = await checkDocketUniqueNow($('#entry_docket').val());
@@ -1984,6 +2248,7 @@ foreach ($customers ?? [] as $c) {
             payment_type: paymentType,
             docket: docket,
             invoice_no: $('#entry_invoice').val(),
+            invoice_template_id: $('#entry_invoice_template').val(),
             part_no: $('#entry_part_no').val(),
             part_qty: parseInt($('#entry_part_qty').val()) || 0,
             invoice_date: $('#entry_invoice_date').val(),
@@ -2178,6 +2443,7 @@ foreach ($customers ?? [] as $c) {
             const c = _customers.find(x => (x.name || '').trim().toLowerCase() === (name || '').trim().toLowerCase());
             setPartySelectValue('#entry_bill_to', defaults.billTo);
             setPartySelectValue('#entry_consignee', defaults.consignee);
+            lookupCustomerItemRate(name);
 
             if (items.length === 0) {
                 $('#global_shipper').val(name);
@@ -2192,6 +2458,7 @@ foreach ($customers ?? [] as $c) {
         } else if (!name) {
             setPartySelectValue('#entry_bill_to', '');
             setPartySelectValue('#entry_consignee', '');
+            $('#entry_rate').removeData('master-rate-id master-rate-value master-rate-found');
             if (items.length === 0) {
                 $('#global_shipper').val('');
                 $('#global_bill_to').val('');
@@ -2341,7 +2608,9 @@ foreach ($customers ?? [] as $c) {
         // Re-render to ensure hidden inputs are fresh/current
         renderGrid();
 
-        clearLocalBookingDraft();
+        if (!isDraftSave) {
+            clearLocalBookingDraft();
+        }
         window.isDirty = false; // allow navigation without prompt
         $('#mainSubmitBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Saving...');
     });

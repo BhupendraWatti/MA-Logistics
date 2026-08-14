@@ -45,6 +45,7 @@ $routes->get('logistics/all-invoices/downloads', 'Logistics::ajaxInvoiceDownload
 $routes->post('logistics/all-invoices/search', 'Logistics::ajaxSearchShipmentRecords');
 $routes->post('logistics/all-invoices/generate', 'Logistics::generateConsolidatedInvoice');
 $routes->get('logistics/all-invoices/downloads/(:num)', 'Logistics::viewInvoiceDownload/$1');
+$routes->post('logistics/all-invoices/downloads/delete/(:num)', 'Logistics::deleteInvoiceDownload/$1');
 
 $routes->get('logistics/clearCompany', 'Logistics::clearCompany');
 
@@ -66,6 +67,8 @@ $routes->post('masters/customers/create',             'MasterController::createC
 $routes->get('masters/customers/edit/(:num)',          'MasterController::editCustomer/$1');
 $routes->post('masters/customers/update/(:num)',       'MasterController::updateCustomer/$1');
 $routes->post('masters/customers/delete/(:num)',       'MasterController::deleteCustomer/$1');
+$routes->post('masters/customers/rate-lookup',         'MasterController::lookupCustomerRate');
+$routes->post('masters/customers/rate-save',           'MasterController::saveCustomerRate');
 
 $routes->get('masters/transporters',                  'MasterController::transporters');
 $routes->post('masters/transporters/create',          'MasterController::createTransporter');
@@ -86,6 +89,14 @@ $routes->get('masters/bank-accounts',                     'MasterController::ban
 $routes->post('masters/bank-accounts/create',             'MasterController::createBankAccount');
 $routes->post('masters/bank-accounts/update/(:num)',       'MasterController::updateBankAccount/$1');
 $routes->post('masters/bank-accounts/delete/(:num)',       'MasterController::deleteBankAccount/$1');
+$routes->get('masters/invoice-templates',                  'MasterController::invoiceTemplates');
+$routes->post('masters/invoice-templates/create',          'MasterController::createInvoiceTemplate');
+$routes->post('masters/invoice-templates/update/(:num)',   'MasterController::updateInvoiceTemplate/$1');
+$routes->post('masters/invoice-templates/delete/(:num)',   'MasterController::deleteInvoiceTemplate/$1');
+$routes->get('masters/docket-series',                      'MasterController::docketSeries');
+$routes->post('masters/docket-series/create',              'MasterController::createDocketSeries');
+$routes->post('masters/docket-series/update/(:num)',       'MasterController::updateDocketSeries/$1');
+$routes->post('masters/docket-series/delete/(:num)',       'MasterController::deleteDocketSeries/$1');
 
 $routes->get('masters/lookups/(:segment)',              'MasterController::lookups/$1');
 $routes->post('masters/lookups/(:segment)/create',      'MasterController::createLookup/$1');

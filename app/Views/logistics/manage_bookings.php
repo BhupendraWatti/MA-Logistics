@@ -11,6 +11,14 @@
             min-width: 250px !important;
             width: 250px !important;
         }
+        #bookingsTable .customer-cell {
+            white-space: normal !important;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            width: 40%;
+            max-width: 40vw;
+            min-width: 220px;
+        }
     </style>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>
@@ -48,7 +56,7 @@
                             <th>Docket No</th>
                             <th>Date</th>
                             <th>Origin → Dest</th>
-                            <th>Customer</th>
+                            <th class="customer-cell">Customer</th>
                             <th class="consignee-cell">Consignee</th>
                             <th>Remark</th>
                             <th>Status</th>
@@ -145,8 +153,9 @@ $(document).ready(function() {
         },
         {
             data: 'customer_name',
+            className: 'customer-cell',
             render: function(data) {
-                return `<span class="fw-semibold text-dark" style="font-size:0.85rem;">${data}</span>`;
+                return `<span class="fw-semibold text-dark d-block" style="font-size:0.85rem; line-height:1.35;">${data || '-'}</span>`;
             }
         },
         {

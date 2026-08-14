@@ -12,6 +12,14 @@
             min-width: 250px !important;
             width: 250px !important;
         }
+        .table-responsive table .customer-cell {
+            white-space: normal !important;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            width: 40%;
+            max-width: 40vw;
+            min-width: 220px;
+        }
     </style>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -45,7 +53,7 @@
                             <th>AWB Number</th>
                             <th>Docket No</th>
                             <th>Origin &rarr; Dest</th>
-                            <th>Customer</th>
+                            <th class="customer-cell">Customer</th>
                             <th class="consignee-cell">Consignee</th>
                             <th>Created</th>
                             <th>Created By</th>
@@ -76,7 +84,7 @@
                                 <span class="text-muted fw-semibold" style="font-size: 0.85rem;" title="<?= $docketTitle ?>"><?= $docketDisplay ?></span>
                             </td>
                             <td><span class="fw-medium text-dark"><?= esc($booking['origin']) ?></span> <span class="text-muted mx-1">&rarr;</span> <span class="fw-medium text-dark"><?= esc($booking['destination']) ?></span></td>
-                            <td>
+                            <td class="customer-cell">
                                 <?= esc($booking['customer_name'] ?? 'Unknown') ?>
                             </td>
                             <td class="consignee-cell">

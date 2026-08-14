@@ -6,7 +6,7 @@ This document outlines the testing strategy, manual smoke test procedures, perfo
 
 | Test Case | Scenario | Expected Result | Status |
 | :--- | :--- | :--- | :---: |
-| **TC016** | Customer Rate Snapshot Fallback | Save an item with blank/zero rate where `customer_rates` contains a matching company/customer/category/date row; `shipment_items.rate` stores the matched rate. | PASS |
+| **TC016** | Customer Rate Snapshot Fallback | Save an item with blank/zero rate where `customer_rates` contains a matching company/customer/origin/destination/category/date row; `shipment_items.rate` stores the matched rate. | PASS |
 | **TC017** | Zero Actual Weight Allowed | Save a shipment item with `actual_weight = 0` and no positive booking-level master weight. | PASS |
 | **TC018** | Master AWB Weight Guard | Save a booking with `total_weight` greater than summed item actual weights; backend rejects the save with a clear validation message. | PASS |
 | **TC019** | Customer Master Invoice Fallback | Generate PDF for a customer with master address/GST/PAN populated; invoice header uses master data before shipment free-text fallback. | PASS |
@@ -18,6 +18,19 @@ This document outlines the testing strategy, manual smoke test procedures, perfo
 | **TC025** | Invoice First-Four Charge Columns | Generate a default invoice with more than four active item charges; first four charges render as columns and remaining charges sum into Other Charges. | PASS |
 | **TC026** | Runtime AWB/Docket Uniqueness | Type a duplicate AWB or docket in the booking form/item drawer; duplicate feedback appears before final booking save and Save Item blocks duplicate docket rows. | PASS |
 | **TC027** | Default Bank Preselection | Mark one bank as default in Bank Accounts, open All Invoices, and verify that bank is selected automatically. | PASS |
+| **TC028** | Booking Customer Column Wrapping | Open Dashboard and All Bookings with long multi-customer values; Customer wraps within its column and horizontal scroll appears only when the full table needs it. | PASS |
+| **TC029** | All Downloads Month Summary/Delete | Generate a consolidated PDF, open All Downloads for that month, verify billing total/count/user, then delete the saved download as a permitted user. | PASS |
+| **TC030** | Draft Recovery After Failed Draft Save | Add shipment rows, click Save Draft, force a server validation rejection, then reload/create again and verify the local draft can still be restored. | PASS |
+| **TC031** | Invoice Master GST Prefix Warning | Create GST and Non-GST invoice masters, select a prefix in the booking item drawer, then generate from All Invoices and verify any saved prefix/GST mismatch allows Proceed Anyway or Cancel. | PASS |
+| **TC032** | Invoice Master Sequence Isolation | Generate invoices with GST and Non-GST prefixes in the same financial year; each prefix advances independently. | PASS |
+| **TC033** | Docket Master Auto/Manual Prefix | Create auto and manual docket prefixes, add shipment items with each mode, and verify auto dockets increment while manual mode keeps the field editable. | PASS |
+| **TC034** | Invoice PDF Booking Date | Generate a consolidated invoice for selected shipments and verify the header period/date and item Date column derive from shipment booking dates. | PASS |
+| **TC035** | Invoice PDF Save Location Picker | Generate a PDF from All Invoices in Chrome/Edge secure context; verify the explicit action opens the picker, cancellation is informational, and unsupported browsers use standard download. | MANUAL PENDING |
+| **TC036** | Location Wise Item Rate Runtime Flow | Verify exact O&D hit/miss prompt and active/history Customer Master UI in a logged-in browser. Automated model/service coverage passes; browser flow remains pending. | PARTIAL |
+| **TC037** | Customer Rate Versioning and Idempotency | Change, remove, add, and repeat Customer Master rates; closed history remains and repeated submission creates no duplicate. | PASS (PHPUnit) |
+| **TC038** | Customer Rate Concurrency and Tenant Guard | Use two database connections for the same scope; stale differing save conflicts, exactly one active row remains, and cross-company lookup/mutation fails. | PASS (PHPUnit) |
+| **TC039** | Exact O&D and Category Precedence | Exact route hit succeeds, route miss never uses generic, and exact category precedes blank category. | PASS (PHPUnit) |
+| **TC040** | Customer Rate Migration Backfill | On a disposable MySQL database, duplicate legacy scopes retain all rows, newest row is active, and duplicate active insertion is rejected. | PASS (PHPUnit) |
 
 ---
 
@@ -26,7 +39,7 @@ This document outlines the testing strategy, manual smoke test procedures, perfo
 Execute this 10-minute smoke test before signing off on any production deployment:
 
 1. **Authentication & Session**:
-   - Log in with valid credentials $\rightarrow$ Select active company $\rightarrow$ Verify dashboard loads recent bookings.
+   - Confirm resolved session configuration points to `writable/session` and that directory is writable; log in with valid credentials $\rightarrow$ select active company $\rightarrow$ verify dashboard loads without the former session-path 500.
 2. **DataTables Grid Performance**:
    - Open **Manage Bookings** $\rightarrow$ Verify booking grid loads in $< 3.0$ seconds.
 3. **Consignment Entry & Copy-Forward Verification**:

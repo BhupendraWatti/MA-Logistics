@@ -12,6 +12,8 @@ use App\Models\AirlineModel;
 use App\Models\LookupValueModel;
 use App\Models\SystemSettingsModel;
 use App\Models\InvoiceDownloadModel;
+use App\Models\InvoiceTemplateModel;
+use App\Models\DocketSeriesModel;
 
 class Logistics extends BaseController
 {
@@ -187,6 +189,8 @@ public function create()
         'material_category' => (new LookupValueModel())->getByType($companyId, 'material_category'),
         'payment_type'      => (new LookupValueModel())->getByType($companyId, 'payment_type'),
     ];
+    $data['docket_series'] = (new DocketSeriesModel())->getActiveByCompany($companyId);
+    $data['invoice_templates'] = (new InvoiceTemplateModel())->getActiveByCompany($companyId);
     $data['volumetric_formula'] = (new SystemSettingsModel())->getSetting($companyId, 'volumetric_divider', 6000);
     $data['company'] = (new CompanyModel())->find($companyId);
     
@@ -340,6 +344,8 @@ public function edit($id)
             'material_category' => (new LookupValueModel())->getByType($companyId, 'material_category'),
             'payment_type'      => (new LookupValueModel())->getByType($companyId, 'payment_type'),
         ],
+        'docket_series' => (new DocketSeriesModel())->getActiveByCompany($companyId),
+        'invoice_templates' => (new InvoiceTemplateModel())->getActiveByCompany($companyId),
         'volumetric_formula' => (new SystemSettingsModel())->getSetting($companyId, 'volumetric_divider', 6000),
         'company' => (new CompanyModel())->find($companyId),
     ];
@@ -1389,7 +1395,8 @@ public function exportExcel()
 
         $customers = (new CustomerModel())->getByCompany($companyId);
         $banks = (new \App\Models\BankAccountModel())->getByCompany($companyId);
-        $downloads = (new InvoiceDownloadModel())->getRecentByCompany((int) $companyId, 30);
+        $downloads = (new InvoiceDownloadModel())->getByCompanyMonth((int) $companyId, date('Y-m'), 100);
+        $invoiceTemplates = (new InvoiceTemplateModel())->getActiveByCompany((int) $companyId);
 
         return view('logistics/all_invoices', [
             'user'         => session()->get(),
@@ -1397,6 +1404,7 @@ public function exportExcel()
             'customers'    => $customers,
             'banks'        => $banks,
             'downloads'    => $downloads,
+            'invoice_templates' => $invoiceTemplates,
         ]);
     }
 
@@ -1410,18 +1418,30 @@ public function exportExcel()
             ]);
         }
 
-        $downloads = (new InvoiceDownloadModel())->getRecentByCompany((int) $companyId, 30);
+        $month = trim((string) ($this->request->getGet('month') ?? date('Y-m')));
+        if (!preg_match('/^\d{4}-\d{2}$/', $month)) {
+            $month = date('Y-m');
+        }
+
+        $downloads = (new InvoiceDownloadModel())->getByCompanyMonth((int) $companyId, $month, 100);
+        $monthTotal = 0.0;
         foreach ($downloads as &$download) {
             $download['downloaded_at_display'] = !empty($download['downloaded_at']) ? date('d-M-Y H:i', strtotime($download['downloaded_at'])) : '-';
             $download['from_date_display'] = !empty($download['from_date']) ? date('d-M-Y', strtotime($download['from_date'])) : '-';
             $download['to_date_display'] = !empty($download['to_date']) ? date('d-M-Y', strtotime($download['to_date'])) : '-';
+            $download['total_amount_display'] = number_format((float) ($download['total_amount'] ?? 0), 2);
             $download['view_url'] = base_url('logistics/all-invoices/downloads/' . $download['id']);
+            $download['delete_url'] = base_url('logistics/all-invoices/downloads/delete/' . $download['id']);
+            $monthTotal += (float) ($download['total_amount'] ?? 0);
         }
         unset($download);
 
         return $this->response->setJSON([
-            'status'    => 'success',
-            'downloads' => $downloads,
+            'status'      => 'success',
+            'downloads'   => $downloads,
+            'month'       => $month,
+            'month_total' => $monthTotal,
+            'month_total_display' => number_format($monthTotal, 2),
         ]);
     }
 
@@ -1458,11 +1478,32 @@ public function exportExcel()
                            ->get()
                            ->getResultArray();
 
+        $invoiceTemplates = (new InvoiceTemplateModel())->getActiveByCompany((int) $companyId);
+
         // Format dates for UI
         foreach ($records as &$r) {
             $dateVal = $r['booking_date'] ?? null;
             $r['display_date'] = date('d-M-Y', strtotime($dateVal));
+            $r['invoice_template_name'] = '';
+            $r['invoice_template_gst_type'] = '';
+            $r['invoice_template_prefix'] = '';
+
+            $invoiceNo = strtoupper(trim((string) ($r['invoice_no'] ?? '')));
+            if ($invoiceNo === '') {
+                continue;
+            }
+
+            foreach ($invoiceTemplates as $template) {
+                $prefix = strtoupper(trim((string) ($template['prefix'] ?? '')));
+                if ($prefix !== '' && strpos($invoiceNo, $prefix) === 0) {
+                    $r['invoice_template_name'] = $template['name'] ?? '';
+                    $r['invoice_template_gst_type'] = $template['gst_type'] ?? '';
+                    $r['invoice_template_prefix'] = $template['prefix'] ?? '';
+                    break;
+                }
+            }
         }
+        unset($r);
 
         return $this->response->setJSON($records);
     }
@@ -1487,6 +1528,7 @@ public function exportExcel()
         $itemIds      = $post['item_ids']      ?? [];
         $exportType   = $post['export_type']   ?? 'pdf';
         $orientation  = (($post['layout_orientation'] ?? 'landscape') === 'portrait') ? 'P' : 'L';
+        $invoiceTemplateId = (int) ($post['invoice_template_id'] ?? 0);
 
         if (empty($customerName) || empty($itemIds)) {
             return redirect()->back()->with('error', 'Please select a customer and at least one shipment record!');
@@ -1524,6 +1566,8 @@ public function exportExcel()
             $bookingDates = array_filter(array_column($shipments, 'booking_date'));
             sort($bookingDates);
             $pdfInvoiceDateRaw = !empty($bookingDates) ? end($bookingDates) : $invoiceDate;
+            $bookingDateStartRaw = !empty($bookingDates) ? reset($bookingDates) : $fromDate;
+            $bookingDateEndRaw = !empty($bookingDates) ? end($bookingDates) : $toDate;
 
             if ($exportType === 'pdf') {
                 $invoiceNo = $invoiceService->finalizeConsolidatedInvoiceNumber(
@@ -1531,7 +1575,8 @@ public function exportExcel()
                     $shipments,
                     $companyData,
                     $pdfInvoiceDateRaw,
-                    $invoiceNo
+                    $invoiceNo,
+                    $invoiceTemplateId
                 );
                 $shipments = $invoiceService->applyInvoiceNumberToShipments($shipments, $invoiceNo, $pdfInvoiceDateRaw);
             }
@@ -1787,7 +1832,7 @@ public function exportExcel()
             );
 
             // ── Period ──────────────────────────────────────────────────────
-            $invoicePeriod = date('d/m/Y', strtotime($fromDate)) . ' TO ' . date('d/m/Y', strtotime($toDate));
+            $invoicePeriod = date('d/m/Y', strtotime($bookingDateStartRaw)) . ' TO ' . date('d/m/Y', strtotime($bookingDateEndRaw));
 
             $viewData = $invoiceService->assembleViewData([
                 'company'              => $companyData,
@@ -1824,7 +1869,8 @@ public function exportExcel()
             $absolutePath = WRITEPATH . $relativePath;
             $pdfGenerator->save($viewData, $absolutePath, $orientation);
 
-            (new InvoiceDownloadModel())->insert([
+            $downloadModel = new InvoiceDownloadModel();
+            $downloadModel->insert([
                 'company_id'          => (int) $companyId,
                 'user_id'             => session()->get('user_id') ? (int) session()->get('user_id') : null,
                 'customer_name'       => $customerName,
@@ -1837,10 +1883,22 @@ public function exportExcel()
                 'billing_mode'        => $post['billing_mode'] ?? 'awb',
                 'club_by_lr'          => (!empty($post['club_by_lr']) || (($post['billing_mode'] ?? '') === 'docket')) ? 1 : 0,
                 'item_ids'            => json_encode(array_values($itemIds)),
+                'total_amount'        => (float) ($gstData['netPayable'] ?? $rowData['totalTaxable'] ?? 0),
                 'file_path'           => $relativePath,
                 'file_name'           => $fileName,
                 'downloaded_at'       => date('Y-m-d H:i:s'),
             ]);
+            $downloadId = (int) $downloadModel->getInsertID();
+
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'status' => 'success',
+                    'message' => 'Invoice generated.',
+                    'file_name' => $fileName,
+                    'download_url' => base_url('logistics/all-invoices/downloads/' . $downloadId),
+                    'csrf_hash' => csrf_hash(),
+                ]);
+            }
 
             $pdfGenerator->stream($viewData, $fileName, $orientation);
 
@@ -1878,5 +1936,50 @@ public function exportExcel()
             ->setHeader('Content-Type', 'application/pdf')
             ->setHeader('Content-Disposition', 'inline; filename="' . basename($download['file_name']) . '"')
             ->setBody(file_get_contents($resolvedPath));
+    }
+
+    public function deleteInvoiceDownload($id)
+    {
+        $perm = $this->checkPermission('can_delete');
+        if ($perm !== true) {
+            return $perm;
+        }
+
+        $companyId = (int) session()->get('selected_company_id');
+        if (!$companyId) {
+            return $this->response->setStatusCode(401)->setJSON([
+                'status' => 'error',
+                'message' => 'Unauthorized',
+            ]);
+        }
+
+        $model = new InvoiceDownloadModel();
+        $download = $model->where('id', (int) $id)
+            ->where('company_id', $companyId)
+            ->first();
+
+        if (!$download) {
+            return $this->response->setStatusCode(404)->setJSON([
+                'status' => 'error',
+                'message' => 'Invoice download not found or access denied.',
+            ]);
+        }
+
+        $absolutePath = WRITEPATH . $download['file_path'];
+        $resolvedPath = realpath($absolutePath);
+        $writeRoot = realpath(WRITEPATH);
+
+        if ($resolvedPath && $writeRoot && strpos($resolvedPath, $writeRoot . DIRECTORY_SEPARATOR) === 0 && is_file($resolvedPath)) {
+            @unlink($resolvedPath);
+        }
+
+        $model->delete((int) $download['id']);
+        session_write_close();
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => 'Invoice download deleted.',
+            'csrf_hash' => csrf_hash(),
+        ]);
     }
 }

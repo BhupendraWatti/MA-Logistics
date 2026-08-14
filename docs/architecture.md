@@ -13,7 +13,7 @@ graph TD
     Client[Browser / Client] -->|HTTP Request| Router[CI4 Routes]
     Router --> Controller[Controller Layer]
     Controller -->|Session Check| AuthFilter[Auth / Company Filter]
-    Controller -->|Data Processing| Service[BookingService Layer]
+    Controller -->|Data Processing| Service[Service Layer]
     Service -->|CRUD / Queries| Models[Model Layer]
     Models -->|SQL Queries| DB[(MySQL Database)]
     Service -->|Transactions| DB
@@ -24,7 +24,7 @@ graph TD
 
 ### Layer Responsibilities
 * **Controllers (`app/Controllers/`)**: Handle HTTP routing, input validation, request parsing, session checks, and response formatting (HTML views or JSON responses).
-* **Service Layer (`app/Services/BookingService.php`)**: Encapsulates core business algorithms (volumetric calculations, chargeable weight resolution, sales surcharges summation, database transaction boundaries).
+* **Service Layer (`app/Services/`)**: `BookingService` encapsulates booking calculations and persistence. `CustomerRateService` owns customer/rate transaction boundaries, locks the tenant-scoped customer row as a per-customer mutex, closes immutable versions, and handles idempotent/conflicting runtime saves.
 * **Models (`app/Models/`)**: CodeIgniter Entity/Model wrappers executing parameterized SQL queries, field casting, and validation rules against MySQL database tables.
 * **Views (`app/Views/`)**: Modular PHP templates rendering Bootstrap-based responsive layouts (`layout.php`), form partials, dashboard DataTables grids, and TCPDF HTML layouts.
 
@@ -35,6 +35,7 @@ graph TD
 * **Multi-Company Isolation**: Every data retrieval query filters by `company_id = session('selected_company_id')`.
 * **Session Storage Architecture**:
   * Default: `FileHandler` (`writable/session`).
+  * `.env` intentionally leaves `session.savePath` unset so `Config\Session::$savePath = WRITEPATH . 'session'` remains authoritative; deployment must verify that directory exists and is writable.
   * Production Scaling: Supports `RedisHandler` via `.env` configuration to avoid MySQL database lock contention during concurrent user sessions.
 * **CSRF Protection**: Form submit tokens and AJAX headers match unified `csrf_token_name`.
 

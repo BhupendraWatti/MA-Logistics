@@ -63,6 +63,12 @@ Retrieve current status and history timeline of a consignment by AWB or Docket n
 
 ## 3. Internal Master Data APIs (JSON)
 
+### Customer Rate Endpoints
+
+* `POST /masters/customers/rate-lookup` accepts `customer_name`, `origin`, `destination`, `material_category`, and `booking_date`. When O&D are supplied both must match exactly, case-insensitively; an exact-route miss returns HTTP 200 with `status: "success"` and `found: false`. Category-specific rows precede blank-category rows.
+* `POST /masters/customers/rate-save` accepts the existing fields `customer_name`, `origin`, `destination`, `material_category`, `rate`, and `rate_id`. Success preserves the existing JSON fields and returns `id` for the newly active version. A stale competing value returns HTTP 409 with `status: "error"`, a reload message, and `csrf_hash`; a repeated same-rate request returns the existing active version id.
+* Both endpoints are session/company scoped and cannot read, lock, or mutate another company’s customer/rate rows.
+
 ### Endpoints
 1. `GET /api/masters/customers` — Get all active customers.
 2. `GET /api/masters/customers/{id}` — Get customer profile:

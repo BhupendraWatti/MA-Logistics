@@ -213,9 +213,26 @@
             <div>
                 <h6 class="fw-bold text-primary mb-0"><i class="fas fa-download me-2"></i> All Downloads</h6>
             </div>
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <input type="month" id="downloadHistoryMonth" class="form-control form-control-sm shadow-none" value="<?= date('Y-m') ?>" style="width: 150px;">
                 <input type="search" id="downloadHistorySearch" class="form-control form-control-sm shadow-none" placeholder="Search downloads..." style="width: min(220px, 70vw);">
                 <span class="badge bg-light text-secondary border" id="downloadHistoryCardCount"><?= count($downloads ?? []) ?> Saved</span>
+            </div>
+        </div>
+        <div class="px-3 py-3 border-bottom bg-light">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="small text-muted fw-semibold">Month Billing</div>
+                    <div class="fs-5 fw-bold text-success">₹<span id="downloadMonthAmount"><?= esc(number_format(array_sum(array_map(static fn ($d) => (float) ($d['total_amount'] ?? 0), $downloads ?? [])), 2)) ?></span></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="small text-muted fw-semibold">Invoices Saved</div>
+                    <div class="fs-5 fw-bold text-dark" id="downloadMonthCount"><?= count($downloads ?? []) ?></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="small text-muted fw-semibold">Selected Month</div>
+                    <div class="fs-5 fw-bold text-primary" id="downloadMonthLabel"><?= esc(date('M Y')) ?></div>
+                </div>
             </div>
         </div>
         <div class="card-body p-0">
@@ -228,6 +245,7 @@
                             <th>Customer</th>
                             <th>Bill To</th>
                             <th>Period</th>
+                            <th class="text-end">Amount</th>
                             <th>Layout</th>
                             <th>User</th>
                             <th class="text-end pe-3">Action</th>
@@ -246,22 +264,28 @@
                                         to
                                         <?= !empty($download['to_date']) ? esc(date('d-M-Y', strtotime($download['to_date']))) : '-' ?>
                                     </td>
+                                    <td class="text-end fw-semibold">₹<?= esc(number_format((float) ($download['total_amount'] ?? 0), 2)) ?></td>
                                     <td><span class="badge bg-light text-dark border"><?= esc(ucfirst($download['layout_orientation'])) ?></span></td>
                                     <td><?= esc($download['downloaded_by'] ?: 'Unknown') ?></td>
                                     <td class="text-end pe-3">
                                         <a class="btn btn-sm btn-outline-primary" target="_blank" href="<?= base_url('logistics/all-invoices/downloads/' . $download['id']) ?>">
                                             <i class="fas fa-eye me-1"></i> View
                                         </a>
+                                        <?php if ((session()->get('permissions')['can_delete'] ?? 0) == 1): ?>
+                                            <button type="button" class="btn btn-sm btn-outline-danger ms-1 delete-invoice-download-btn" data-id="<?= (int) $download['id'] ?>" data-invoice="<?= esc($download['invoice_no']) ?>">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="8" class="text-center py-4 text-muted">No consolidated invoice downloads saved yet.</td>
+                                <td colspan="9" class="text-center py-4 text-muted">No consolidated invoice downloads saved yet.</td>
                             </tr>
                         <?php endif; ?>
                         <tr id="downloadHistoryNoMatches" class="d-none">
-                            <td colspan="8" class="text-center py-4 text-muted">No matching downloads found.</td>
+                            <td colspan="9" class="text-center py-4 text-muted">No matching downloads found.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -349,6 +373,14 @@ $(document).ready(function() {
         $('#downloadHistoryNoMatches').toggleClass('d-none', visibleRows > 0);
     });
 
+    $('#downloadHistoryMonth').on('change', function() {
+        refreshDownloadHistory();
+    });
+
+    $(document).on('click', '.delete-invoice-download-btn', function() {
+        deleteInvoiceDownload(parseInt($(this).data('id') || 0), $(this).data('invoice') || '-');
+    });
+
     // Select all checkboxes helper
     $('#selectAllCheckbox').on('change', function() {
         const checked = $(this).is(':checked');
@@ -382,6 +414,7 @@ $(document).ready(function() {
         let igstRecords = [];
         let cgstSgstRecords = [];
         let noGstRecords = [];
+        let invoicePrefixMismatchRecords = [];
 
         checkedBoxes.each(function() {
             const checkbox = $(this);
@@ -391,6 +424,10 @@ $(document).ready(function() {
             const igstRate = parseFloat(checkbox.data('igst-rate') || 0);
             const awbNo = checkbox.data('awb-no') || '';
             const docketNo = checkbox.data('docket-no') || '';
+            const invoiceNo = checkbox.data('invoice-no') || '';
+            const templateGstType = checkbox.data('invoice-template-gst-type') || '';
+            const templateName = checkbox.data('invoice-template-name') || '';
+            const templatePrefix = checkbox.data('invoice-template-prefix') || '';
             
             const recordInfo = { awb: awbNo, docket: docketNo };
 
@@ -402,6 +439,22 @@ $(document).ready(function() {
                 cgstSgstRecords.push(recordInfo);
             } else {
                 noGstRecords.push(recordInfo);
+            }
+
+            if (templateGstType) {
+                const templateIsGst = templateGstType !== 'non_gst';
+                const rowIsGst = gstApplied && (igstRate > 0 || cgstRate > 0 || sgstRate > 0);
+                if (templateIsGst !== rowIsGst) {
+                    invoicePrefixMismatchRecords.push({
+                        awb: awbNo,
+                        docket: docketNo,
+                        invoiceNo: invoiceNo,
+                        templateName: templateName,
+                        templatePrefix: templatePrefix,
+                        templateType: templateIsGst ? 'GST' : 'Non-GST',
+                        recordType: rowIsGst ? 'GST' : 'Non-GST'
+                    });
+                }
             }
         });
 
@@ -468,15 +521,46 @@ $(document).ready(function() {
                 cancelButtonText: 'Cancel'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    isSubmitting = true;
-                    scheduleDownloadHistoryRefresh();
-                    $('#invoiceForm').submit();
-                    isSubmitting = false;
+                    proceedInvoiceSubmit();
                 }
             });
             return false;
         }
-        scheduleDownloadHistoryRefresh();
+
+        if (invoicePrefixMismatchRecords.length > 0) {
+            e.preventDefault();
+            const mismatchRows = invoicePrefixMismatchRecords.slice(0, 12).map(r => {
+                return `- AWB: ${escapeHistoryHtml(r.awb)} (Docket: ${escapeHistoryHtml(r.docket)}, Invoice: ${escapeHistoryHtml(r.invoiceNo || '-')}, ${escapeHistoryHtml(r.templateName || r.templatePrefix)} is ${escapeHistoryHtml(r.templateType)}, record is ${escapeHistoryHtml(r.recordType)})`;
+            }).join('<br>');
+            const extraCount = invoicePrefixMismatchRecords.length > 12 ? `<br>...and ${invoicePrefixMismatchRecords.length - 12} more` : '';
+
+            Swal.fire({
+                title: 'Invoice Prefix Mismatch',
+                html: `<div class="text-start fs-7">
+                    <p class="text-danger fw-bold mb-2"><i class="fas fa-exclamation-triangle"></i> Some selected shipment rows use an invoice prefix whose master type does not match the row GST status.</p>
+                    <div class="mt-2" style="max-height: 220px; overflow-y: auto;">${mismatchRows}${extraCount}</div>
+                    <p class="mb-0 mt-3">You can still proceed if this is intentional.</p>
+                </div>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Proceed Anyway',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    proceedInvoiceSubmit();
+                }
+            });
+            return false;
+        }
+
+        if ($('#export_type').val() === 'pdf') {
+            e.preventDefault();
+            proceedInvoiceSubmit();
+            return false;
+        }
+
         return true;
     });
 
@@ -504,16 +588,148 @@ function scheduleDownloadHistoryRefresh() {
     setTimeout(refreshDownloadHistory, 4000);
 }
 
+function proceedInvoiceSubmit() {
+    if ($('#export_type').val() !== 'pdf') {
+        isSubmitting = true;
+        $('#invoiceForm')[0].submit();
+        isSubmitting = false;
+        return;
+    }
+
+    generatePdfWithSavePicker();
+}
+
+async function generatePdfWithSavePicker() {
+    if (isSubmitting) return;
+    isSubmitting = true;
+
+    const form = document.getElementById('invoiceForm');
+    const formData = new FormData(form);
+    formData.set('export_type', 'pdf');
+
+    Swal.fire({
+        title: 'Generating Invoice...',
+        text: 'Please wait while the PDF is prepared.',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            credentials: 'same-origin'
+        });
+
+        const result = await response.json();
+        if (result.csrf_hash) {
+            $('meta[name="csrf-token"]').attr('content', result.csrf_hash);
+            $('input[name="<?= csrf_token() ?>"]').val(result.csrf_hash);
+        }
+        if (!response.ok || result.status !== 'success') {
+            throw new Error(result.message || 'Invoice generation failed.');
+        }
+
+        const pdfResponse = await fetch(result.download_url, { credentials: 'same-origin' });
+        if (!pdfResponse.ok) {
+            throw new Error('Generated PDF could not be fetched.');
+        }
+        const blob = await pdfResponse.blob();
+        const saveResult = await saveInvoiceBlob(blob, result.file_name || 'invoice.pdf');
+        refreshDownloadHistory();
+
+        if (saveResult === 'saved') {
+            Swal.fire('Invoice Saved', 'Invoice PDF saved successfully.', 'success');
+        } else if (saveResult === 'cancelled') {
+            Swal.fire('Save Cancelled', 'The generated invoice remains available in All Downloads.', 'info');
+        } else {
+            Swal.fire('Browser Download Used', 'This browser cannot open the native save-location picker here, so the normal download was used. The invoice also remains in All Downloads.', 'info');
+        }
+    } catch (error) {
+        Swal.fire('Download Failed', error.message || 'Unable to generate invoice PDF.', 'error');
+    } finally {
+        isSubmitting = false;
+    }
+}
+
+async function saveInvoiceBlob(blob, fileName) {
+    if (window.isSecureContext && typeof window.showSaveFilePicker === 'function') {
+        const pickerResult = await Swal.fire({
+            title: 'Invoice Ready',
+            text: 'Choose where to save the generated PDF.',
+            icon: 'success',
+            showCancelButton: true,
+            confirmButtonText: 'Choose save location',
+            cancelButtonText: 'Not now',
+            preConfirm: async () => {
+                try {
+                    // This must be the first browser API invoked by the explicit confirm click.
+                    const handle = await window.showSaveFilePicker({
+                        id: 'ma-logistics-invoices',
+                        suggestedName: fileName,
+                        types: [{
+                            description: 'PDF Invoice',
+                            accept: { 'application/pdf': ['.pdf'] }
+                        }]
+                    });
+                    const writable = await handle.createWritable();
+                    await writable.write(blob);
+                    await writable.close();
+                    return 'saved';
+                } catch (error) {
+                    if (error && error.name === 'AbortError') {
+                        return 'cancelled';
+                    }
+                    Swal.showValidationMessage(error.message || 'Unable to save the PDF to that location.');
+                    return false;
+                }
+            }
+        });
+
+        if (pickerResult.isDismissed) {
+            return 'cancelled';
+        }
+        return pickerResult.value || 'cancelled';
+    }
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return 'fallback';
+}
+
 function refreshDownloadHistory() {
     $.ajax({
         url: BASE_URL + 'logistics/all-invoices/downloads',
         type: 'GET',
+        data: {
+            month: $('#downloadHistoryMonth').val()
+        },
         dataType: 'json',
         success: function(res) {
             if (!res || res.status !== 'success') return;
+            updateDownloadMonthSummary(res);
             renderDownloadHistory(res.downloads || []);
         }
     });
+}
+
+function updateDownloadMonthSummary(res) {
+    const monthValue = res.month || $('#downloadHistoryMonth').val();
+    const monthDate = monthValue ? new Date(monthValue + '-01T00:00:00') : new Date();
+    const label = monthDate.toLocaleString(undefined, { month: 'short', year: 'numeric' });
+    $('#downloadMonthLabel').text(label);
+    $('#downloadMonthCount').text((res.downloads || []).length);
+    $('#downloadMonthAmount').text(res.month_total_display || '0.00');
 }
 
 function renderDownloadHistory(downloads) {
@@ -523,12 +739,15 @@ function renderDownloadHistory(downloads) {
     $('#downloadHistoryCardCount').text(downloads.length + ' Saved');
 
     if (!downloads.length) {
-        tbody.append('<tr><td colspan="8" class="text-center py-4 text-muted">No consolidated invoice downloads saved yet.</td></tr>');
-        tbody.append('<tr id="downloadHistoryNoMatches" class="d-none"><td colspan="8" class="text-center py-4 text-muted">No matching downloads found.</td></tr>');
+        tbody.append('<tr><td colspan="9" class="text-center py-4 text-muted">No consolidated invoice downloads saved yet.</td></tr>');
+        tbody.append('<tr id="downloadHistoryNoMatches" class="d-none"><td colspan="9" class="text-center py-4 text-muted">No matching downloads found.</td></tr>');
         return;
     }
 
     downloads.forEach(function(download) {
+        const deleteButton = <?= (session()->get('permissions')['can_delete'] ?? 0) == 1 ? 'true' : 'false' ?>
+            ? `<button type="button" class="btn btn-sm btn-outline-danger ms-1 delete-invoice-download-btn" data-id="${parseInt(download.id || 0)}" data-invoice="${escapeHistoryHtml(download.invoice_no || '-')}"><i class="fas fa-trash"></i></button>`
+            : '';
         tbody.append(`
             <tr class="download-history-row">
                 <td class="ps-3">${escapeHistoryHtml(download.downloaded_at_display || '-')}</td>
@@ -536,18 +755,60 @@ function renderDownloadHistory(downloads) {
                 <td>${escapeHistoryHtml(download.customer_name || '-')}</td>
                 <td>${escapeHistoryHtml(download.bill_to || '-')}</td>
                 <td>${escapeHistoryHtml(download.from_date_display || '-')} to ${escapeHistoryHtml(download.to_date_display || '-')}</td>
+                <td class="text-end fw-semibold">₹${escapeHistoryHtml(download.total_amount_display || '0.00')}</td>
                 <td><span class="badge bg-light text-dark border">${escapeHistoryHtml((download.layout_orientation || '-').replace(/^./, c => c.toUpperCase()))}</span></td>
                 <td>${escapeHistoryHtml(download.downloaded_by || 'Unknown')}</td>
                 <td class="text-end pe-3">
                     <a class="btn btn-sm btn-outline-primary" target="_blank" href="${escapeHistoryHtml(download.view_url || '#')}">
                         <i class="fas fa-eye me-1"></i> View
                     </a>
+                    ${deleteButton}
                 </td>
             </tr>
         `);
     });
-    tbody.append('<tr id="downloadHistoryNoMatches" class="d-none"><td colspan="8" class="text-center py-4 text-muted">No matching downloads found.</td></tr>');
+    tbody.append('<tr id="downloadHistoryNoMatches" class="d-none"><td colspan="9" class="text-center py-4 text-muted">No matching downloads found.</td></tr>');
     $('#downloadHistorySearch').trigger('input');
+}
+
+function deleteInvoiceDownload(id, invoiceNo) {
+    if (!id) return;
+
+    Swal.fire({
+        title: 'Delete invoice download?',
+        text: 'This removes saved invoice ' + invoiceNo + ' from All Downloads.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Delete',
+        cancelButtonText: 'Cancel'
+    }).then(function(result) {
+        if (!result.isConfirmed) return;
+
+        $.ajax({
+            url: BASE_URL + 'logistics/all-invoices/downloads/delete/' + id,
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                <?= csrf_token() ?>: $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(res) {
+                if (res && res.csrf_hash) {
+                    $('meta[name="csrf-token"]').attr('content', res.csrf_hash);
+                }
+                if (!res || res.status !== 'success') {
+                    ERPUtils.showError('Delete Failed', res && res.message ? res.message : 'Unable to delete this invoice download.');
+                    return;
+                }
+                refreshDownloadHistory();
+            },
+            error: function(xhr) {
+                const msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Unable to delete this invoice download.';
+                ERPUtils.showError('Delete Failed', msg);
+            }
+        });
+    });
 }
 
 function loadShipments() {
@@ -597,6 +858,10 @@ function loadShipments() {
                                     data-igst-rate="${parseFloat(row.igst_rate || 0)}"
                                     data-awb-no="${row.awb_no || ''}"
                                     data-docket-no="${row.docket_no || ''}"
+                                    data-invoice-no="${escapeHistoryHtml(row.invoice_no || '')}"
+                                    data-invoice-template-name="${escapeHistoryHtml(row.invoice_template_name || '')}"
+                                    data-invoice-template-gst-type="${escapeHistoryHtml(row.invoice_template_gst_type || '')}"
+                                    data-invoice-template-prefix="${escapeHistoryHtml(row.invoice_template_prefix || '')}"
                                     checked>
                             </td>
                             <td>${row.display_date}</td>

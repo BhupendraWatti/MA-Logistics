@@ -7,6 +7,7 @@ This document tracks known issues, technical limitations, accepted workarounds, 
 * **Resolved in CHG-015**: Backend support for item-level payment type/material category, date/category customer rate snapshot lookup, zero actual-weight allowance, master AWB weight sanity validation, Customer Master invoice address/GST/PAN fallback, remarks aliasing, and optional LR/docket clubbing.
 * **Resolved in CHG-016**: Consolidated invoice PDF generation now auto-generates company-scoped financial-year invoice numbers, persists them to selected shipment rows, and reuses finalized numbers for reprints.
 * **Resolved in CHG-019**: Edit-mode Save Item now autosaves booking changes, default bank accounts are preselected in invoice generation, duplicate AWB/docket feedback appears during entry, default invoices place only the first four active charges into columns, and later charges flow into Other Charges.
+* **Resolved in CHG-023**: Customer rates are immutable versions with one database-enforced active scope, exact O&D lookup no longer falls back to generic rows, and the blank session save-path override no longer redirects PHP sessions to `D:\xampp\tmp`.
 
 ---
 
@@ -60,6 +61,9 @@ This document tracks known issues, technical limitations, accepted workarounds, 
 
 ## Resolved Issues Log
 
+* **[RESOLVED] Customer Rate History and Concurrent Save Collision**: `CustomerRateService` closes changed/removed versions under a tenant/customer transaction lock; a unique active-scope key provides the database guard and stale differing saves return HTTP 409.
+* **[RESOLVED] Local Session Path 500**: Removed the blank `.env` `session.savePath` override. File sessions now resolve to `writable/session`, which must remain writable at deployment.
+* **[ACCEPTED LIMITATION] Native PDF Save Picker Availability**: `showSaveFilePicker()` depends on a supported Chromium browser and secure context. Other environments receive a normal browser download and the generated invoice remains recoverable from All Downloads.
 * **[RESOLVED] Master Entries Missing from Booking Dropdowns**: Resolved by removing hardcoded `->where('is_active', 1)` filters across master models (`CustomerModel`, `TransporterModel`, etc.).
 * **[RESOLVED] Logout Crash (`Undefined variable $success`)**: Resolved by extracting flashdata checks outside the auth session check wrapper at top of `layout.php`.
 * **[RESOLVED] Slow DataTables Response on 100k+ Row Database**: Resolved by optimizing batch count queries in `Logistics::ajaxDatatable()` and executing migration `2026-06-03-000002_AddBookingsCompanyListIndex`.
