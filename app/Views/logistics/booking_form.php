@@ -285,7 +285,7 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                         <option value="">Select Shipper</option>
                         <option value="NEW_ENTRY" style="color: #20c997; font-weight: bold;">+ NEW ENTRY</option>
                         <?php foreach ($customers ?? [] as $c): ?>
-                            <option value="<?= esc($c['name']) ?>"><?= esc($c['name']) ?> (<?= esc($c['code']) ?>)</option>
+                            <option value="<?= esc($c['name']) ?>"><?= esc($c['name']) ?> (<?= esc($c['city'] ?? '') ?>)</option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -713,10 +713,16 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
 <?php
 $partyOptions = [];
 foreach ($customers ?? [] as $c) {
+    $city = trim((string) ($c['city'] ?? ''));
     foreach ([$c['name'] ?? '', $c['bill_to'] ?? '', $c['consignee'] ?? ''] as $partyValue) {
         $partyValue = trim((string) $partyValue);
         if ($partyValue !== '') {
-            $partyOptions[$partyValue] = $partyValue;
+            if (!isset($partyOptions[$partyValue]) || ($partyOptions[$partyValue]['city'] === '' && $city !== '')) {
+                $partyOptions[$partyValue] = [
+                    'value' => $partyValue,
+                    'city'  => $city,
+                ];
+            }
         }
     }
 }
@@ -724,14 +730,14 @@ foreach ($customers ?? [] as $c) {
 <datalist id="billToOptions">
     <?php foreach ($customers ?? [] as $c): ?>
         <?php if (!empty($c['bill_to'])): ?>
-            <option value="<?= esc($c['bill_to']) ?>"><?= esc($c['name'] ?? '') ?></option>
+            <option value="<?= esc($c['bill_to']) ?>"><?= esc($c['name'] ?? '') ?> (<?= esc($c['city'] ?? '') ?>)</option>
         <?php endif; ?>
     <?php endforeach; ?>
 </datalist>
 <datalist id="consigneeOptions">
     <?php foreach ($customers ?? [] as $c): ?>
         <?php if (!empty($c['consignee'])): ?>
-            <option value="<?= esc($c['consignee']) ?>"><?= esc($c['name'] ?? '') ?></option>
+            <option value="<?= esc($c['consignee']) ?>"><?= esc($c['name'] ?? '') ?> (<?= esc($c['city'] ?? '') ?>)</option>
         <?php endif; ?>
     <?php endforeach; ?>
 </datalist>
@@ -756,7 +762,7 @@ foreach ($customers ?? [] as $c) {
                         <option value="">Select Shipper</option>
                         <option value="NEW_ENTRY" style="color: #20c997; font-weight: bold;">+ NEW ENTRY</option>
                         <?php foreach ($customers ?? [] as $c): ?>
-                            <option value="<?= esc($c['name']) ?>"><?= esc($c['name']) ?> (<?= esc($c['code']) ?>)</option>
+                            <option value="<?= esc($c['name']) ?>"><?= esc($c['name']) ?> (<?= esc($c['city'] ?? '') ?>)</option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -765,7 +771,7 @@ foreach ($customers ?? [] as $c) {
                     <select id="entry_bill_to" class="form-select form-select-sm shadow-none party-typeahead">
                         <option value="">Select Bill To</option>
                         <?php foreach ($partyOptions ?? [] as $party): ?>
-                            <option value="<?= esc($party) ?>"><?= esc($party) ?></option>
+                            <option value="<?= esc($party['value']) ?>"><?= esc($party['value']) ?> (<?= esc($party['city']) ?>)</option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -774,7 +780,7 @@ foreach ($customers ?? [] as $c) {
                     <select id="entry_consignee" class="form-select form-select-sm shadow-none party-typeahead">
                         <option value="">Select Consignee</option>
                         <?php foreach ($partyOptions ?? [] as $party): ?>
-                            <option value="<?= esc($party) ?>"><?= esc($party) ?></option>
+                            <option value="<?= esc($party['value']) ?>"><?= esc($party['value']) ?> (<?= esc($party['city']) ?>)</option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -2861,17 +2867,27 @@ foreach ($customers ?? [] as $c) {
                             consignee: res.consignee,
                             payment_type: res.payment_type,
                             gst_number: res.gst_number,
-                            gst_state: res.gst_state
+                            gst_state: res.gst_state,
+                            city: res.city
                         });
 
                         const $globalShipper = $('#global_shipper');
                         const $entryCustomer = $('#entry_customer');
+                        const $entryBillTo = $('#entry_bill_to');
+                        const $entryConsignee = $('#entry_consignee');
 
-                        const newOptionGlobal = `<option value="${res.name}">${res.name} (${res.code || 'N/A'})</option>`;
-                        const newOptionEntry = `<option value="${res.name}">${res.name} (${res.code || 'N/A'})</option>`;
+                        const customerCity = res.city || '';
+                        const newOptionGlobal = $('<option>', { value: res.name, text: `${res.name} (${customerCity})` });
+                        const newOptionEntry = $('<option>', { value: res.name, text: `${res.name} (${customerCity})` });
 
                         $globalShipper.append(newOptionGlobal);
                         $entryCustomer.append(newOptionEntry);
+                        if (res.bill_to && !$entryBillTo.find('option').filter(function () { return $(this).val() === res.bill_to; }).length) {
+                            $entryBillTo.append($('<option>', { value: res.bill_to, text: `${res.bill_to} (${customerCity})` }));
+                        }
+                        if (res.consignee && !$entryConsignee.find('option').filter(function () { return $(this).val() === res.consignee; }).length) {
+                            $entryConsignee.append($('<option>', { value: res.consignee, text: `${res.consignee} (${customerCity})` }));
+                        }
 
                         if (targetSelectId === 'global_shipper') {
                             $globalShipper.val(res.name).trigger('change');

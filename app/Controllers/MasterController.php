@@ -128,6 +128,7 @@ class MasterController extends BaseController
                 'id'          => $customerId,
                 'name'        => $post['name'],
                 'code'        => $post['code'] ?? '',
+                'city'        => $post['city'] ?? '',
                 'bill_to'     => $post['bill_to'] ?? '',
                 'consignee'   => $post['consignee'] ?? '',
                 'payment_type'=> $post['payment_type'] ?? '',
