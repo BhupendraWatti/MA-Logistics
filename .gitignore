@@ -56,21 +56,13 @@ graphify_output.md
 
 # Antigravity IDE Metadata
 .antigravitycli/
+.playwright-mcp
+.agent
+
+# Archive Directory
+.archive/
 
 # Uploaded signatures and files
 public/uploads/
 
-testsprite_tests\tmp\config.json
-
 testsprite_tests
-
-
-docs/
-.playwright-mcp
-.antigravitycli
-.agent
-MALogistic phase 1 issues
-
-
-
-.gitignore docs/api.md docs/architecture.md docs/changes.md docs/database.md docs/functionality.md docs/gemini.md docs/known-issues.md docs/project_manager_update.md docs/project_summary.md docs/README.md docs/rules.md docs/testing.md docs/video_to_action_explanations.md
