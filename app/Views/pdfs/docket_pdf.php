@@ -70,7 +70,6 @@ $declaredWeight   = (float) ($shipment['declared_weight'] ?? $actualWeight);
 $partNo          = trim((string) ($shipment['part_no'] ?? ''));
 $partQty         = (int) ($shipment['part_qty'] ?? $pieces);
 $invoiceNo       = trim((string) ($shipment['invoice_no'] ?? $invoiceNo ?? ''));
-$deliveryChallan = trim((string) ($shipment['eway_bill_no'] ?? $shipment['eway_no'] ?? $shipment['delivery_challan'] ?? ''));
 $formNo          = trim((string) ($shipment['form_no'] ?? $docketNo));
 $dimension       = '';
 
@@ -144,7 +143,7 @@ $renderCharge = static function (float $amount) use ($isHalfPrint): string {
     <tr>
         <td width="35%" height="112" class="rule-r rule-b top" style="padding: 5px 6px 3px;">
             <?php if ($hasLogo): ?>
-                <img src="<?= esc($logoFile) ?>" style="max-height: 58px; max-width: 185px;"><br>
+                <img src="<?= esc($logoFile) ?>" style="max-height: 50px; max-width: 150px;"><br>
             <?php elseif ($companyName !== ''): ?>
                 <span style="font-size: 17pt; font-weight: bold;"><?= esc($companyName) ?></span><br>
             <?php endif; ?>
@@ -202,7 +201,7 @@ $renderCharge = static function (float $amount) use ($isHalfPrint): string {
     <tr>
         <td colspan="3" class="rule-b" style="padding: 0;">
             <table cellpadding="3" cellspacing="0">
-                <tr class="label center">
+                <tr class="center" style="background-color: #fff; font-weight: bold;">
                     <td width="13%" height="28" class="rule-r rule-b middle">MODE</td>
                     <td width="12%" height="28" class="rule-r rule-b middle">NO. OF PIECES</td>
                     <td width="12%" height="28" class="rule-r rule-b middle">ACTUAL<br>WEIGHT</td>
@@ -244,10 +243,9 @@ $renderCharge = static function (float $amount) use ($isHalfPrint): string {
                 <tr>
                     <td width="25%" height="150" class="rule-r top" style="padding: 0;">
                         <table cellpadding="4" cellspacing="0">
-                            <tr><td height="37" class="rule-b top"><b>INVOICE NO.</b><br><span class="value"><?= esc($invoiceNo) ?></span></td></tr>
-                            <tr><td height="37" class="rule-b top"><b>DEL. CHALLAN</b><br><?= esc($deliveryChallan) ?></td></tr>
-                            <tr><td height="37" class="rule-b top"><b>FORM NO.</b><br><span class="value"><?= esc($formNo) ?></span></td></tr>
-                            <tr><td height="39" class="top"><b>DIMENSION</b><br><?= esc($dimension) ?></td></tr>
+                            <tr><td height="50" class="rule-b top"><b>INVOICE NO.</b><br><span class="value"><?= esc($invoiceNo) ?></span></td></tr>
+                            <tr><td height="50" class="rule-b top"><b>FORM NO.</b><br><span class="value"><?= esc($formNo) ?></span></td></tr>
+                            <tr><td height="50" class="top"><b>DIMENSION</b><br><?= esc($dimension) ?></td></tr>
                         </table>
                     </td>
                     <td width="24%" height="150" class="rule-r top" style="padding: 0;">
@@ -270,7 +268,7 @@ $renderCharge = static function (float $amount) use ($isHalfPrint): string {
                     </td>
                     <td width="24%" height="150" class="top center" style="padding: 0;">
                         <table cellpadding="3" cellspacing="0">
-                            <tr><td height="25" class="label rule-b center middle">INSURED</td></tr>
+                            <tr><td height="25" class="rule-b center middle" style="background-color: #fff; font-weight: bold;">INSURED</td></tr>
                             <tr><td height="28" class="rule-b center middle">YES <?= renderDocketBox($isInsuredYes) ?> &nbsp;&nbsp; NO <?= renderDocketBox($isInsuredNo) ?></td></tr>
                             <tr><td height="97" class="center top" style="padding-top: 8px;"><b>SIGNATURE WITH STAMP</b></td></tr>
                         </table>

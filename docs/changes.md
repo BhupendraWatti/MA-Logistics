@@ -10,6 +10,7 @@ This file tracks every technical change, feature implementation, refactoring, an
 * **Requirement**: Make the individual customer docket match the original printed shipper-copy waybill and ensure that company, customer, booking, shipment, tax, and charge values reach the PDF without sample-data fallbacks.
 * **Implementation**:
   - Rebuilt `pdfs/docket_pdf.php` as a taller, grayscale, TCPDF-safe paper form with balanced header metadata, ruled shipper/consignee areas, an expanded mode/weight grid, and a full-height lower document/charge/signature matrix.
+  - Follow-up visual refinement removed the gray fill from the Mode/weight and Insured headers, removed the Delivery Challan block, redistributed Invoice/Form/Dimension space evenly, and constrained uploaded logos so wide artwork cannot touch the waybill border.
   - Fixed `Logistics::streamDocketPdf()` so raw shipment data, resolved Customer Master addresses and contact numbers, docket number, print mode, and calculated GST data survive the shared invoice assembly step.
   - Removed hardcoded Pune, phone, email, payment, package, and goods defaults. Missing master data now prints blank instead of displaying false customer-facing information.
   - Preserved Full Print and Half Print behavior. Half Print suppresses monetary values while keeping operational shipment details.
