@@ -41,13 +41,18 @@ graph TD
 
 ---
 
-## 3. PDF Generator Architecture
+## 3. PDF Generator Architecture & Dual Invoice Engine
 
 ### TCPDF Engine Integration
-PDF invoices are rendered dynamically via `TCPDF` inside `Logistics::exportPdf()`.
+PDF documents are rendered dynamically via `TCPDF` inside `Logistics::exportPdf()` and `Logistics::exportDocketPdf()`. The system supports a **Dual Invoice Output Engine**:
+1. **AWB Invoice (All Invoices Summary)**: Multi-page tabular billing layout (`app/Views/pdfs/invoice.php`) matching sample `MAL_25-26_126.pdf`. Renders top-left company logo, compact line spacing, and multi-line Terms & Conditions.
+2. **Docket Bill (Individual Shipper Copy)**: Single-page docket waybill (`app/Views/pdfs/docket_pdf.php`) matching sample `1.jpeg`. Supports **Full Print** (full financial breakdown) and **Half Print** (`print_mode=half` suppressing charge amounts for clean delivery slips).
+
+### Dynamic Branding & Uploaded Assets
+- **Company Logo Storage**: Uploaded company logo images are validated in `CompanyController` and stored in `public/uploads/logos/` with paths saved to `companies.logo_path`. Both PDF templates check `FCPATH . $logoPath` and dynamically render the branding image in the document header.
 
 ### Layout Stability (Option C Architecture)
-To prevent table cell height blowouts when dynamic Terms & Conditions expand, the footer section is rendered using independent side-by-side sub-tables ($60\%$ left for T&C / $40\%$ right for Signature):
+To prevent table cell height blowouts when dynamic Terms & Conditions expand, the invoice footer section is rendered using independent side-by-side sub-tables ($60\%$ left for T&C / $40\%$ right for Signature):
 
 ```html
 <table style="width: 100%; border: none;">

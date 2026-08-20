@@ -58,16 +58,16 @@ Core operational engine for creating, viewing, editing, tracking, and invoicing 
    - **Totals**: Global custom surcharges include class `calc-surcharge` — automatically included in the live Net Payable footer calculation. `calculateTotalAmount()` in `BookingService` decodes and sums custom charges into the sales total.
    - **Invoice PDF**: `InvoiceService::buildShipmentRows()` decodes per-item custom charges, sums them into the taxable total per row, and populates `$itemCustomMap` (per-label lookup). `invoice.php` includes custom charges in the "OTHER CHG" column so all columns sum correctly to "TOTAL Amt."
    - **Backward Compatibility**: Existing bookings without custom charges work identically — `custom_charges` defaults to `NULL`, treated as zero throughout all calculation paths.
-6. **PDF Invoice Generation (`app/Views/pdfs/invoice.php`)**:
-   - Generates pixel-perfect horizontal A4 PDF invoices.
-   - Performs row-level taxable calculation: $\text{Freight} + \text{Fuel Surcharge} + \text{Docket} + \text{Pickup} + \text{Delivery}$.
-   - Prints company dynamic Terms & Conditions and Authorised Signatory digital signature.
+6. **Dual Invoice Output Engine (`invoice.php` & `docket_pdf.php`)**:
+   - **AWB Invoice (All Invoices Summary)**: Generates pixel-perfect horizontal A4 consolidated PDF invoices (`app/Views/pdfs/invoice.php`) matching sample `MAL_25-26_126.pdf`. Renders top-left company logo, compact line spacing, row-level taxable calculation ($\text{Freight} + \text{Fuel Surcharge} + \text{Docket} + \text{Pickup} + \text{Delivery}$), and dynamic multi-line Terms & Conditions.
+   - **Docket Bill (Individual Shipper Copy Waybill)**: Generates single-page docket waybill PDFs (`app/Views/pdfs/docket_pdf.php`) matching sample `1.jpeg`. Supports **Full Print** (full financial breakdown) and **Half Print** (`print_mode=half` suppressing lower charge amounts for concise delivery slips).
+   - **Visual Alignment & Encoding**: Uses `Rs.` for currency, explicit `PART NO.` (75%) and `QTY.` (25%) bordered cells, clean TCPDF square bracket checkboxes `[X]` / `[ ]`, `DELIVERY CHARGES` replacing Octroi, dynamic `Method of Pkg` and `Said to Contain` mapping, and manual Insured/Signature boxes for physical stamping.
 
 ### Responsible Files
 * **Controller**: `app/Controllers/Logistics.php`
-* **Service**: `app/Services/BookingService.php`
+* **Service**: `app/Services/BookingService.php`, `app/Services/InvoiceService.php`, `app/Services/PdfInvoiceGenerator.php`
 * **Models**: `app/Models/BookingModel.php`, `app/Models/ShipmentItemModel.php`, `app/Models/SalesChargeModel.php`, `app/Models/AuditLogModel.php`
-* **Views**: `app/Views/logistics/booking_form.php`, `app/Views/logistics/manage_bookings.php`, `app/Views/logistics/view_booking.php`, `app/Views/pdfs/invoice.php`
+* **Views**: `app/Views/logistics/booking_form.php`, `app/Views/logistics/manage_bookings.php`, `app/Views/logistics/view_booking.php`, `app/Views/pdfs/invoice.php`, `app/Views/pdfs/docket_pdf.php`
 * **JS Utilities**: `public/js/erp-utils.js`
 
 ---
@@ -85,8 +85,9 @@ Centralized administrative registry for operational assets, customer profiles, s
 3. **Lookup Values (`masters/lookups.php`)**:
    - Standardized lookup categories: `origin`, `destination`, `mode`, `material_type`, `material_category`, `payment_type`.
    - Dropdown options populate alphabetically.
-4. **Company Settings (`company_settings.php`)**:
-   - Manages active company profiles, SAC/PAN credentials, default tax rates (CGST/SGST/IGST), custom invoice print Terms & Conditions text, and digital signature uploads (`public/uploads/signatures/`).
+4. **Company Settings (`company/settings.php`)**:
+   - Manages active company profiles, SAC/PAN credentials, default tax rates (CGST/SGST/IGST), custom invoice print Terms & Conditions text, digital signature uploads (`public/uploads/signatures/`), and **Company Logo Upload & Branding** (`public/uploads/logos/`).
+   - Admins can upload company logos (PNG, JPG, WEBP, GIF up to 2MB) with live preview thumbnails and a Delete Logo action. Uploaded logos render dynamically in PDF invoice and waybill headers.
 
 ### Responsible Files
 * **Controllers**: `app/Controllers/MasterController.php`, `app/Controllers/CompanyController.php`

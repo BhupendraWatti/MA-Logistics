@@ -18,7 +18,10 @@ This document provides a comprehensive summary of the **M.A. Logistics ERP (MARL
   * 20+ standard sales surcharges (pickup, handling, TSP, TCP, fuel, X-ray, admin).
   * Dynamic item-level custom charges (`+ Add Charge`) and global booking surcharges (`+ Add Surcharge`).
 * **Multi-Tenant Isolation**: Complete data segregation by `company_id` across session, queries, dropdowns, and reports.
-* **Pixel-Perfect PDF Invoicing**: Horizontal A4 invoice generation using TCPDF with dynamic Terms & Conditions and digital signature uploads.
+* **Dual Invoice PDF Output Engine**:
+  * **AWB Invoice (All Invoices Summary)**: Consolidated multi-page billing invoice (`pdfs/invoice.php`) matching sample `MAL_25-26_126.pdf`.
+  * **Docket Bill (Individual Shipper Copy)**: Single-page docket waybill (`pdfs/docket_pdf.php`) matching sample `1.jpeg` with Full & Half Print modes.
+* **Company Logo Upload & Dynamic Branding**: Dynamic logo image upload in `company/settings.php` (`uploads/logos/`) rendered on PDF invoice and waybill headers.
 * **Live Courier Tracking & POD Management**: Internal tracking timeline drawer, proof-of-delivery (POD) signature/image uploads, and public CORS-enabled JSON API (`/api/track/{awb_no}`).
 
 ### Technology Stack

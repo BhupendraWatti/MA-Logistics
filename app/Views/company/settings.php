@@ -102,7 +102,41 @@
                     </div>
                 </div>
 
-                <!-- Card 4: Invoice PDF Settings -->
+                <!-- Card 4: Company Logo & Branding -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                        <h6 class="fw-bold text-primary mb-0"><i class="fas fa-image me-1"></i> Company Logo & Branding</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-7">
+                                <label class="form-label text-muted fs-7 fw-semibold">Upload Company Logo <small class="text-muted">(PNG, JPG, WEBP - max 2MB)</small></label>
+                                <input type="file" name="logo_image" class="form-control form-control-sm shadow-none" accept="image/png, image/jpeg, image/jpg, image/webp, image/gif">
+                                <small class="text-muted d-block mt-1">This logo will be displayed on top-left of all PDF Invoices and Dockets.</small>
+                            </div>
+                            <div class="col-md-5 text-center">
+                                <?php $logo = $company['logo_path'] ?? $company['logo_image'] ?? ''; ?>
+                                <?php if (!empty($logo) && file_exists(FCPATH . $logo)): ?>
+                                    <div class="p-2 border rounded bg-white d-inline-block shadow-sm">
+                                        <img src="<?= base_url(esc($logo)) ?>" alt="Company Logo" style="max-height: 60px; max-width: 160px; object-fit: contain;">
+                                    </div>
+                                    <div class="mt-2">
+                                        <a href="<?= base_url('company/settings/deleteLogo') ?>" class="btn btn-outline-danger btn-xs fw-bold px-2 py-1 fs-8" onclick="return confirm('Are you sure you want to delete the company logo?');">
+                                            <i class="fas fa-trash me-1"></i> Delete Logo
+                                        </a>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="p-3 border rounded bg-light text-muted fs-8 text-center">
+                                        <i class="fas fa-image fs-3 mb-1 d-block text-secondary"></i>
+                                        No logo uploaded yet
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 5: Invoice PDF Settings -->
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
                         <h6 class="fw-bold text-primary mb-0"><i class="fas fa-file-signature me-1"></i> Invoice PDF Settings</h6>
@@ -110,8 +144,8 @@
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-12">
-                                <label class="form-label text-muted fs-7 fw-semibold">Terms &amp; Conditions <small class="text-muted">(printed on all invoices)</small></label>
-                                <textarea name="terms_conditions" class="form-control form-control-sm shadow-none" rows="5"><?= esc($company['terms_conditions'] ?? '') ?></textarea>
+                                <label class="form-label text-muted fs-7 fw-semibold">Terms &amp; Conditions <small class="text-muted">(printed on all invoices - supports multi-line numbered points)</small></label>
+                                <textarea name="terms_conditions" class="form-control form-control-sm shadow-none" rows="6" placeholder="1. Difference if any may be notified within 7 days of receipt of bills.&#10;2. Subject to Pune Jurisdiction.&#10;3. E & O.E.&#10;4. Draw Cheque in favour of &quot;MA LOGISTICS&quot;"><?= esc($company['terms_conditions'] ?? '') ?></textarea>
                             </div>
                         </div>
                     </div>

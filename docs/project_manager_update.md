@@ -76,3 +76,14 @@ The table below outlines the formal **Phase 1 Sprint Backlog**, detailing the pr
 - **Live Google Sheet**: [MARL EXPRESS ERP Software — Google Sheets](https://docs.google.com/spreadsheets/d/1W9Zi4OHg0hqVbSTgccItXIKHrBRXCDeXwyOteGqNaXk/edit?usp=sharing)
 - **Video-to-Action Master Specification**: [video_to_action_explanations.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/video_to_action_explanations.md)
 - **Known Issues Registry**: [known-issues.md](file:///d:/Company%20Work/Company%20projects/MAlogistic/docs/known-issues.md)
+
+---
+
+## 6. Recent Sprint Completion (August 20, 2026) — [CHG-024] Dual Invoice & Logo Branding
+
+- **Company Logo Upload**: Added database migration `AddLogoToCompanies`, updated `CompanyModel` and `CompanyController`, and created a Logo Upload & Removal card in `company/settings.php` (`uploads/logos/`).
+- **Dual Invoice Output Engine**:
+  - **AWB Invoice**: Multi-page tabular billing layout (`pdfs/invoice.php`) matching `MAL_25-26_126.pdf`.
+  - **Docket Bill**: Single-page docket waybill layout (`pdfs/docket_pdf.php`) matching `1.jpeg` with Full & Half Print modes.
+- **Visual & Layout Alignment**: Fixed Docket PDF inner cell borders, explicit Docket No binding (`NO.` & `FORM NO.`), clean TCPDF square bracket checkboxes (`[X]` / `[ ]`), `DELIVERY CHARGES` replacing Octroi, dynamic `Method of Pkg` / `Said to Contain` mapping, and manual Insured/Stamp boxes.
+

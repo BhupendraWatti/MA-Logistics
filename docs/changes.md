@@ -4,6 +4,21 @@ This file tracks every technical change, feature implementation, refactoring, an
 
 ## Latest Frontend Change
 
+### [CHG-024] Dual Invoice System (AWB Invoice vs Docket Bill), Company Logo Upload & Meeting Layout Fixes
+* **Status**: Completed; verified
+* **Priority**: High
+* **Requirement**: Provide explicit dual invoice formats (AWB Invoice for All Invoices summary billing, Docket Bill for individual shipper copy waybill print), add Company Logo upload in settings, render logo on PDF headers, compact line spacing, enforce conditional 18% GST rules, and support Full/Half print modes.
+* **Implementation**:
+  - Added migration `2026-08-20-063240_AddLogoToCompanies.php` adding `logo_path` and `logo_image` columns to `companies` table. Updated `CompanyModel` allowed fields.
+  - Implemented Company Logo upload & removal in `CompanyController.php` and `company/settings.php` (`uploads/logos/`).
+  - Updated `app/Views/pdfs/invoice.php` (AWB Invoice) to render company logo on top-left of header, reduced table cell padding for maximum row density per page, and rendered multi-line numbered Terms & Conditions.
+  - Updated `app/Views/pdfs/docket_pdf.php` (Docket Bill) matching sample `1.jpeg`: top-left company logo, explicit Docket No resolution (`NO.` and `FORM NO.`), inner cell borders across all 4 bottom matrix columns, `PART NO.` (75%) and `QTY.` (25%) bordered header cells, clean TCPDF square bracket checkboxes (`[X]` / `[ ]`), `DELIVERY CHARGES` replacing Octroi, separate Payment Mode column (`CASH`, `CREDIT`, `TO-PAY`), manual Insured checkboxes, and manual physical stamp/signature area.
+  - Wired `streamDocketPdf` in `Logistics.php` to pass `'docketNo' => $row['docket_no']` and `print_mode` into view data.
+* **Files Modified**: `app/Database/Migrations/2026-08-20-063240_AddLogoToCompanies.php`, `app/Models/CompanyModel.php`, `app/Controllers/CompanyController.php`, `app/Views/company/settings.php`, `app/Views/pdfs/invoice.php`, `app/Views/pdfs/docket_pdf.php`, `app/Controllers/Logistics.php`, `app/Config/Routes.php`, `docs/*`
+* **QA**: `php spark migrate` applied, `php -l` syntax validation passed across all modified PHP files with 0 errors.
+
+---
+
 ### [CHG-023] Immutable Customer Rates, Exact Route Lookup, Safe Save Picker, Session Path Repair
 * **Status**: Implemented; browser smoke verification pending
 * **Priority**: High

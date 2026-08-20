@@ -947,20 +947,28 @@ private function streamDocketPdf(int $itemId, bool $autoPrint)
         $shipments = [$row];
         $companyId = (int) $booking['company_id'];
         $companyData = $invoiceService->loadCompany($companyId);
-        $customerName = trim($shipments[0]['customer_name'] ?? '');
-        $recipientName = $this->resolveInvoiceRecipientName($shipments[0], $customerName, $companyData);
-        $customerInfo = $invoiceService->resolveCustomerGstDetails($recipientName, $companyId);
-        if (empty($customerInfo['gst']) && $customerName !== '' && strcasecmp($customerName, $recipientName) !== 0) {
-            $customerInfo = $invoiceService->resolveCustomerGstDetails($customerName, $companyId);
-        }
-        $bankDetails = $invoiceService->resolveBankDetails($companyId, $companyData);
-        $bookingDate = !empty($booking['booking_date']) ? strtotime($booking['booking_date']) : time();
-        $formattedBookingDate = date('d.m.Y', $bookingDate);
-        $invoiceNo = $shipments[0]['invoice_no'] ?? 'AWB-' . ($booking['awb_no'] ?? '');
+        $shipperName   = trim($shipments[0]['customer_name'] ?? $booking['customer_name'] ?? '');
+        $consigneeName = trim($shipments[0]['consignee'] ?? $booking['consignee_name'] ?? '');
 
-        $chargeAgg = $invoiceService->aggregateCharges($shipments);
+        $shipperInfo   = $invoiceService->resolveCustomerGstDetails($shipperName, $companyId);
+        $consigneeInfo = $invoiceService->resolveCustomerGstDetails($consigneeName, $companyId);
+
+        $customerMdl = new \App\Models\CustomerModel();
+        $shipperCustomer   = $customerMdl->where('company_id', $companyId)->where('name', $shipperName)->first();
+        $consigneeCustomer = $customerMdl->where('company_id', $companyId)->where('name', $consigneeName)->first();
+
+        $customerPhone  = $shipperCustomer['mobile'] ?? $shipperCustomer['phone'] ?? '';
+        $consigneePhone = $consigneeCustomer['mobile'] ?? $consigneeCustomer['phone'] ?? '';
+
+        $recipientName  = $this->resolveInvoiceRecipientName($shipments[0], $shipperName, $companyData);
+        $bankDetails    = $invoiceService->resolveBankDetails($companyId, $companyData);
+        $bookingDate    = !empty($booking['booking_date']) ? strtotime($booking['booking_date']) : time();
+        $formattedBookingDate = date('d.m.Y', $bookingDate);
+        $invoiceNo      = $shipments[0]['invoice_no'] ?? 'AWB-' . ($booking['awb_no'] ?? '');
+
+        $chargeAgg     = $invoiceService->aggregateCharges($shipments);
         $activeCharges = $invoiceService->resolveActiveCharges($chargeAgg['totals'], $chargeAgg['miscLabel'], $chargeAgg['customTotals'] ?? []);
-        $rowData = $invoiceService->buildShipmentRows($shipments, $booking['origin'] ?? 'Pune', $booking['destination'] ?? '', false);
+        $rowData       = $invoiceService->buildShipmentRows($shipments, $booking['origin'] ?? 'Pune', $booking['destination'] ?? '', false);
 
         $gstApplied = (bool) ($booking['gst_applied'] ?? false);
         $rateSource = [
@@ -968,15 +976,21 @@ private function streamDocketPdf(int $itemId, bool $autoPrint)
             'sgst_rate' => (float) ($booking['sgst_rate'] ?? $companyData['sgst_rate'] ?? 9),
             'igst_rate' => (float) ($booking['igst_rate'] ?? $companyData['igst_rate'] ?? 18),
         ];
-        $isIgst = ($gstApplied && $rateSource['igst_rate'] > 0);
+        $isIgst  = ($gstApplied && $rateSource['igst_rate'] > 0);
         $gstData = $invoiceService->calculateGst($rowData['totalTaxable'], $gstApplied, $isIgst, $rateSource);
 
         $viewData = $invoiceService->assembleViewData([
             'company'              => $companyData,
+            'shipperName'          => $shipperName,
+            'shipperAddress'       => !empty($shipperInfo['address']) ? $shipperInfo['address'] : ($shipperCustomer['billing_address'] ?? ''),
+            'customerPhone'        => $customerPhone,
+            'consigneeName'        => $consigneeName,
+            'consigneeAddress'     => !empty($consigneeInfo['address']) ? $consigneeInfo['address'] : ($consigneeCustomer['billing_address'] ?? ''),
+            'consigneePhone'       => $consigneePhone,
             'recipientName'        => $recipientName,
-            'recipientAddress'     => !empty($customerInfo['address']) ? $customerInfo['address'] : ($shipments[0]['consignee'] ?? 'Address not available'),
-            'customerGst'          => $customerInfo['gst'],
-            'customerPan'          => $customerInfo['pan'],
+            'recipientAddress'     => !empty($shipperInfo['address']) ? $shipperInfo['address'] : ($shipments[0]['consignee'] ?? 'Address not available'),
+            'customerGst'          => $shipperInfo['gst'] ?? '',
+            'customerPan'          => $shipperInfo['pan'] ?? '',
             'invoiceNo'            => $invoiceNo,
             'invoicePeriod'        => $formattedBookingDate . ' TO ' . $formattedBookingDate,
             'invoiceDate'          => $formattedBookingDate,
@@ -995,10 +1009,13 @@ private function streamDocketPdf(int $itemId, bool $autoPrint)
             'activeCharges'        => $activeCharges,
             'dueDate'              => '',
             'booking'              => $booking,
+            'shipment'             => $shipments[0],
+            'docketNo'             => $row['docket_no'] ?? $shipments[0]['docket_no'] ?? '',
+            'printMode'            => strtolower($this->request->getGet('print_mode') ?: 'full'),
         ]);
 
         $fileSafe = preg_replace('/[^A-Za-z0-9_-]+/', '_', ($booking['awb_no'] ?? 'AWB') . '_' . ($row['docket_no'] ?? 'DOCKET'));
-        $pdfGenerator->stream($viewData, $fileSafe . '.pdf', 'L', $autoPrint);
+        $pdfGenerator->stream($viewData, $fileSafe . '.pdf', 'P', $autoPrint, 'pdfs/docket_pdf');
     } catch (\Throwable $e) {
         log_message('error', '[Docket PDF Export Error] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
         return redirect()->back()->with('error', 'PDF Generation failed: ' . $e->getMessage());

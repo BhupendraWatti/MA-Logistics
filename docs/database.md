@@ -49,7 +49,7 @@ This document details all database tables, columns, indexes, foreign key relatio
 ### B. `companies`
 * **Purpose**: Multi-tenant company context and profile configuration.
 * **Primary Key**: `id` (INT, AUTO_INCREMENT)
-* **Columns**: `id`, `company_name`, `company_code`, `gst_no`, `pan_no`, `sac_code`, `address`, `cgst_rate`, `sgst_rate`, `igst_rate`, `terms_conditions`, `signature_image`, `created_at`
+* **Columns**: `id`, `company_name`, `company_code`, `gst_no`, `pan_no`, `sac_code`, `address`, `cgst_rate`, `sgst_rate`, `igst_rate`, `terms_conditions`, `signature_image`, **`logo_path`** (VARCHAR(255), NULL — relative path to uploaded company logo image, e.g. `uploads/logos/logo_1.png`), **`logo_image`** (VARCHAR(255), NULL — original uploaded filename), `created_at`
 * **Related Model**: `app/Models/CompanyModel.php`
 
 ### C. `bookings`

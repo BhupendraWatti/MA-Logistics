@@ -26,9 +26,9 @@ class PdfInvoiceGenerator
      * @param  string $fileName     Desired download filename (without path), e.g. "AWB_12345.pdf"
      * @throws \Throwable           Propagates TCPDF exceptions to the caller for logging
      */
-    public function stream(array $viewData, string $fileName, string $orientation = 'L', bool $autoPrint = false): void
+    public function stream(array $viewData, string $fileName, string $orientation = 'L', bool $autoPrint = false, string $viewName = 'pdfs/invoice'): void
     {
-        $pdf = $this->buildPdf($viewData, $orientation, $autoPrint);
+        $pdf = $this->buildPdf($viewData, $orientation, $autoPrint, $viewName);
         $pdf->SetTitle(pathinfo($fileName, PATHINFO_FILENAME) ?: 'Invoice');
 
         // Flush any stale output buffers to prevent PDF binary corruption
@@ -45,9 +45,9 @@ class PdfInvoiceGenerator
         exit;
     }
 
-    public function save(array $viewData, string $absolutePath, string $orientation = 'L'): void
+    public function save(array $viewData, string $absolutePath, string $orientation = 'L', string $viewName = 'pdfs/invoice'): void
     {
-        $pdf = $this->buildPdf($viewData, $orientation, false);
+        $pdf = $this->buildPdf($viewData, $orientation, false, $viewName);
         $dir = dirname($absolutePath);
         if (!is_dir($dir)) {
             mkdir($dir, 0775, true);
@@ -55,23 +55,35 @@ class PdfInvoiceGenerator
         $pdf->Output($absolutePath, 'F');
     }
 
-    private function buildPdf(array $viewData, string $orientation = 'L', bool $autoPrint = false): TCPDF
+    private function buildPdf(array $viewData, string $orientation = 'L', bool $autoPrint = false, string $viewName = 'pdfs/invoice'): TCPDF
     {
         $pdf = $this->createPdfInstance($orientation);
-        $topMargin = $this->calculateTopMargin($viewData);
-        $pdf->SetMargins(8, $topMargin, 8);
-        $pdf->SetAutoPageBreak(true, 15);
+        
+        if ($viewName === 'pdfs/docket_pdf') {
+            $pdf->SetPrintHeader(false);
+            $pdf->SetPrintFooter(false);
+            $pdf->SetMargins(8, 8, 8);
+            $pdf->SetAutoPageBreak(true, 8);
+            $pdf->AddPage();
+            $html = view($viewName, $viewData);
+            $pdf->SetFont('helvetica', '', 8);
+            $pdf->writeHTML($html, true, false, true, false, '');
+        } else {
+            $topMargin = $this->calculateTopMargin($viewData);
+            $pdf->SetMargins(8, $topMargin, 8);
+            $pdf->SetAutoPageBreak(true, 15);
 
-        // Render header section into the TCPDF page-header callback
-        $viewData['renderSection'] = 'header';
-        $pdf->headerHtml           = view('pdfs/invoice', $viewData);
+            // Render header section into the TCPDF page-header callback
+            $viewData['renderSection'] = 'header';
+            $pdf->headerHtml           = view($viewName, $viewData);
 
-        // Render body section into the page body
-        $pdf->AddPage();
-        $viewData['renderSection'] = 'body';
-        $bodyHtml                  = view('pdfs/invoice', $viewData);
-        $pdf->SetFont('helvetica', '', 8);
-        $pdf->writeHTML($bodyHtml, true, false, true, false, '');
+            // Render body section into the page body
+            $pdf->AddPage();
+            $viewData['renderSection'] = 'body';
+            $bodyHtml                  = view($viewName, $viewData);
+            $pdf->SetFont('helvetica', '', 8);
+            $pdf->writeHTML($bodyHtml, true, false, true, false, '');
+        }
 
         if ($autoPrint && method_exists($pdf, 'IncludeJS')) {
             $pdf->IncludeJS('print(true);');

@@ -86,4 +86,4 @@ Use the appropriate subagent knowledge before performing requested work.
 
 ## Project Overview Summary
 
-**MARL EXPRESS ERP (M.A. Logistics ERP)** is an enterprise-grade logistics management system built on **CodeIgniter 4 (PHP 7.4+/8.x)**, **MySQL**, **Bootstrap 5**, and **TCPDF**. It manages the end-to-end consignment lifecycle, air/surface freight manifests, dynamic master data registries, multi-surcharge billing, live courier tracking, POD image uploads, and pixel-perfect horizontal A4 PDF invoice generation.
+**MARL EXPRESS ERP (M.A. Logistics ERP)** is an enterprise-grade logistics management system built on **CodeIgniter 4 (PHP 7.4+/8.x)**, **MySQL**, **Bootstrap 5**, and **TCPDF**. It manages the end-to-end consignment lifecycle, air/surface freight manifests, dynamic master data registries, multi-surcharge billing, live courier tracking, POD image uploads, dynamic company logo branding, and a **Dual Invoice Output Engine** (consolidated AWB Invoices matching `MAL_25-26_126.pdf` and single-page Docket Waybills matching `1.jpeg` with Full & Half Print modes).

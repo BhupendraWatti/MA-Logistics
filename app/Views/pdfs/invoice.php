@@ -135,15 +135,32 @@ $showDefaultOtherCharge = $defaultOtherChgTotal > 0;
 $defaultTotalWidth = max(8, 38 - (count($defaultVisibleChargeColumns) * 5) - ($showDefaultOtherCharge ? 8 : 0));
 ?>
 <?php if ($renderSection === 'header'): ?>
+    <?php
+    $logoPath = $company['logo_path'] ?? $company['logo_image'] ?? '';
+    $hasLogo  = !empty($logoPath) && file_exists(FCPATH . $logoPath);
+    ?>
     <table border="1" cellpadding="2" cellspacing="0"
         style="width:100%; font-size:8px; border-collapse:collapse; font-family:helvetica;">
         <tr>
-            <td colspan="<?= $totalCols ?>" style="text-align:center;">
-                <span
-                    style="font-size:18px; font-weight:bold; font-family:times;"><?= esc($company['name'] ?? 'M.A.LOGISTICS') ?></span><br>
-                <span style="font-size:8px;"><?= esc($company['address'] ?? '') ?></span><br>
-                <span style="font-size:8px;">Mobile: <?= esc($company['mobile'] ?? '') ?> | Email ID:
-                    <?= esc($company['email'] ?? '') ?></span>
+            <td colspan="<?= $totalCols ?>" style="text-align:center; padding: 4px;">
+                <?php if ($hasLogo): ?>
+                    <table cellpadding="0" cellspacing="0" style="width: 100%; border: none;">
+                        <tr>
+                            <td style="width: 25%; text-align: left; vertical-align: middle; border: none;">
+                                <img src="<?= FCPATH . esc($logoPath) ?>" style="max-height: 48px; max-width: 140px;">
+                            </td>
+                            <td style="width: 75%; text-align: center; vertical-align: middle; border: none;">
+                                <span style="font-size:18px; font-weight:bold; font-family:times;"><?= esc($company['name'] ?? 'M.A.LOGISTICS') ?></span><br>
+                                <span style="font-size:8px;"><?= esc($company['address'] ?? '') ?></span><br>
+                                <span style="font-size:8px;">Mobile: <?= esc($company['mobile'] ?? '') ?> | Email ID: <?= esc($company['email'] ?? '') ?></span>
+                            </td>
+                        </tr>
+                    </table>
+                <?php else: ?>
+                    <span style="font-size:18px; font-weight:bold; font-family:times;"><?= esc($company['name'] ?? 'M.A.LOGISTICS') ?></span><br>
+                    <span style="font-size:8px;"><?= esc($company['address'] ?? '') ?></span><br>
+                    <span style="font-size:8px;">Mobile: <?= esc($company['mobile'] ?? '') ?> | Email ID: <?= esc($company['email'] ?? '') ?></span>
+                <?php endif; ?>
             </td>
         </tr>
         <?php

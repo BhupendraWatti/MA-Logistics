@@ -12,6 +12,7 @@ $routes->get('auth/logout', 'AuthController::logout');
 $routes->get('company/settings', 'CompanyController::settings');
 $routes->post('company/settings/update', 'CompanyController::updateSettings');
 $routes->get('company/settings/deleteSignature', 'CompanyController::deleteSignature');
+$routes->get('company/settings/deleteLogo', 'CompanyController::deleteLogo');
 
 // ====== ADMIN/USER MANAGEMENT ======
 $routes->get('admin', 'AdminController::index');

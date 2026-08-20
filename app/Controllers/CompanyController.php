@@ -98,7 +98,7 @@ class CompanyController extends BaseController
             }
         }
 
-        // 2. Handle File Upload
+        // 2. Handle Signature File Upload
         $signatureFile = $this->request->getFile('signature_image');
         if ($signatureFile && $signatureFile->isValid() && !$signatureFile->hasMoved()) {
             if (!in_array($signatureFile->getMimeType(), ['image/png', 'image/jpeg', 'image/jpg', 'image/gif'])) {
@@ -109,6 +109,24 @@ class CompanyController extends BaseController
             $data['signature_path'] = 'uploads/signatures/' . $newName;
             if (in_array('signature_image', $fields)) {
                 $data['signature_image'] = $data['signature_path'];
+            }
+        }
+
+        // 3. Handle Logo File Upload
+        $logoFile = $this->request->getFile('logo_image');
+        if ($logoFile && $logoFile->isValid() && !$logoFile->hasMoved()) {
+            if (!in_array($logoFile->getMimeType(), ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif'])) {
+                return redirect()->back()->with('error', 'Logo must be a PNG, JPG, WEBP, or GIF image.');
+            }
+            $uploadPath = FCPATH . 'uploads/logos';
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0777, true);
+            }
+            $newName = 'logo_' . time() . '_' . rand(1000, 9999) . '.' . $logoFile->getExtension();
+            $logoFile->move($uploadPath, $newName);
+            $data['logo_path'] = 'uploads/logos/' . $newName;
+            if (in_array('logo_image', $fields)) {
+                $data['logo_image'] = $data['logo_path'];
             }
         }
 
@@ -139,5 +157,27 @@ class CompanyController extends BaseController
         $companyModel->update($companyId, ['signature_path' => null]);
         
         return redirect()->to('/company/settings')->with('success', 'Signature deleted successfully!');
+    }
+
+    public function deleteLogo()
+    {
+        if (session()->get('role') !== 'admin') {
+            return redirect()->to('/logistics')->with('error', 'Admin access required!');
+        }
+
+        $companyId = session()->get('selected_company_id');
+        if (!$companyId) return redirect()->to('/company-selection');
+
+        $companyModel = new CompanyModel();
+        $company = $companyModel->find($companyId);
+
+        $logoPath = $company['logo_path'] ?? $company['logo_image'] ?? '';
+        if (!empty($logoPath) && file_exists(FCPATH . $logoPath)) {
+            unlink(FCPATH . $logoPath);
+        }
+
+        $companyModel->update($companyId, ['logo_path' => null, 'logo_image' => null]);
+        
+        return redirect()->to('/company/settings')->with('success', 'Company logo deleted successfully!');
     }
 }
