@@ -28,6 +28,9 @@ node_modules/
 # Temporary files
 *.tmp
 *.temp
+/tmp/pdfs/
+/output/pdf/
+/.gstack/design-reports/
 
 # Local test/debug files
 test_db.php

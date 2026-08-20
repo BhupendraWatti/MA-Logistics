@@ -4,6 +4,20 @@ This file tracks every technical change, feature implementation, refactoring, an
 
 ## Latest Frontend Change
 
+### [CHG-025] Customer Docket Fidelity & End-to-End Dynamic Field Binding
+* **Status**: Completed; rendered and verified
+* **Priority**: High
+* **Requirement**: Make the individual customer docket match the original printed shipper-copy waybill and ensure that company, customer, booking, shipment, tax, and charge values reach the PDF without sample-data fallbacks.
+* **Implementation**:
+  - Rebuilt `pdfs/docket_pdf.php` as a taller, grayscale, TCPDF-safe paper form with balanced header metadata, ruled shipper/consignee areas, an expanded mode/weight grid, and a full-height lower document/charge/signature matrix.
+  - Fixed `Logistics::streamDocketPdf()` so raw shipment data, resolved Customer Master addresses and contact numbers, docket number, print mode, and calculated GST data survive the shared invoice assembly step.
+  - Removed hardcoded Pune, phone, email, payment, package, and goods defaults. Missing master data now prints blank instead of displaying false customer-facing information.
+  - Preserved Full Print and Half Print behavior. Half Print suppresses monetary values while keeping operational shipment details.
+* **Files Modified**: `app/Controllers/Logistics.php`, `app/Views/pdfs/docket_pdf.php`, `.gitignore`, `docs/*`
+* **QA**: Full and Half fixtures each rendered as one A4 portrait page. Visual PNG inspection found no clipping, overlap, broken borders, or extra pages. Dynamic text extraction confirmed company, docket, shipper, consignee, route, package, and charge values; Half Print contained no monetary total. Existing PHPUnit suite remains green (8 tests, 30 assertions).
+
+---
+
 ### [CHG-024] Dual Invoice System (AWB Invoice vs Docket Bill), Company Logo Upload & Meeting Layout Fixes
 * **Status**: Completed; verified
 * **Priority**: High

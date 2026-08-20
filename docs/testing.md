@@ -31,6 +31,8 @@ This document outlines the testing strategy, manual smoke test procedures, perfo
 | **TC038** | Customer Rate Concurrency and Tenant Guard | Use two database connections for the same scope; stale differing save conflicts, exactly one active row remains, and cross-company lookup/mutation fails. | PASS (PHPUnit) |
 | **TC039** | Exact O&D and Category Precedence | Exact route hit succeeds, route miss never uses generic, and exact category precedes blank category. | PASS (PHPUnit) |
 | **TC040** | Customer Rate Migration Backfill | On a disposable MySQL database, duplicate legacy scopes retain all rows, newest row is active, and duplicate active insertion is rejected. | PASS (PHPUnit) |
+| **TC041** | Dynamic Customer Docket Full Print | Render one customer docket with company logo/contact/GST, master addresses/phones, route, docket, item measurements, payment mode, and charges; output is one portrait A4 page with no clipping or overlap and all supplied values present. | PASS (RENDERED) |
+| **TC042** | Dynamic Customer Docket Half Print | Render the same docket with `print_mode=half`; operational/company/customer values remain, monetary charge values and total are suppressed, and output remains one portrait A4 page. | PASS (RENDERED) |
 
 ---
 

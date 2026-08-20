@@ -957,14 +957,37 @@ private function streamDocketPdf(int $itemId, bool $autoPrint)
         $shipperCustomer   = $customerMdl->where('company_id', $companyId)->where('name', $shipperName)->first();
         $consigneeCustomer = $customerMdl->where('company_id', $companyId)->where('name', $consigneeName)->first();
 
-        $customerPhone  = $shipperCustomer['mobile'] ?? $shipperCustomer['phone'] ?? '';
-        $consigneePhone = $consigneeCustomer['mobile'] ?? $consigneeCustomer['phone'] ?? '';
+        $resolveCustomerPhone = static function (?array $customer): string {
+            if (empty($customer)) {
+                return '';
+            }
+
+            foreach ([
+                'operation_contact_number',
+                'billing_contact_number',
+                'person1_phone',
+                'sales_contact_number',
+                'purchase_contact_number',
+                'plant_head_contact_number',
+                'person2_phone',
+                'person3_phone',
+            ] as $field) {
+                if (!empty($customer[$field])) {
+                    return trim((string) $customer[$field]);
+                }
+            }
+
+            return '';
+        };
+
+        $customerPhone  = $resolveCustomerPhone($shipperCustomer);
+        $consigneePhone = $resolveCustomerPhone($consigneeCustomer);
 
         $recipientName  = $this->resolveInvoiceRecipientName($shipments[0], $shipperName, $companyData);
         $bankDetails    = $invoiceService->resolveBankDetails($companyId, $companyData);
         $bookingDate    = !empty($booking['booking_date']) ? strtotime($booking['booking_date']) : time();
         $formattedBookingDate = date('d.m.Y', $bookingDate);
-        $invoiceNo      = $shipments[0]['invoice_no'] ?? 'AWB-' . ($booking['awb_no'] ?? '');
+        $invoiceNo      = trim((string) ($shipments[0]['invoice_no'] ?? ''));
 
         $chargeAgg     = $invoiceService->aggregateCharges($shipments);
         $activeCharges = $invoiceService->resolveActiveCharges($chargeAgg['totals'], $chargeAgg['miscLabel'], $chargeAgg['customTotals'] ?? []);
@@ -995,7 +1018,7 @@ private function streamDocketPdf(int $itemId, bool $autoPrint)
             'invoicePeriod'        => $formattedBookingDate . ' TO ' . $formattedBookingDate,
             'invoiceDate'          => $formattedBookingDate,
             'billingBranch'        => trim(explode(',', $booking['origin'] ?: 'Pune')[0]),
-            'modeTransport'        => strtoupper($booking['mode_transport'] ?: 'AIR'),
+            'modeTransport'        => strtoupper(trim((string) ($booking['mode_transport'] ?? ''))),
             'shipmentRows'         => $rowData['rows'],
             'totalBoxes'           => $rowData['totalBoxes'],
             'totalWt'              => $rowData['totalWt'],
@@ -1012,6 +1035,22 @@ private function streamDocketPdf(int $itemId, bool $autoPrint)
             'shipment'             => $shipments[0],
             'docketNo'             => $row['docket_no'] ?? $shipments[0]['docket_no'] ?? '',
             'printMode'            => strtolower($this->request->getGet('print_mode') ?: 'full'),
+        ]);
+
+        // The shared invoice assembler intentionally returns invoice-only fields.
+        // Preserve the raw docket/customer payload required by the customer-facing
+        // waybill instead of forcing the view to read transformed invoice rows.
+        $viewData = array_merge($viewData, [
+            'shipperName'      => $shipperName,
+            'shipperAddress'   => !empty($shipperInfo['address']) ? $shipperInfo['address'] : ($shipperCustomer['address'] ?? ''),
+            'customerPhone'    => $customerPhone,
+            'consigneeName'    => $consigneeName,
+            'consigneeAddress' => !empty($consigneeInfo['address']) ? $consigneeInfo['address'] : ($consigneeCustomer['address'] ?? ''),
+            'consigneePhone'   => $consigneePhone,
+            'shipment'         => $shipments[0],
+            'docketNo'         => trim((string) ($row['docket_no'] ?? $shipments[0]['docket_no'] ?? '')),
+            'printMode'        => strtolower($this->request->getGet('print_mode') ?: 'full'),
+            'gstData'          => $gstData,
         ]);
 
         $fileSafe = preg_replace('/[^A-Za-z0-9_-]+/', '_', ($booking['awb_no'] ?? 'AWB') . '_' . ($row['docket_no'] ?? 'DOCKET'));
