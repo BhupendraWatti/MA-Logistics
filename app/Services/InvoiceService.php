@@ -444,6 +444,7 @@ class InvoiceService
             $rows[] = [
                 'serial'        => $serial,
                 'date'          => $date,
+                'dateRaw'       => $rawDate,
                 'lrNo'          => $item['docket_no']  ?: '-',
                 'invoiceNumber' => $item['invoice_no'] ?: '-',
                 'origin'        => $origin,

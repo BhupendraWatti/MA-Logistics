@@ -13,7 +13,7 @@ class BookingModel extends Model
         'material_category', 'status', 'transporter_name', 'transporter_mobile', 
         'driver_name', 'driver_mobile', 'driver_license_no', 
         'vehicle_no', 'total_pieces', 'total_weight', 'flight_number', 'airlines', 
-        'volumetric_formula', 'gst_applied', 'payment_type', 'narration', 'remarks', 'created_by',
+        'volumetric_formula', 'gst_applied', 'payment_type', 'narration', 'remarks', 'docket_terms', 'created_by',
         'gstin', 'pan', 'sac_code', 'cgst_rate', 'sgst_rate', 'igst_rate', 'signature_path'
     ];
     protected $useTimestamps = true;

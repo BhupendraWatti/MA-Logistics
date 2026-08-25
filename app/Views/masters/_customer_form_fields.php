@@ -29,6 +29,13 @@ $destinationOptions = $lookups['destination'] ?? [];
                         <label class="form-label text-muted fs-7 fw-semibold">Address</label>
                         <textarea name="address" class="form-control form-control-sm shadow-none" rows="2"><?= esc($c['address'] ?? '') ?></textarea>
                     </div>
+                    <div class="col-12">
+                        <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-2">
+                            <label class="form-label text-muted fs-7 fw-semibold mb-0">Default Terms &amp; Conditions <small class="text-muted">(Auto-applies to all dockets for this customer)</small></label>
+                            <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2" onclick="loadSampleTermsIntoEditor('customer_default_terms')"><i class="fas fa-file-alt me-1"></i> Sample T&amp;C</button>
+                        </div>
+                        <textarea name="default_terms" id="customer_default_terms" class="form-control form-control-sm shadow-none font-monospace" rows="3" placeholder="Enter default terms &amp; conditions for this customer..."><?= esc($c['default_terms'] ?? '') ?></textarea>
+                    </div>
                     <div class="col-md-3">
                         <label class="form-label text-muted fs-7 fw-semibold">City</label>
                         <input type="text" name="city" class="form-control form-control-sm shadow-none" value="<?= esc($c['city'] ?? '') ?>">
@@ -389,4 +396,35 @@ document.addEventListener('click', function (event) {
         if (row) row.remove();
     }
 });
+
+function applyTermsFontSize(targetId, fontSize) {
+    const el = document.getElementById(targetId);
+    if (!el) return;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const selected = el.value.substring(start, end);
+    if (selected) {
+        const replacement = `<span style="font-size:${fontSize};">${selected}</span>`;
+        el.value = el.value.substring(0, start) + replacement + el.value.substring(end);
+    } else {
+        el.value += (el.value ? '\n' : '') + `<span style="font-size:${fontSize};">Sample text in ${fontSize}</span>`;
+    }
+}
+
+function insertSampleWaybillTerms(targetId) {
+    const el = document.getElementById(targetId);
+    if (!el) return;
+    const sampleTerms = `<span style="font-size:6.5pt;"><b>1. ACCEPTANCE OF TERMS:</b> Tendering this consignment for carriage constitutes acceptance of all terms & conditions herein.
+<b>2. PACKAGING & MARKING:</b> The Shipper must ensure adequate packaging and legibly marked address & telephone details.
+<b>3. PROHIBITED GOODS:</b> Consignor declares consignment contains no contraband or prohibited items under state/central laws.
+<b>4. INSPECTION:</b> Carrier reserves the right to inspect any consignment tendered for carriage.
+<b>5. FREIGHT & CHARGES:</b> Charges calculated on Chargeable Weight = max(Actual Weight, Volumetric Weight @ 6000 cm3/kg).
+<b>6. INSURANCE & LIABILITY:</b> High value shipments must be insured by shipper. Carrier liability for uninsured lost/damaged goods is limited to Rs. 100/-.
+<b>7. JURISDICTION:</b> All disputes subject to Pune Jurisdiction only. E. & O.E.</span>`;
+    
+    if (el.value.trim() !== '' && !confirm('Replace current terms with sample waybill T&C template?')) {
+        return;
+    }
+    el.value = sampleTerms;
+}
 </script>

@@ -43,5 +43,9 @@ This document defines the permanent coding standards, architectural rules, busin
 
 ## 5. PDF Generation & Layout Rules
 * **Engine Compatibility**: PDF invoice generation uses **TCPDF**.
+* **All Invoice Branding**: Consolidated All Invoice PDFs are text-only forms and must never render the uploaded company logo. The individual docket may render the configured logo.
+* **All Invoice Orientation**: Both A4 landscape and A4 portrait are supported. Portrait must use compact orientation-aware typography and spacing without removing financial fields or allowing headings, dates, or metadata to overlap.
+* **GST Visibility**: Company GSTIN, SAC, PAN, customer GST/PAN, GST table columns, and GST summary rows print only when GST is applied and at least one configured GST rate is positive. Non-GST invoices must not print zero-value GST columns or tax identity rows.
+* **All Invoice Totals**: The final summary must show Taxable Amount, each applicable GST component, Gross Amount, amount in words, Service Category, bank details, Terms & Conditions, and Authorised Signatory.
 * **Layout Stability (Option C Standard)**: Footer layout containing dynamic Terms & Conditions and Digital Signatures must be structured using independent side-by-side HTML sub-tables ($60\%$ left / $40\%$ right) inside outer cells to prevent TCPDF cell height blowouts and text clipping.
 * **Signature Authorization**: Authorized digital signature images (`public/uploads/signatures/`) must print centered within the right-aligned signature box.

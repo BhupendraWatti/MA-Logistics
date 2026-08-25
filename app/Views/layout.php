@@ -17,9 +17,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <!-- DataTables & SweetAlert2 CSS -->
+    <!-- DataTables, SweetAlert2 & Quill Rich Text Editor CSS -->
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
     
     <link href="<?= base_url('css/style.css') ?>" rel="stylesheet">
     <style>
@@ -28,6 +29,35 @@
         table.dataTable { border-collapse: collapse !important; }
         .dataTables_wrapper .dataTables_paginate .paginate_button { padding: 0 !important; margin: 0 !important; }
         .dataTables_wrapper .dataTables_paginate .paginate_button:hover { border: none !important; background: none !important; }
+
+        /* MS Word Style Toolbar Overrides for Quill */
+        .ql-toolbar.ql-snow {
+            background-color: #f8f9fa;
+            border-color: #ced4da !important;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+        }
+        .ql-container.ql-snow {
+            border-color: #ced4da !important;
+            border-bottom-left-radius: 4px;
+            border-bottom-right-radius: 4px;
+        }
+        .ql-snow .ql-picker.ql-size .ql-picker-label::before,
+        .ql-snow .ql-picker.ql-size .ql-picker-item::before {
+            content: attr(data-value) !important;
+        }
+        .ql-snow .ql-picker.ql-size .ql-picker-label[data-value=""]::before,
+        .ql-snow .ql-picker.ql-size .ql-picker-item[data-value=""]::before {
+            content: "12px" !important;
+        }
+        .ql-snow .ql-picker.ql-font .ql-picker-label::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item::before {
+            content: attr(data-value) !important;
+        }
+        .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=""]::before,
+        .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=""]::before {
+            content: "Font" !important;
+        }
     </style>
 </head>
 <body>
@@ -200,10 +230,11 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- DataTables & SweetAlert2 JS -->
+    <!-- DataTables, SweetAlert2 & Quill Rich Text Editor JS -->
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
     
     <!-- Global ERP Utilities -->
     <script>const BASE_URL = '<?= base_url() ?>'.replace(/^https?:/, '');</script>

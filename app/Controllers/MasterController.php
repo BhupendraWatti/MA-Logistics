@@ -137,7 +137,7 @@ class MasterController extends BaseController
                 'csrf_hash'   => csrf_hash(),
             ]);
         }
-        return redirect()->to('/masters/customers')->with('success', 'Customer created!');
+        return redirect()->to('/masters/customers/edit/' . $customerId)->with('success', 'Customer created!');
     }
 
     public function editCustomer(int $id)
@@ -188,7 +188,7 @@ class MasterController extends BaseController
         } catch (\Throwable $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
-        return redirect()->to('/masters/customers')->with('success', 'Customer updated!');
+        return redirect()->to('/masters/customers/edit/' . $id)->with('success', 'Customer updated!');
     }
 
     public function deleteCustomer(int $id)

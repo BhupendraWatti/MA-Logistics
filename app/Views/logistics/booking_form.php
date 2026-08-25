@@ -668,6 +668,22 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                 </div>
             </div>
 
+            <!-- Custom Docket Terms & Conditions card -->
+            <div class="row g-4 mb-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm" style="background-color: #fcfcfc; border: 1px solid #eaeaea !important;">
+                        <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <h6 class="fw-bold text-primary mb-0"><i class="fas fa-file-contract me-1"></i> Docket Terms &amp; Conditions (Rich Editor Override)</h6>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="loadSampleTermsIntoEditor('docket_terms')"><i class="fas fa-file-alt me-1"></i> Load Sample Waybill T&amp;C</button>
+                        </div>
+                        <div class="card-body">
+                            <label class="form-label text-muted fs-7 fw-semibold">Custom Terms &amp; Conditions for this Booking/Docket <small class="text-muted font-weight-normal">(Leave blank to use default Customer/Company T&amp;C. Supports HTML tags &amp; font-size)</small></label>
+                            <textarea name="docket_terms" id="docket_terms" class="form-control form-control-sm shadow-none font-monospace" rows="4" placeholder="Enter custom terms and conditions for this docket..."><?= esc($booking['docket_terms'] ?? '') ?></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -2991,5 +3007,53 @@ foreach ($customers ?? [] as $c) {
             inputEl.removeAttribute('required');
         }
     }
+
+    function applyTermsFontSize(targetId, fontSize) {
+        const el = document.getElementById(targetId);
+        if (!el) return;
+        const start = el.selectionStart;
+        const end = el.selectionEnd;
+        const selected = el.value.substring(start, end);
+        if (selected) {
+            const replacement = `<span style="font-size:${fontSize};">${selected}</span>`;
+            el.value = el.value.substring(0, start) + replacement + el.value.substring(end);
+        } else {
+            el.value += (el.value ? '\n' : '') + `<span style="font-size:${fontSize};">Sample text in ${fontSize}</span>`;
+        }
+    }
+
+    function insertSampleWaybillTerms(targetId) {
+        const el = document.getElementById(targetId);
+        if (!el) return;
+        const sampleTerms = `<span style="font-size:6.5pt;"><b>1. ACCEPTANCE OF TERMS:</b> Tendering this consignment for carriage constitutes acceptance of all terms & conditions herein.
+<b>2. PACKAGING & MARKING:</b> The Shipper must ensure adequate packaging and legibly marked address & telephone details.
+<b>3. PROHIBITED GOODS:</b> Consignor declares consignment contains no contraband or prohibited items under state/central laws.
+<b>4. INSPECTION:</b> Carrier reserves the right to inspect any consignment tendered for carriage.
+<b>5. FREIGHT & CHARGES:</b> Charges calculated on Chargeable Weight = max(Actual Weight, Volumetric Weight @ 6000 cm3/kg).
+<b>6. INSURANCE & LIABILITY:</b> High value shipments must be insured by shipper. Carrier liability for uninsured lost/damaged goods is limited to Rs. 100/-.
+<b>7. JURISDICTION:</b> All disputes subject to Pune Jurisdiction only. E. & O.E.</span>`;
+        
+        if (el.value.trim() !== '' && !confirm('Replace current terms with sample waybill T&C template?')) {
+            return;
+        }
+        el.value = sampleTerms;
+    }
+
+    // Active tab persistence across form submission & reload
+    $(document).ready(function() {
+        const activeTabKey = 'activeBookingTab_' + ('<?= $booking['id'] ?? 'new' ?>');
+        const savedTabTarget = localStorage.getItem(activeTabKey);
+        if (savedTabTarget) {
+            const tabBtn = document.querySelector(`button[data-bs-target="${savedTabTarget}"]`);
+            if (tabBtn) {
+                const bsTab = bootstrap.Tab.getInstance(tabBtn) || new bootstrap.Tab(tabBtn);
+                bsTab.show();
+            }
+        }
+        $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+            const target = e.target.getAttribute('data-bs-target');
+            localStorage.setItem(activeTabKey, target);
+        });
+    });
 </script>
 <?= $this->endSection() ?>

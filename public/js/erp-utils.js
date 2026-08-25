@@ -310,3 +310,108 @@ if (typeof $ !== 'undefined') {
         }
     });
 }
+
+// ==========================================
+// MS WORD STYLE RICH TEXT EDITOR FOR T&C
+// ==========================================
+if (typeof Quill !== 'undefined') {
+    try {
+        const Size = Quill.import('attributors/style/size');
+        Size.whitelist = ['6px', '7px', '8px', '9px', '10px', '11px', '12px', '14px', '16px', '18px', '20px', '24px'];
+        Quill.register(Size, true);
+
+        const Font = Quill.import('attributors/style/font');
+        Font.whitelist = ['sans-serif', 'serif', 'monospace', 'helvetica', 'arial', 'times-new-roman'];
+        Quill.register(Font, true);
+    } catch (e) {
+        console.warn('Quill custom size/font registration warning:', e);
+    }
+}
+
+window.initTermsRichEditor = function(textareaId) {
+    const textarea = typeof textareaId === 'string' ? document.getElementById(textareaId) : textareaId;
+    if (!textarea || textarea.dataset.quillInitted) return;
+    textarea.dataset.quillInitted = 'true';
+
+    const editorId = 'quill_editor_' + (textarea.id || Math.random().toString(36).substr(2, 9));
+
+    const editorDiv = document.createElement('div');
+    editorDiv.id = editorId;
+    editorDiv.className = 'bg-white rounded border';
+    editorDiv.style.minHeight = '150px';
+    editorDiv.style.fontSize = '12px';
+
+    textarea.parentNode.insertBefore(editorDiv, textarea.nextSibling);
+    textarea.style.display = 'none';
+
+    if (typeof Quill === 'undefined') {
+        textarea.style.display = 'block';
+        return;
+    }
+
+    const quill = new Quill('#' + editorId, {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'font': ['sans-serif', 'serif', 'monospace', 'helvetica', 'arial', 'times-new-roman'] }],
+                [{ 'size': ['6px', '7px', '8px', '9px', '10px', '11px', '12px', '14px', '16px', '18px', '20px', '24px'] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'script': 'sub'}, { 'script': 'super' }],
+                [{ 'align': [] }],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'indent': '-1'}, { 'indent': '+1' }],
+                ['clean']
+            ]
+        }
+    });
+
+    if (textarea.value.trim()) {
+        quill.clipboard.dangerouslyPasteHTML(textarea.value);
+    }
+
+    const syncToTextarea = function() {
+        let html = quill.root.innerHTML;
+        if (html === '<p><br></p>') html = '';
+        textarea.value = html;
+    };
+
+    quill.on('text-change', syncToTextarea);
+
+    const form = textarea.closest('form');
+    if (form) {
+        form.addEventListener('submit', syncToTextarea);
+    }
+
+    editorDiv.__quill = quill;
+    return quill;
+};
+
+window.loadSampleTermsIntoEditor = function(textareaId) {
+    const textarea = typeof textareaId === 'string' ? document.getElementById(textareaId) : textareaId;
+    if (!textarea) return;
+    const sampleHtml = `<p><span style="font-size: 11px;"><strong>1. ACCEPTANCE OF TERMS:</strong> Tendering this consignment for carriage constitutes acceptance of all terms &amp; conditions herein.</span></p>
+<p><span style="font-size: 11px;"><strong>2. PACKAGING &amp; MARKING:</strong> The Shipper must ensure adequate packaging and legibly marked address &amp; telephone details.</span></p>
+<p><span style="font-size: 11px;"><strong>3. PROHIBITED GOODS:</strong> Consignor declares consignment contains no contraband or prohibited items under state/central laws.</span></p>
+<p><span style="font-size: 11px;"><strong>4. INSPECTION:</strong> Carrier reserves the right to inspect any consignment tendered for carriage.</span></p>
+<p><span style="font-size: 11px;"><strong>5. FREIGHT &amp; CHARGES:</strong> Charges calculated on Chargeable Weight = max(Actual Weight, Volumetric Weight @ 6000 cm3/kg).</span></p>
+<p><span style="font-size: 11px;"><strong>6. INSURANCE &amp; LIABILITY:</strong> High value shipments must be insured by shipper. Carrier liability for uninsured lost/damaged goods is limited to Rs. 100/-.</span></p>
+<p><span style="font-size: 11px;"><strong>7. JURISDICTION:</strong> All disputes subject to Pune Jurisdiction only. E. &amp; O.E.</span></p>`;
+
+    if (textarea.value.trim() !== '' && !confirm('Replace current terms with sample waybill T&C template?')) {
+        return;
+    }
+    textarea.value = sampleHtml;
+    const editorDiv = document.getElementById('quill_editor_' + textarea.id);
+    if (editorDiv && editorDiv.__quill) {
+        editorDiv.__quill.clipboard.dangerouslyPasteHTML(sampleHtml);
+    }
+};
+
+$(document).ready(function() {
+    $('textarea[name="docket_terms"], textarea[name="default_terms"], textarea[name="terms_conditions"]').each(function() {
+        if (!this.id) {
+            this.id = 'tc_editor_' + Math.random().toString(36).substr(2, 7);
+        }
+        initTermsRichEditor(this.id);
+    });
+});

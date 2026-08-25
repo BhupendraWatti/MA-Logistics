@@ -69,7 +69,8 @@ class PdfInvoiceGenerator
             $pdf->SetFont('helvetica', '', 8);
             $pdf->writeHTML($html, true, false, true, false, '');
         } else {
-            $topMargin = $this->calculateTopMargin($viewData);
+            $viewData['layoutOrientation'] = strtoupper($orientation) === 'P' ? 'P' : 'L';
+            $topMargin = $this->calculateTopMargin($viewData, $orientation);
             $pdf->SetMargins(8, $topMargin, 8);
             $pdf->SetAutoPageBreak(true, 15);
 
@@ -79,6 +80,10 @@ class PdfInvoiceGenerator
 
             // Render body section into the page body
             $pdf->AddPage();
+            // Keep the full company/invoice header on page one only. Automatic
+            // continuation pages should start near the top with the repeated
+            // table headings and the next shipment serial number.
+            $pdf->SetTopMargin(8);
             $viewData['renderSection'] = 'body';
             $bodyHtml                  = view($viewName, $viewData);
             $pdf->SetFont('helvetica', '', 8);
@@ -105,16 +110,23 @@ class PdfInvoiceGenerator
 
             public function Header(): void
             {
-                if (!empty($this->headerHtml)) {
+                if ($this->getPage() === 1 && !empty($this->headerHtml)) {
                     $this->writeHTMLCell(0, 0, 8, 8, $this->headerHtml, 0, 0, false, true, '', true);
                 }
+            }
+
+            public function Footer(): void
+            {
+                $this->SetY(-10);
+                $this->SetFont('helvetica', 'I', 8);
+                $this->Cell(0, 10, $this->getAliasNumPage() . ' out of ' . $this->getAliasNbPages(), 0, false, 'R', 0, '', 0, false, 'T', 'M');
             }
         };
 
         $pdf->SetCreator('Malogistics');
         $pdf->SetAuthor('Malogistics');
         $pdf->SetPrintHeader(true);
-        $pdf->SetPrintFooter(false);
+        $pdf->SetPrintFooter(true);
 
         return $pdf;
     }
@@ -123,7 +135,7 @@ class PdfInvoiceGenerator
      * Calculate the dynamic top margin required so that the page body starts
      * immediately below the header block without overlapping or leaving excess whitespace.
      *
-     * Rules (cumulative additive to a 61mm base):
+     * Rules (cumulative additive to an orientation-specific base):
      *  +5mm  — if GST row is shown in the header (GSTIN, SAC, PAN row)
      *  +4mm  — if a Due Date row is shown
      *  +3.5mm per extra line — for multi-line addresses beyond the first line
@@ -132,19 +144,18 @@ class PdfInvoiceGenerator
      *                          booking['gst_applied'], dueDate, recipientAddress
      * @return int   Top margin in mm (rounded)
      */
-    private function calculateTopMargin(array $viewData): int
+    private function calculateTopMargin(array $viewData, string $orientation = 'L'): int
     {
         $gstApplied = !empty($viewData['booking']['gst_applied']);
-        $customerGst = $viewData['customerGst'] ?? '';
         $cgstRate    = (float) ($viewData['cgstRate'] ?? 0);
         $sgstRate    = (float) ($viewData['sgstRate'] ?? 0);
         $igstRate    = (float) ($viewData['igstRate'] ?? 0);
         $dueDate     = $viewData['dueDate'] ?? '';
         $address     = $viewData['recipientAddress'] ?? '';
+        $isPortrait = strtoupper($orientation) === 'P';
+        $margin     = $isPortrait ? 59 : 56;
 
-        $margin = 56;
-
-        $showGstRow = ($gstApplied && !empty($customerGst) && ($cgstRate > 0 || $sgstRate > 0 || $igstRate > 0));
+        $showGstRow = ($gstApplied && ($cgstRate > 0 || $sgstRate > 0 || $igstRate > 0));
         if ($showGstRow) {
             $margin += 5;
         }
@@ -153,7 +164,9 @@ class PdfInvoiceGenerator
             $margin += 4;
         }
 
-        $lines = count(explode("\n", str_replace("\r", '', $address)));
+        $explicitLines = count(explode("\n", str_replace("\r", '', $address)));
+        $wrappedLines  = (int) ceil(strlen($address) / ($isPortrait ? 58 : 92));
+        $lines         = max($explicitLines, $wrappedLines);
         if ($lines > 1) {
             $margin += ($lines - 1) * 3.5;
         }

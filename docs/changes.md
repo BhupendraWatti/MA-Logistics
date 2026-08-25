@@ -4,6 +4,54 @@ This file tracks every technical change, feature implementation, refactoring, an
 
 ## Latest Frontend Change
 
+### [CHG-029] Rebalance Portrait All Invoice Column Widths
+* **Status**: Completed; rendered and verified
+* **Priority**: Medium
+* **Requirement**: Reduce the oversized Total column in the portrait consolidated invoice and give descriptive columns more room.
+* **Implementation**: Portrait default invoices now reclaim up to eight percentage points from the Total column, while preserving a 12% minimum, and distribute that width to LR No., Invoice Number, Origin, and Destination. Landscape and special NX/Brembo layouts retain their existing proportions.
+* **Files Modified**: `app/Views/pdfs/invoice.php`, `tests/PdfInvoiceLayoutTest.php`, `docs/*`
+* **QA**: PHPUnit layout assertions plus rendered first/final-page inspection of a 70-row A4 portrait fixture with Docket, Pickup, and Delivery columns.
+
+---
+
+### [CHG-028] Correct All Invoice Landscape/Portrait Forms and GST Rules
+* **Status**: Completed; rendered and verified
+* **Priority**: High
+* **Requirement**: Correct the consolidated All Invoice without changing the finished individual docket. Match the supplied text-only invoice form in landscape and portrait, apply GST identity/tax visibility rules, and prevent portrait/header/footer overlap.
+* **Implementation**: Removed uploaded logos from the All Invoice only; added orientation-aware PDF view data, portrait typography, padding, and date formatting; made company GSTIN/SAC/PAN, customer GST/PAN, and GST columns conditional on applied/configured GST; added Taxable Amount and Gross Amount summary rows; formatted monetary cells consistently; and rebuilt the final footer as the required independent 60/40 terms-and-bank/signature layout. The docket template remains unchanged.
+* **Files Modified**: `app/Services/PdfInvoiceGenerator.php`, `app/Services/InvoiceService.php`, `app/Views/pdfs/invoice.php`, `tests/PdfInvoiceLayoutTest.php`, `docs/*`
+* **QA**: PHP lint, PHPUnit layout assertions, PDF metadata checks, text extraction, and rendered first/final-page inspection for 70-row A4 landscape and portrait fixtures.
+
+---
+
+### [CHG-027] Single-Header Multi-Page All Invoice PDF
+* **Status**: Completed; rendered and verified
+* **Priority**: High
+* **Requirement**: Print the company/invoice header only once and continue overflow billing rows on the next page without restarting serial numbers.
+* **Implementation**: Limited the TCPDF invoice header callback to page 1 and switched automatic continuation pages to the compact top margin. The billing table still repeats its column headings through `<thead>`, while the existing shipment-row sequence continues unchanged. Added GST/address-aware first-page height reservation so billing metadata cannot overlap the item headings, and tightened the table header padding/type size to prevent narrow labels from breaking mid-word.
+* **Files Modified**: `app/Services/PdfInvoiceGenerator.php`, `app/Views/pdfs/invoice.php`, `docs/*`
+* **QA**: PHP lint plus multi-page PDF text extraction and rendered page inspection.
+
+---
+
+### [CHG-026] Dynamic Docket Content Binding and Layout Review
+* **Status**: Completed; rendered and verified
+* **Priority**: High
+* **Requirement**: Keep all customer docket values form/database-backed while matching the original ruled waybill's spacing and proportions.
+* **Implementation**:
+  - Added `shipment_items.contents` so **Said to Contain** round-trips independently from Part No.
+  - Made the booking drawer field visible and required; removed the static `Goods` default and the fallback that stored it as `part_no`.
+  - Removed unbacked Declared Weight, Form No., and Method of Pkg. substitutions from the customer docket.
+  - Reduced the logo to an explicit print width, tightened the ruled form's vertical proportions, normalized cell padding, widened Payment, and kept Mode/Insured headers white.
+  - Added an explicit continuous top rule to the Mode/weight table so its dividers connect cleanly beneath the phone row without a floating left-edge stub.
+  - Locked the Mode/weight body cells to the same percentage widths as their headers, preventing TCPDF from drawing doubled or offset vertical separators.
+  - Added compatibility for the legacy stored payment spelling `CREADIT` so Credit is selected correctly.
+  - Removed hardcoded Pune and GST-rate defaults from the individual docket controller path.
+* **Files Modified**: `app/Controllers/Logistics.php`, `app/Services/BookingService.php`, `app/Models/ShipmentItemModel.php`, `app/Views/logistics/booking_form.php`, `app/Views/pdfs/docket_pdf.php`, `app/Database/Migrations/2026-08-20-120000_AddContentsToShipmentItems.php`, `Docs/*`
+* **QA**: PHP lint, migration, PHPUnit, PDF text extraction, and rendered PNG inspection.
+
+---
+
 ### [CHG-025] Customer Docket Fidelity & End-to-End Dynamic Field Binding
 * **Status**: Completed; rendered and verified
 * **Priority**: High

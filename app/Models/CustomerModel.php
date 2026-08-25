@@ -10,7 +10,7 @@ class CustomerModel extends Model
     protected $primaryKey = 'id';
     protected $useTimestamps = true;
     protected $allowedFields = [
-        'company_id', 'name', 'code', 'email', 'pan', 'gst_state', 'gst_number', 'pincode', 'city', 'state', 'country', 'address',
+        'company_id', 'name', 'code', 'email', 'pan', 'gst_state', 'gst_number', 'pincode', 'city', 'state', 'country', 'address', 'default_terms',
         'bill_to', 'consignee', 'payment_type', 'currency', 'tds_percentage', 'narration',
         'person1_name', 'person1_phone', 'person1_email',
         'person2_name', 'person2_phone', 'person2_email',

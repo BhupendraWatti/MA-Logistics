@@ -1,4 +1,4 @@
-﻿<?= $this->extend('layout') ?>
+<?= $this->extend('layout') ?>
 
 <?= $this->section('content') ?>
 <div class="container-fluid py-4">
@@ -634,77 +634,18 @@ async function generatePdfWithSavePicker() {
             throw new Error(result.message || 'Invoice generation failed.');
         }
 
-        const pdfResponse = await fetch(result.download_url, { credentials: 'same-origin' });
-        if (!pdfResponse.ok) {
-            throw new Error('Generated PDF could not be fetched.');
-        }
-        const blob = await pdfResponse.blob();
-        const saveResult = await saveInvoiceBlob(blob, result.file_name || 'invoice.pdf');
-        refreshDownloadHistory();
+        Swal.close();
 
-        if (saveResult === 'saved') {
-            Swal.fire('Invoice Saved', 'Invoice PDF saved successfully.', 'success');
-        } else if (saveResult === 'cancelled') {
-            Swal.fire('Save Cancelled', 'The generated invoice remains available in All Downloads.', 'info');
-        } else {
-            Swal.fire('Browser Download Used', 'This browser cannot open the native save-location picker here, so the normal download was used. The invoice also remains in All Downloads.', 'info');
+        // Direct open/download without exhausting multi-step alerts
+        if (result.download_url) {
+            window.open(result.download_url, '_blank');
         }
+        refreshDownloadHistory();
     } catch (error) {
         Swal.fire('Download Failed', error.message || 'Unable to generate invoice PDF.', 'error');
     } finally {
         isSubmitting = false;
     }
-}
-
-async function saveInvoiceBlob(blob, fileName) {
-    if (window.isSecureContext && typeof window.showSaveFilePicker === 'function') {
-        const pickerResult = await Swal.fire({
-            title: 'Invoice Ready',
-            text: 'Choose where to save the generated PDF.',
-            icon: 'success',
-            showCancelButton: true,
-            confirmButtonText: 'Choose save location',
-            cancelButtonText: 'Not now',
-            preConfirm: async () => {
-                try {
-                    // This must be the first browser API invoked by the explicit confirm click.
-                    const handle = await window.showSaveFilePicker({
-                        id: 'ma-logistics-invoices',
-                        suggestedName: fileName,
-                        types: [{
-                            description: 'PDF Invoice',
-                            accept: { 'application/pdf': ['.pdf'] }
-                        }]
-                    });
-                    const writable = await handle.createWritable();
-                    await writable.write(blob);
-                    await writable.close();
-                    return 'saved';
-                } catch (error) {
-                    if (error && error.name === 'AbortError') {
-                        return 'cancelled';
-                    }
-                    Swal.showValidationMessage(error.message || 'Unable to save the PDF to that location.');
-                    return false;
-                }
-            }
-        });
-
-        if (pickerResult.isDismissed) {
-            return 'cancelled';
-        }
-        return pickerResult.value || 'cancelled';
-    }
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    return 'fallback';
 }
 
 function refreshDownloadHistory() {

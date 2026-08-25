@@ -45,7 +45,7 @@ graph TD
 
 ### TCPDF Engine Integration
 PDF documents are rendered dynamically via `TCPDF` inside `Logistics::exportPdf()` and `Logistics::exportDocketPdf()`. The system supports a **Dual Invoice Output Engine**:
-1. **AWB Invoice (All Invoices Summary)**: Multi-page tabular billing layout (`app/Views/pdfs/invoice.php`) matching sample `MAL_25-26_126.pdf`. Renders top-left company logo, compact line spacing, and multi-line Terms & Conditions.
+1. **AWB Invoice (All Invoices Summary)**: Multi-page tabular billing layout (`app/Views/pdfs/invoice.php`) matching sample `MAL_25-26_126.pdf`, available in A4 landscape and portrait. It uses a text-only company header with no logo, orientation-aware table density, conditional GST identity/tax columns, and multi-line Terms & Conditions.
 2. **Docket Bill (Individual Shipper Copy)**: Single-page docket waybill (`app/Views/pdfs/docket_pdf.php`) matching sample `1.jpeg`. Supports **Full Print** (full financial breakdown) and **Half Print** (`print_mode=half` suppressing charge amounts for clean delivery slips).
 
 For docket output, `Logistics::streamDocketPdf()` merges the shared invoice totals with a docket-specific payload after `InvoiceService::assembleViewData()`. This preserves the raw shipment fields, resolved shipper/consignee master data, contact numbers, docket number, print mode, and GST calculation that the shared invoice assembler does not expose. The view therefore never relies on transformed invoice rows for item-level docket fields.

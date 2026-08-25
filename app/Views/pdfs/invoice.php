@@ -2,8 +2,21 @@
 $recipientNameClean = strtolower($recipientName ?? '');
 $isNx = (strpos($recipientNameClean, 'nx logistics') !== false);
 $isBrembo = (strpos($recipientNameClean, 'brembo') !== false);
-$totalCols = $isNx ? 16 : 14;
+$isPortrait = strtoupper($layoutOrientation ?? 'L') === 'P';
 $gstApplied = (isset($booking['gst_applied']) && $booking['gst_applied'] == 1);
+$showTaxColumns = $gstApplied && ($cgstRate > 0 || $sgstRate > 0 || $igstRate > 0);
+$taxColumnCount = $showTaxColumns ? (($cgstRate > 0 ? 1 : 0) + ($sgstRate > 0 ? 1 : 0) + ($igstRate > 0 ? 1 : 0)) : 0;
+$totalCols = ($isNx ? 13 : 14) + $taxColumnCount;
+$tableFontSize = $isPortrait ? 6.2 : 8;
+$tableHeaderFontSize = $isPortrait ? 5.8 : 7;
+$tableCellPadding = $isPortrait ? 0.9 : 2;
+$displayDate = static function (array $row) use ($isPortrait): string {
+    $raw = $row['dateRaw'] ?? '';
+    if ($raw !== '' && strtotime($raw) !== false) {
+        return date($isPortrait ? 'd-m-y' : 'd/m/Y', strtotime($raw));
+    }
+    return (string) ($row['date'] ?? '');
+};
 
 // Common variables calculation
 $totalFreight = 0;
@@ -57,7 +70,7 @@ $showOtherCharge = $hasActiveCharge(['pickup', 'delivery', 'fov', 'handling', 's
 
 $showNxDocCharge = $showDocketCharge;
 $showNxFscCharge = $showFuelCharge || $showOtherCharge || $totalFsc > 0;
-$nxTotalWidth = 12 + ($showNxDocCharge ? 0 : 5) + ($showNxFscCharge ? 0 : 5);
+$nxTotalWidth = 16 + ($showNxDocCharge ? 0 : 5) + ($showNxFscCharge ? 0 : 5) + ((3 - $taxColumnCount) * 6);
 
 $showBremboDocketCharge = $hasActiveCharge(['docket', 'fuel_rate', 'fuel_amt', 'fov', 'handling', 'service', 'misc']) || $hasActiveCustomCharge || $totalBremboDocket > 0;
 $showBremboPickupCharge = $hasActiveCharge(['pickup']) || $totalPickup > 0;
@@ -133,38 +146,26 @@ foreach ($shipmentRows as $row) {
 }
 $showDefaultOtherCharge = $defaultOtherChgTotal > 0;
 $defaultTotalWidth = max(8, 38 - (count($defaultVisibleChargeColumns) * 5) - ($showDefaultOtherCharge ? 8 : 0));
+$portraitTotalReduction = $isPortrait ? min(8, max(0, $defaultTotalWidth - 12)) : 0;
+$defaultTotalWidth -= $portraitTotalReduction;
+$defaultLrWidth = 8 + ($portraitTotalReduction * 0.25);
+$defaultInvoiceWidth = 11 + ($portraitTotalReduction * 0.375);
+$defaultOriginWidth = 6 + ($portraitTotalReduction * 0.1875);
+$defaultDestinationWidth = 6 + ($portraitTotalReduction * 0.1875);
+$defaultIdentityWidth = 3 + 6 + $defaultLrWidth + $defaultInvoiceWidth + $defaultOriginWidth + $defaultDestinationWidth;
 ?>
 <?php if ($renderSection === 'header'): ?>
-    <?php
-    $logoPath = $company['logo_path'] ?? $company['logo_image'] ?? '';
-    $hasLogo  = !empty($logoPath) && file_exists(FCPATH . $logoPath);
-    ?>
     <table border="1" cellpadding="2" cellspacing="0"
         style="width:100%; font-size:8px; border-collapse:collapse; font-family:helvetica;">
         <tr>
             <td colspan="<?= $totalCols ?>" style="text-align:center; padding: 4px;">
-                <?php if ($hasLogo): ?>
-                    <table cellpadding="0" cellspacing="0" style="width: 100%; border: none;">
-                        <tr>
-                            <td style="width: 25%; text-align: left; vertical-align: middle; border: none;">
-                                <img src="<?= FCPATH . esc($logoPath) ?>" style="max-height: 48px; max-width: 140px;">
-                            </td>
-                            <td style="width: 75%; text-align: center; vertical-align: middle; border: none;">
-                                <span style="font-size:18px; font-weight:bold; font-family:times;"><?= esc($company['name'] ?? 'M.A.LOGISTICS') ?></span><br>
-                                <span style="font-size:8px;"><?= esc($company['address'] ?? '') ?></span><br>
-                                <span style="font-size:8px;">Mobile: <?= esc($company['mobile'] ?? '') ?> | Email ID: <?= esc($company['email'] ?? '') ?></span>
-                            </td>
-                        </tr>
-                    </table>
-                <?php else: ?>
-                    <span style="font-size:18px; font-weight:bold; font-family:times;"><?= esc($company['name'] ?? 'M.A.LOGISTICS') ?></span><br>
-                    <span style="font-size:8px;"><?= esc($company['address'] ?? '') ?></span><br>
-                    <span style="font-size:8px;">Mobile: <?= esc($company['mobile'] ?? '') ?> | Email ID: <?= esc($company['email'] ?? '') ?></span>
-                <?php endif; ?>
+                <span style="font-size:18px; font-weight:bold; font-family:times;"><?= esc($company['name'] ?? 'M.A.LOGISTICS') ?></span><br>
+                <span style="font-size:8px;"><?= esc($company['address'] ?? '') ?></span><br>
+                <span style="font-size:8px;">Mobile: <?= esc($company['mobile'] ?? '') ?> | Email ID: <?= esc($company['email'] ?? '') ?></span>
             </td>
         </tr>
         <?php
-        $showGstRow = (!empty($booking['gst_applied']) && !empty($customerGst) && ($cgstRate > 0 || $sgstRate > 0 || $igstRate > 0));
+        $showGstRow = $showTaxColumns;
         if ($showGstRow):
             $colSpanPart1 = floor($totalCols / 3);
             $colSpanPart2 = floor($totalCols / 3);
@@ -194,10 +195,10 @@ $defaultTotalWidth = max(8, 38 - (count($defaultVisibleChargeColumns) * 5) - ($s
             <td colspan="<?= $leftColspan ?>" style="vertical-align:top;">
                 <strong>Bill TO : <?= htmlspecialchars($recipientName, ENT_QUOTES, 'UTF-8') ?></strong><br>
                 <?= htmlspecialchars($recipientAddress, ENT_QUOTES, 'UTF-8') ?>
-                <?php if (!empty($customerGst)): ?><br>
+                <?php if ($gstApplied && !empty($customerGst)): ?><br>
                     <strong>GSTIN : <?= htmlspecialchars($customerGst, ENT_QUOTES, 'UTF-8') ?></strong>
                 <?php endif; ?>
-                <?php if (!empty($customerPan)): ?><br>
+                <?php if ($gstApplied && !empty($customerPan)): ?><br>
                     <strong>PAN : <?= htmlspecialchars($customerPan, ENT_QUOTES, 'UTF-8') ?></strong>
                 <?php endif; ?>
             </td>
@@ -208,12 +209,12 @@ $defaultTotalWidth = max(8, 38 - (count($defaultVisibleChargeColumns) * 5) - ($s
                         <td>: <?= htmlspecialchars($invoiceNo, ENT_QUOTES, 'UTF-8') ?></td>
                     </tr>
                     <tr>
-                        <td><strong>Invoice Period Date</strong></td>
-                        <td>: <?= htmlspecialchars($invoicePeriod, ENT_QUOTES, 'UTF-8') ?></td>
-                    </tr>
-                    <tr>
                         <td><strong>Invoice Date</strong></td>
                         <td>: <?= htmlspecialchars($invoiceDate, ENT_QUOTES, 'UTF-8') ?></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Invoice Period</strong></td>
+                        <td>: <?= htmlspecialchars($invoicePeriod, ENT_QUOTES, 'UTF-8') ?></td>
                     </tr>
                     <tr>
                         <td><strong>Billing Branch</strong></td>
@@ -241,10 +242,10 @@ $defaultTotalWidth = max(8, 38 - (count($defaultVisibleChargeColumns) * 5) - ($s
             border-bottom: 1px solid #000;
         }
     </style>
-    <table class="invoice-body-table" cellpadding="2" cellspacing="0"
-        style="width:100%; font-size:8px; border-collapse:collapse; font-family:helvetica; border-top:1px solid #000;">
+    <table class="invoice-body-table" cellpadding="<?= $tableCellPadding ?>" cellspacing="0"
+        style="width:100%; font-size:<?= $tableFontSize ?>px; line-height:<?= $isPortrait ? '1.05' : '1.2' ?>; border-collapse:collapse; font-family:helvetica; border-top:1px solid #000;">
         <thead>
-            <tr style="text-align:center; font-weight:bold; font-size:8px; line-height:1.4;">
+            <tr style="text-align:center; font-weight:bold; font-size:<?= $tableHeaderFontSize ?>px; line-height:1.05;">
                 <?php if ($isNx): ?>
                     <td style="width:3%; border-top:1px solid #000; border-bottom:1px solid #000;">SR<br>NO</td>
                     <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">DATE</td>
@@ -260,25 +261,22 @@ $defaultTotalWidth = max(8, 38 - (count($defaultVisibleChargeColumns) * 5) - ($s
                     <?php if ($showNxFscCharge): ?>
                         <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">FSC</td><?php endif; ?>
                     <td style="width:7%; border-top:1px solid #000; border-bottom:1px solid #000;">GROSS</td>
-                    <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">C.GST
-                        <?= (float) $cgstRate ?>
-                        %
-                    </td>
-                    <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">S.GST
-                        <?= (float) $sgstRate ?>
-                        %
-                    </td>
-                    <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">I.GST
-                        <?= (float) $igstRate ?>
-                        %
-                    </td>
+                    <?php if ($showTaxColumns && $cgstRate > 0): ?>
+                        <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">C.GST<br><?= (float) $cgstRate ?>%</td>
+                    <?php endif; ?>
+                    <?php if ($showTaxColumns && $sgstRate > 0): ?>
+                        <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">S.GST<br><?= (float) $sgstRate ?>%</td>
+                    <?php endif; ?>
+                    <?php if ($showTaxColumns && $igstRate > 0): ?>
+                        <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">I.GST<br><?= (float) $igstRate ?>%</td>
+                    <?php endif; ?>
                     <td style="width:<?= $nxTotalWidth ?>%; border-top:1px solid #000; border-bottom:1px solid #000;">TOTAL Amt.
                     </td>
                 <?php elseif ($isBrembo): ?>
-                    <td style="width:3%; border-top:1px solid #000; border-bottom:1px solid #000;">SR NO</td>
+                    <td style="width:3%; border-top:1px solid #000; border-bottom:1px solid #000;">SR<br>NO</td>
                     <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">DATE</td>
-                    <td style="width:8%; border-top:1px solid #000; border-bottom:1px solid #000;">DOCKET NO.</td>
-                    <td style="width:11%; border-top:1px solid #000; border-bottom:1px solid #000;">BREMBO INV NO.</td>
+                    <td style="width:8%; border-top:1px solid #000; border-bottom:1px solid #000;">DOCKET<br>NO.</td>
+                    <td style="width:11%; border-top:1px solid #000; border-bottom:1px solid #000;">BREMBO INV.<br>NO.</td>
                     <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">ORIGIN</td>
                     <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">DEST</td>
                     <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">BOXES</td>
@@ -292,15 +290,14 @@ $defaultTotalWidth = max(8, 38 - (count($defaultVisibleChargeColumns) * 5) - ($s
                         <td style="width:7%; border-top:1px solid #000; border-bottom:1px solid #000;">PICKUP</td><?php endif; ?>
                     <?php if ($showBremboDeliveryCharge): ?>
                         <td style="width:8%; border-top:1px solid #000; border-bottom:1px solid #000;">DELIVERY</td><?php endif; ?>
-                    <td style="width:<?= $bremboTotalWidth ?>%; border-top:1px solid #000; border-bottom:1px solid #000;">TOTAL
-                        Amt.</td>
+                    <td style="width:<?= $bremboTotalWidth ?>%; border-top:1px solid #000; border-bottom:1px solid #000;">TOTAL<br>Amt.</td>
                 <?php else: ?>
                     <td style="width:3%; border-top:1px solid #000; border-bottom:1px solid #000;">SR NO</td>
                     <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">DATE</td>
-                    <td style="width:8%; border-top:1px solid #000; border-bottom:1px solid #000;">LR NO.</td>
-                    <td style="width:11%; border-top:1px solid #000; border-bottom:1px solid #000;">INVOICE NUMBER</td>
-                    <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">ORIGIN</td>
-                    <td style="width:6%; border-top:1px solid #000; border-bottom:1px solid #000;">DEST</td>
+                    <td style="width:<?= $defaultLrWidth ?>%; border-top:1px solid #000; border-bottom:1px solid #000;">LR NO.</td>
+                    <td style="width:<?= $defaultInvoiceWidth ?>%; border-top:1px solid #000; border-bottom:1px solid #000;">INVOICE NUMBER</td>
+                    <td style="width:<?= $defaultOriginWidth ?>%; border-top:1px solid #000; border-bottom:1px solid #000;">ORIGIN</td>
+                    <td style="width:<?= $defaultDestinationWidth ?>%; border-top:1px solid #000; border-bottom:1px solid #000;">DEST</td>
                     <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">BOXES</td>
                     <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">WT</td>
                     <td style="width:5%; border-top:1px solid #000; border-bottom:1px solid #000;">RATE</td>
@@ -317,7 +314,7 @@ $defaultTotalWidth = max(8, 38 - (count($defaultVisibleChargeColumns) * 5) - ($s
         </thead>
         <tbody>
             <?php foreach ($shipmentRows as $row): ?>
-                <tr style="font-size:8px;">
+                <tr style="font-size:<?= $tableFontSize ?>px; line-height:<?= $isPortrait ? '1.05' : '1.2' ?>;">
                     <?php if ($isNx): ?>
                         <?php
                         $rowDoc = floatval($row['docket'] ?? 0);
@@ -329,7 +326,7 @@ $defaultTotalWidth = max(8, 38 - (count($defaultVisibleChargeColumns) * 5) - ($s
                         $rowTotal = $rowGross + $rowCgst + $rowSgst + $rowIgst;
                         ?>
                         <td nowrap="nowrap" style="width:3%; white-space: nowrap; text-align:center;"><?= $row['serial'] ?></td>
-                        <td nowrap="nowrap" style="width:6%; white-space: nowrap; text-align:center;"><?= $row['date'] ?></td>
+                        <td nowrap="nowrap" style="width:6%; white-space: nowrap; text-align:center;"><?= $displayDate($row) ?></td>
                         <td nowrap="nowrap" style="width:8%; white-space: nowrap; text-align:center;">
                             <?= htmlspecialchars($row['lrNo'], ENT_QUOTES, 'UTF-8') ?>
                         </td>
@@ -341,22 +338,22 @@ $defaultTotalWidth = max(8, 38 - (count($defaultVisibleChargeColumns) * 5) - ($s
                         </td>
                         <td nowrap="nowrap" style="width:4%; white-space: nowrap; text-align:center;"><?= $row['boxes'] ?></td>
                         <td nowrap="nowrap" style="width:5%; white-space: nowrap; text-align:center;"><?= (float) $row['wt'] ?></td>
-                        <td nowrap="nowrap" style="width:5%; white-space: nowrap; text-align:center;"><?= (float) $row['rate'] ?>
+                        <td nowrap="nowrap" style="width:5%; white-space: nowrap; text-align:center;"><?= number_format((float) $row['rate'], 2) ?>
                         </td>
-                        <td nowrap="nowrap" style="width:6%; white-space: nowrap; text-align:center;"><?= (float) $row['freight'] ?>
+                        <td nowrap="nowrap" style="width:6%; white-space: nowrap; text-align:center;"><?= number_format((float) $row['freight'], 2) ?>
                         </td>
                         <?php if ($showNxDocCharge): ?>
-                            <td nowrap="nowrap" style="width:5%; white-space: nowrap; text-align:center;"><?= (float) $rowDoc ?></td>
+                            <td nowrap="nowrap" style="width:5%; white-space: nowrap; text-align:center;"><?= number_format($rowDoc, 2) ?></td>
                         <?php endif; ?>
                         <?php if ($showNxFscCharge): ?>
-                            <td nowrap="nowrap" style="width:5%; white-space: nowrap; text-align:center;"><?= (float) $rowFsc ?></td>
+                            <td nowrap="nowrap" style="width:5%; white-space: nowrap; text-align:center;"><?= number_format($rowFsc, 2) ?></td>
                         <?php endif; ?>
-                        <td nowrap="nowrap" style="width:7%; white-space: nowrap; text-align:center;"><?= (float) $rowGross ?></td>
-                        <td nowrap="nowrap" style="width:6%; white-space: nowrap; text-align:center;"><?= (float) $rowCgst ?></td>
-                        <td nowrap="nowrap" style="width:6%; white-space: nowrap; text-align:center;"><?= (float) $rowSgst ?></td>
-                        <td nowrap="nowrap" style="width:6%; white-space: nowrap; text-align:center;"><?= (float) $rowIgst ?></td>
+                        <td nowrap="nowrap" style="width:7%; white-space: nowrap; text-align:center;"><?= number_format($rowGross, 2) ?></td>
+                        <?php if ($showTaxColumns && $cgstRate > 0): ?><td nowrap="nowrap" style="width:6%; white-space: nowrap; text-align:center;"><?= number_format($rowCgst, 2) ?></td><?php endif; ?>
+                        <?php if ($showTaxColumns && $sgstRate > 0): ?><td nowrap="nowrap" style="width:6%; white-space: nowrap; text-align:center;"><?= number_format($rowSgst, 2) ?></td><?php endif; ?>
+                        <?php if ($showTaxColumns && $igstRate > 0): ?><td nowrap="nowrap" style="width:6%; white-space: nowrap; text-align:center;"><?= number_format($rowIgst, 2) ?></td><?php endif; ?>
                         <td nowrap="nowrap" style="width:<?= $nxTotalWidth ?>%; white-space: nowrap; text-align:center;">
-                            <?= (float) $rowTotal ?>
+                            <?= number_format($rowTotal, 2) ?>
                         </td>
                     <?php elseif ($isBrembo): ?>
                         <?php
@@ -366,7 +363,7 @@ $defaultTotalWidth = max(8, 38 - (count($defaultVisibleChargeColumns) * 5) - ($s
                         $rowTotal = floatval($row['taxable'] ?? 0);
                         ?>
                         <td nowrap="nowrap" style="width:3%; white-space: nowrap; text-align:center;"><?= $row['serial'] ?></td>
-                        <td nowrap="nowrap" style="width:6%; white-space: nowrap; text-align:center;"><?= $row['date'] ?></td>
+                        <td nowrap="nowrap" style="width:6%; white-space: nowrap; text-align:center;"><?= $displayDate($row) ?></td>
                         <td nowrap="nowrap" style="width:8%; white-space: nowrap; text-align:center;">
                             <?= htmlspecialchars($row['lrNo'], ENT_QUOTES, 'UTF-8') ?>
                         </td>
@@ -403,17 +400,17 @@ $defaultTotalWidth = max(8, 38 - (count($defaultVisibleChargeColumns) * 5) - ($s
                         $rowTotal = floatval($row['taxable'] ?? 0);
                         ?>
                         <td nowrap="nowrap" style="width:3%; white-space: nowrap; text-align:center;"><?= $row['serial'] ?></td>
-                        <td nowrap="nowrap" style="width:6%; white-space: nowrap; text-align:center;"><?= $row['date'] ?></td>
-                        <td nowrap="nowrap" style="width:8%; white-space: nowrap; text-align:center;">
+                        <td nowrap="nowrap" style="width:6%; white-space: nowrap; text-align:center;"><?= $displayDate($row) ?></td>
+                        <td nowrap="nowrap" style="width:<?= $defaultLrWidth ?>%; white-space: nowrap; text-align:center;">
                             <?= htmlspecialchars($row['lrNo'], ENT_QUOTES, 'UTF-8') ?>
                         </td>
-                        <td nowrap="nowrap" style="width:11%; white-space: nowrap;">
+                        <td nowrap="nowrap" style="width:<?= $defaultInvoiceWidth ?>%; white-space: nowrap;">
                             <?= htmlspecialchars($row['invoiceNumber'], ENT_QUOTES, 'UTF-8') ?>
                         </td>
-                        <td nowrap="nowrap" style="width:6%; white-space: nowrap; text-align:center;">
+                        <td nowrap="nowrap" style="width:<?= $defaultOriginWidth ?>%; white-space: nowrap; text-align:center;">
                             <?= htmlspecialchars($row['origin'], ENT_QUOTES, 'UTF-8') ?>
                         </td>
-                        <td nowrap="nowrap" style="width:6%; white-space: nowrap; text-align:center;">
+                        <td nowrap="nowrap" style="width:<?= $defaultDestinationWidth ?>%; white-space: nowrap; text-align:center;">
                             <?= htmlspecialchars($row['destination'], ENT_QUOTES, 'UTF-8') ?>
                         </td>
                         <td nowrap="nowrap" style="width:5%; white-space: nowrap; text-align:center;"><?= $row['boxes'] ?></td>
@@ -435,7 +432,7 @@ $defaultTotalWidth = max(8, 38 - (count($defaultVisibleChargeColumns) * 5) - ($s
                 </tr>
             <?php endforeach; ?>
 
-            <tr style="font-size:8px; font-weight:bold;">
+            <tr style="font-size:<?= $tableFontSize ?>px; font-weight:bold;">
                 <?php if ($isNx): ?>
                     <td colspan="5" style="width:29%;">TOTAL</td>
                     <td style="width:4%; text-align:center;"><?= $totalBoxes ?></td>
@@ -447,10 +444,10 @@ $defaultTotalWidth = max(8, 38 - (count($defaultVisibleChargeColumns) * 5) - ($s
                     <?php if ($showNxFscCharge): ?>
                         <td style="width:5%; text-align:center;"><?= (float) $totalFsc ?></td><?php endif; ?>
                     <td style="width:7%; text-align:center;"><?= round($totalTaxable) ?></td>
-                    <td style="width:6%; text-align:center;"><?= (float) $totalRowCgst ?></td>
-                    <td style="width:6%; text-align:center;"><?= (float) $totalRowSgst ?></td>
-                    <td style="width:6%; text-align:center;"><?= (float) $totalRowIgst ?></td>
-                    <td style="width:<?= $nxTotalWidth ?>%; text-align:center;"><?= round($totalRowTotal) ?></td>
+                    <?php if ($showTaxColumns && $cgstRate > 0): ?><td style="width:6%; text-align:center;"><?= number_format($totalRowCgst, 2) ?></td><?php endif; ?>
+                    <?php if ($showTaxColumns && $sgstRate > 0): ?><td style="width:6%; text-align:center;"><?= number_format($totalRowSgst, 2) ?></td><?php endif; ?>
+                    <?php if ($showTaxColumns && $igstRate > 0): ?><td style="width:6%; text-align:center;"><?= number_format($totalRowIgst, 2) ?></td><?php endif; ?>
+                    <td style="width:<?= $nxTotalWidth ?>%; text-align:center;"><?= number_format($totalRowTotal, 2) ?></td>
                 <?php elseif ($isBrembo): ?>
                     <td colspan="6" style="width:40%;">TOTAL</td>
                     <td style="width:5%; text-align:center;"><?= $totalBoxes ?></td>
@@ -465,7 +462,7 @@ $defaultTotalWidth = max(8, 38 - (count($defaultVisibleChargeColumns) * 5) - ($s
                         <td style="width:8%; text-align:center;"><?= (float) $totalDelivery ?></td><?php endif; ?>
                     <td style="width:<?= $bremboTotalWidth ?>%; text-align:center;"><?= round($totalTaxable) ?></td>
                 <?php else: ?>
-                    <td colspan="6" style="width:40%;">TOTAL</td>
+                    <td colspan="6" style="width:<?= $defaultIdentityWidth ?>%;">TOTAL</td>
                     <td style="width:5%; text-align:center;"><?= $totalBoxes ?></td>
                     <td style="width:5%; text-align:center;"><?= (float) $totalWt ?></td>
                     <td style="width:5%;"></td>
@@ -481,8 +478,7 @@ $defaultTotalWidth = max(8, 38 - (count($defaultVisibleChargeColumns) * 5) - ($s
     </table>
 
     <table nobr="true" cellpadding="2" cellspacing="0"
-        style="width:100%; font-size:8px; border-collapse:collapse; font-family:helvetica; border: 1px solid #000; border-top: none;">
-        <!-- Row 1: Remarks (colspan 12) & Net Payable (colspan 8) -->
+        style="width:100%; font-size:<?= $isPortrait ? '6.5' : '8' ?>px; border-collapse:collapse; font-family:helvetica; border: 1px solid #000; border-top: none;">
         <tr>
             <td colspan="12" style="width:60%; vertical-align:top; border-right:1px solid #000; padding: 5px;">
                 <?php $invoiceRemarks = $booking['remarks'] ?? ($booking['narration'] ?? ''); ?>
@@ -493,6 +489,10 @@ $defaultTotalWidth = max(8, 38 - (count($defaultVisibleChargeColumns) * 5) - ($s
             </td>
             <td colspan="8" style="width:40%; padding:0; vertical-align:top;">
                 <table cellpadding="2" cellspacing="0" style="width:100%; border:none;">
+                    <tr>
+                        <td style="width:70%; border-bottom:1px solid #000; border-right:1px solid #000; font-weight:bold;">TAXABLE AMOUNT</td>
+                        <td style="width:30%; border-bottom:1px solid #000; text-align:center; font-weight:bold;"><?= number_format((float) $totalTaxable, 2) ?></td>
+                    </tr>
                     <?php
                     $gstRows = [];
                     if ($gstApplied) {
@@ -515,17 +515,15 @@ $defaultTotalWidth = max(8, 38 - (count($defaultVisibleChargeColumns) * 5) - ($s
                         </tr>
                     <?php endforeach; ?>
                     <tr>
-                        <td style="width:70%; font-weight:bold; background-color:#f5f5f5; border-right:1px solid #000;">NET
-                            PAYABLE AMOUNT</td>
+                        <td style="width:70%; font-weight:bold; background-color:#f5f5f5; border-right:1px solid #000;">GROSS AMOUNT</td>
                         <td style="width:30%; text-align:center; font-weight:bold; background-color:#f5f5f5;">
-                            <?= $netPayable ?>
+                            <?= number_format((float) $netPayable, 2) ?>
                         </td>
                     </tr>
                 </table>
             </td>
         </tr>
 
-        <!-- Row 2: Rs. in Words (colspan 20) -->
         <tr>
             <td colspan="20"
                 style="font-size:9px; font-weight:bold; padding: 5px; border-top:1px solid #000; border-bottom:1px solid #000;">
@@ -533,32 +531,27 @@ $defaultTotalWidth = max(8, 38 - (count($defaultVisibleChargeColumns) * 5) - ($s
             </td>
         </tr>
 
-        <!-- Row 3: Bank Details (colspan 6), Terms & Conditions (colspan 7), Signature (colspan 7) -->
+        <!-- Option C: independent 60/40 footer cells keep long terms away from the signature. -->
         <tr>
-            <td colspan="6" style="width:30%; vertical-align:top; padding:8px; line-height:1.4;">
+            <td colspan="12" style="width:60%; vertical-align:top; padding:6px; line-height:1.35;">
+                <strong>Service Category : Courier &amp; Cargo</strong><br><br>
+                <strong>Terms &amp; Conditions :</strong><br><?php
+                $tcText = !empty($booking['docket_terms']) ? $booking['docket_terms'] : (!empty($customer['default_terms']) ? $customer['default_terms'] : ($company['terms_conditions'] ?? ''));
+                if (strpos($tcText, '<p>') !== false || strpos($tcText, '<span') !== false || strpos($tcText, '<div>') !== false) {
+                    echo $tcText;
+                } else {
+                    echo nl2br(esc($tcText));
+                }
+                ?><br>
                 <strong>Bank Details:</strong><br>
                 Account Name : <?= esc($bankDetails['name'] ?? '') ?><br>
                 Bank Name : <?= esc($bankDetails['bank_name'] ?? '') ?><br>
                 Account No. : <?= esc($bankDetails['ac_no'] ?? '') ?><br>
                 IFSC Code : <?= esc($bankDetails['ifsc'] ?? '') ?><br>
-                Branch : <?= esc($bankDetails['branch'] ?? '') ?><br><br>
-                <strong>Service Category : Courier &amp; Cargo</strong>
+                Branch : <?= esc($bankDetails['branch'] ?? '') ?>
             </td>
-            <td colspan="7"
-                style="width:35%; vertical-align:top; padding:8px; line-height:1.4; border-left:1px solid #000;">
-                <strong>Terms &amp; Conditions :</strong><br><?php
-                $tcText = $company['terms_conditions'] ?? 'No terms specified.';
-                $tcLines = explode("\n", str_replace("\r", "", $tcText));
-                foreach ($tcLines as $line) {
-                    $trimmed = trim($line);
-                    if ($trimmed !== '') {
-                        echo esc($trimmed) . '<br>';
-                    }
-                }
-                ?>
-            </td>
-            <td colspan="7"
-                style="width:35%; vertical-align:bottom; text-align:center; font-size:9px; font-weight:bold; padding:8px; border-left:1px solid #000;">
+            <td colspan="8"
+                style="width:40%; vertical-align:bottom; text-align:center; font-size:<?= $isPortrait ? '7.5' : '9' ?>px; font-weight:bold; padding:8px; border-left:1px solid #000;">
                 For <?= esc($company['name'] ?? 'M.A LOGISTICS') ?><br><br>
                 <?php
                 $sigPath = !empty($bookingSignaturePath) ? $bookingSignaturePath : ($company['signature_path'] ?? '');

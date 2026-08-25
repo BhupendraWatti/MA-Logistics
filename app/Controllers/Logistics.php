@@ -217,7 +217,7 @@ public function create()
             return redirect()->to('/logistics/edit/' . $redirectTo)->with('success', 'Booking saved as Draft successfully.');
         }
         
-        return redirect()->to('/logistics')->with('success', 'Booking created successfully! AWB: ' . $awb_no);
+        return redirect()->to('/logistics/edit/' . $bookingId)->with('success', 'Booking created successfully! AWB: ' . $awb_no);
     } catch (\Throwable $e) {
         log_message('error', '[Logistics Store Error] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
         
@@ -387,7 +387,7 @@ public function edit($id)
             return redirect()->to('/logistics/edit/' . $redirectTo)->with('success', 'Booking updated as Draft successfully.');
         }
         
-        return redirect()->to('/logistics')->with('success', 'Booking updated successfully! AWB: ' . $awb_no);
+        return redirect()->to('/logistics/edit/' . $id)->with('success', 'Booking updated successfully! AWB: ' . $awb_no);
     } catch (\Throwable $e) {
         log_message('error', '[Logistics Update Error] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
         
@@ -991,13 +991,13 @@ private function streamDocketPdf(int $itemId, bool $autoPrint)
 
         $chargeAgg     = $invoiceService->aggregateCharges($shipments);
         $activeCharges = $invoiceService->resolveActiveCharges($chargeAgg['totals'], $chargeAgg['miscLabel'], $chargeAgg['customTotals'] ?? []);
-        $rowData       = $invoiceService->buildShipmentRows($shipments, $booking['origin'] ?? 'Pune', $booking['destination'] ?? '', false);
+        $rowData       = $invoiceService->buildShipmentRows($shipments, $booking['origin'] ?? '', $booking['destination'] ?? '', false);
 
         $gstApplied = (bool) ($booking['gst_applied'] ?? false);
         $rateSource = [
-            'cgst_rate' => (float) ($booking['cgst_rate'] ?? $companyData['cgst_rate'] ?? 9),
-            'sgst_rate' => (float) ($booking['sgst_rate'] ?? $companyData['sgst_rate'] ?? 9),
-            'igst_rate' => (float) ($booking['igst_rate'] ?? $companyData['igst_rate'] ?? 18),
+            'cgst_rate' => (float) ($booking['cgst_rate'] ?? $companyData['cgst_rate'] ?? 0),
+            'sgst_rate' => (float) ($booking['sgst_rate'] ?? $companyData['sgst_rate'] ?? 0),
+            'igst_rate' => (float) ($booking['igst_rate'] ?? $companyData['igst_rate'] ?? 0),
         ];
         $isIgst  = ($gstApplied && $rateSource['igst_rate'] > 0);
         $gstData = $invoiceService->calculateGst($rowData['totalTaxable'], $gstApplied, $isIgst, $rateSource);
@@ -1017,7 +1017,7 @@ private function streamDocketPdf(int $itemId, bool $autoPrint)
             'invoiceNo'            => $invoiceNo,
             'invoicePeriod'        => $formattedBookingDate . ' TO ' . $formattedBookingDate,
             'invoiceDate'          => $formattedBookingDate,
-            'billingBranch'        => trim(explode(',', $booking['origin'] ?: 'Pune')[0]),
+            'billingBranch'        => trim(explode(',', $booking['origin'] ?? '')[0]),
             'modeTransport'        => strtoupper(trim((string) ($booking['mode_transport'] ?? ''))),
             'shipmentRows'         => $rowData['rows'],
             'totalBoxes'           => $rowData['totalBoxes'],
@@ -1054,7 +1054,7 @@ private function streamDocketPdf(int $itemId, bool $autoPrint)
         ]);
 
         $fileSafe = preg_replace('/[^A-Za-z0-9_-]+/', '_', ($booking['awb_no'] ?? 'AWB') . '_' . ($row['docket_no'] ?? 'DOCKET'));
-        $pdfGenerator->stream($viewData, $fileSafe . '.pdf', 'P', $autoPrint, 'pdfs/docket_pdf');
+        $pdfGenerator->stream($viewData, $fileSafe . '.pdf', 'P', true, 'pdfs/docket_pdf');
     } catch (\Throwable $e) {
         log_message('error', '[Docket PDF Export Error] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
         return redirect()->back()->with('error', 'PDF Generation failed: ' . $e->getMessage());

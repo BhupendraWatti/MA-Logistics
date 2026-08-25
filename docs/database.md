@@ -33,6 +33,7 @@ This document details all database tables, columns, indexes, foreign key relatio
 
 ### Added Columns
 * `shipment_items.payment_type` and `shipment_items.material_category` store item-level billing/category metadata when the form or API submits it; if omitted, `BookingService` falls back to booking-level `payment_type` and `material_category`.
+* `shipment_items.contents` stores the booking drawer's **Said to Contain** value independently from `part_no`, so customer dockets never substitute a description into the Part No. box.
 * `bookings.remarks` stores explicit client remarks while preserving legacy `bookings.narration` compatibility.
 * `companies.invoice_prefix` optionally overrides the generated invoice prefix; if blank, `InvoiceService` derives the prefix from the typed invoice field or company name.
 
@@ -64,7 +65,7 @@ This document details all database tables, columns, indexes, foreign key relatio
 * **Purpose**: Child package details belonging to a booking record.
 * **Primary Key**: `id` (BIGINT, AUTO_INCREMENT)
 * **Foreign Key**: `booking_id` $\rightarrow$ `bookings(id)` ON DELETE CASCADE
-* **Columns**: `id`, `booking_id`, `docket_no`, `part_no`, `invoice_date`, `pieces`, `length`, `width`, `height`, `actual_weight`, `volumetric_weight`, `chargeable_weight`, `description`, `misc_charges`, `misc_charges_name`, **`custom_charges`** (TEXT, NULL — JSON array of `{label, value}` pairs for AWB-protocol-specific charges)
+* **Columns**: `id`, `booking_id`, `docket_no`, `part_no`, **`contents`**, `invoice_date`, `pieces`, `length`, `width`, `height`, `actual_weight`, `volumetric_weight`, `chargeable_weight`, `misc_charges`, `misc_charges_name`, **`custom_charges`** (TEXT, NULL — JSON array of `{label, value}` pairs for AWB-protocol-specific charges)
 * **Related Model**: `app/Models/ShipmentItemModel.php`
 
 ### E. `sales_charges`
