@@ -2,6 +2,19 @@
 
 This file tracks every technical change, feature implementation, refactoring, and pending scope addition performed on the M.A. Logistics ERP project.
 
+## Latest PDF Fix
+
+### [CHG-030] Deterministic Terms & Conditions Spacing in TCPDF
+* **Status**: Completed; rendered and verified
+* **Priority**: High
+* **Requirement**: Remove the oversized gap between introductory T&C text and numbered lists, and do not add bottom spacing that was not entered in the editor.
+* **Root Cause**: TCPDF 6.11.3 parses CSS margins on ordinary block tags but does not apply them to paragraph/list HTML flow, and its list-item close handler forces zero vertical space. Raw inter-tag newlines are converted to spaces by TCPDF and were not responsible for the gap. The previous attempt disabled automatic block gaps but relied on ignored `margin-bottom: 5px` rules to restore item spacing.
+* **Implementation**: Centralized T&C normalization in `PdfInvoiceGenerator::formatTermsHtml()`, disabled only TCPDF's automatic paragraph/list spacing, converted editor `<div>` blocks to controlled paragraphs, and inserted only TCPDF's missing normal line advance between consecutive list items. No bottom margin is synthesized. Explicit editor blank lines and empty paragraphs remain visible. Both PDF templates use the same formatter.
+* **Files Modified**: `app/Services/PdfInvoiceGenerator.php`, `app/Views/pdfs/invoice.php`, `app/Views/pdfs/docket_pdf.php`, `tests/PdfInvoiceLayoutTest.php`, `docs/changes.md`
+* **QA**: PHP lint, formatter regression assertions, full PHPUnit suite, generated invoice/docket PDFs, text-coordinate measurement, and rendered-page inspection.
+
+---
+
 ## Latest Frontend Change
 
 ### [CHG-029] Rebalance Portrait All Invoice Column Widths

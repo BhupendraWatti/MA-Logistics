@@ -20,6 +20,54 @@ use TCPDF;
 class PdfInvoiceGenerator
 {
     /**
+     * Convert stored Terms & Conditions without inventing vertical spacing.
+     *
+     * TCPDF parses CSS margins on normal block tags but does not apply those
+     * margins during HTML flow. Its list-item close handler also forces zero
+     * vertical space. We therefore remove the automatic block gaps in
+     * createPdfInstance() and add only the normal line advance that TCPDF omits
+     * between adjacent items. Explicit blank lines in the source are preserved.
+     */
+    public static function formatTermsHtml(?string $terms): string
+    {
+        $terms = trim((string) $terms);
+        if ($terms === '') {
+            return '';
+        }
+
+        $hasHtml = preg_match('/<\s*(?:p|span|div|ol|ul|li|br|b|strong|i|em)\b/i', $terms) === 1;
+        if (!$hasHtml) {
+            $lines = array_map('trim', preg_split('/\R/u', $terms) ?: []);
+
+            return implode(
+                '<br>',
+                array_map(
+                    static fn (string $line): string => htmlspecialchars($line, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+                    $lines
+                )
+            );
+        }
+
+        // Normalize editor output to the small block-tag set whose automatic
+        // TCPDF spacing is controlled below. Inter-tag source whitespace is
+        // cosmetic because TCPDF converts raw newlines to ordinary spaces.
+        $html = preg_replace('/<div\b([^>]*)>/i', '<p$1>', $terms);
+        $html = preg_replace('/<\/div\s*>/i', '</p>', (string) $html);
+        $html = preg_replace('/>\s+</u', '><', (string) $html);
+        // An authored empty paragraph represents a deliberate blank line.
+        $html = preg_replace('/<p\b[^>]*>\s*(?:<br\s*\/?\s*>)?\s*<\/p>/i', '<br><br>', (string) $html);
+
+        // TCPDF does not advance after </li> when custom tag spacing is zero.
+        // Insert one normal break, not a bottom margin. Consecutive paragraphs
+        // and a paragraph following a list use the same authored-line rule.
+        $html = preg_replace('/<\/li>\s*(?=<li\b)/i', '</li><br>', (string) $html);
+        $html = preg_replace('/<\/p>\s*(?=<p\b)/i', '</p><br>', (string) $html);
+        $html = preg_replace('/<\/(ol|ul)>\s*(?=<p\b)/i', '</$1><br>', (string) $html);
+
+        return trim((string) $html);
+    }
+
+    /**
      * Build and stream a TCPDF invoice to the browser as a file download.
      *
      * @param  array  $viewData     The fully assembled view data from InvoiceService::assembleViewData()
@@ -127,6 +175,13 @@ class PdfInvoiceGenerator
         $pdf->SetAuthor('Malogistics');
         $pdf->SetPrintHeader(true);
         $pdf->SetPrintFooter(true);
+
+        $pdf->setHtmlVSpace([
+            'p'   => [0 => ['h' => 0, 'n' => 0], 1 => ['h' => 0, 'n' => 0]],
+            'ol'  => [0 => ['h' => 0, 'n' => 0], 1 => ['h' => 0, 'n' => 0]],
+            'ul'  => [0 => ['h' => 0, 'n' => 0], 1 => ['h' => 0, 'n' => 0]],
+            'li'  => [0 => ['h' => 0, 'n' => 0], 1 => ['h' => 0, 'n' => 0]],
+        ]);
 
         return $pdf;
     }

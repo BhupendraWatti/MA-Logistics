@@ -439,9 +439,7 @@ $renderCharge = static function (float $amount) use ($isHalfPrint): string {
     </table>
 <?php if (!empty($docketTerms)): ?>
     <?php
-    $formattedDocketTerms = (strpos($docketTerms, '<p>') !== false || strpos($docketTerms, '<span') !== false || strpos($docketTerms, '<div>') !== false)
-        ? $docketTerms
-        : nl2br(esc($docketTerms));
+    $formattedDocketTerms = \App\Services\PdfInvoiceGenerator::formatTermsHtml($docketTerms);
     ?>
     <table cellpadding="0" cellspacing="0" style="width: 100%; margin-top: 8px; border: 1.5px solid #000;">
         <tr>
@@ -451,7 +449,9 @@ $renderCharge = static function (float $amount) use ($isHalfPrint): string {
         </tr>
         <tr>
             <td style="padding: 6px 8px; font-size: 7.5pt; line-height: 1.35; color: #000000; background-color: #ffffff;">
-                <?= $formattedDocketTerms ?>
+                <div class="tc-container">
+                    <?= $formattedDocketTerms ?>
+                </div>
             </td>
         </tr>
     </table>

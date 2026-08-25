@@ -285,7 +285,8 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
                         <option value="">Select Shipper</option>
                         <option value="NEW_ENTRY" style="color: #20c997; font-weight: bold;">+ NEW ENTRY</option>
                         <?php foreach ($customers ?? [] as $c): ?>
-                            <option value="<?= esc($c['name']) ?>"><?= esc($c['name']) ?> (<?= esc($c['city'] ?? '') ?>)</option>
+                            <option value="<?= esc($c['name']) ?>"><?= esc($c['name']) ?> (<?= esc($c['city'] ?? '') ?>)
+                            </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -669,16 +670,25 @@ if (!$permissions['can_create'] && !isset($isEdit)) {
             </div>
 
             <!-- Custom Docket Terms & Conditions card -->
-            <div class="row g-4 mb-4">
+            <div style="margin-top:5px;" class="row g-4 mb-4">
                 <div class="col-12">
-                    <div class="card border-0 shadow-sm" style="background-color: #fcfcfc; border: 1px solid #eaeaea !important;">
-                        <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <h6 class="fw-bold text-primary mb-0"><i class="fas fa-file-contract me-1"></i> Docket Terms &amp; Conditions (Rich Editor Override)</h6>
-                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="loadSampleTermsIntoEditor('docket_terms')"><i class="fas fa-file-alt me-1"></i> Load Sample Waybill T&amp;C</button>
+                    <div class="card border-0 shadow-sm"
+                        style="background-color: #fcfcfc; border: 1px solid #eaeaea !important;">
+                        <div
+                            class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <h6 class="fw-bold text-primary mb-0"><i class="fas fa-file-contract me-1"></i> Docket Terms
+                                &amp; Conditions (Rich Editor Override)</h6>
+                            <button type="button" class="btn btn-outline-primary btn-sm"
+                                onclick="loadSampleTermsIntoEditor('docket_terms')"><i class="fas fa-file-alt me-1"></i>
+                                Load Sample Waybill T&amp;C</button>
                         </div>
                         <div class="card-body">
-                            <label class="form-label text-muted fs-7 fw-semibold">Custom Terms &amp; Conditions for this Booking/Docket <small class="text-muted font-weight-normal">(Leave blank to use default Customer/Company T&amp;C. Supports HTML tags &amp; font-size)</small></label>
-                            <textarea name="docket_terms" id="docket_terms" class="form-control form-control-sm shadow-none font-monospace" rows="4" placeholder="Enter custom terms and conditions for this docket..."><?= esc($booking['docket_terms'] ?? '') ?></textarea>
+                            <label class="form-label text-muted fs-7 fw-semibold">Custom Terms &amp; Conditions for this
+                                Booking/Docket <small class="text-muted font-weight-normal">(Leave blank to use default
+                                    Customer/Company T&amp;C. Supports HTML tags &amp; font-size)</small></label>
+                            <textarea name="docket_terms" id="docket_terms"
+                                class="form-control form-control-sm shadow-none font-monospace" rows="4"
+                                placeholder="Enter custom terms and conditions for this docket..."><?= esc($booking['docket_terms'] ?? '') ?></textarea>
                         </div>
                     </div>
                 </div>
@@ -736,7 +746,7 @@ foreach ($customers ?? [] as $c) {
             if (!isset($partyOptions[$partyValue]) || ($partyOptions[$partyValue]['city'] === '' && $city !== '')) {
                 $partyOptions[$partyValue] = [
                     'value' => $partyValue,
-                    'city'  => $city,
+                    'city' => $city,
                 ];
             }
         }
@@ -778,7 +788,8 @@ foreach ($customers ?? [] as $c) {
                         <option value="">Select Shipper</option>
                         <option value="NEW_ENTRY" style="color: #20c997; font-weight: bold;">+ NEW ENTRY</option>
                         <?php foreach ($customers ?? [] as $c): ?>
-                            <option value="<?= esc($c['name']) ?>"><?= esc($c['name']) ?> (<?= esc($c['city'] ?? '') ?>)</option>
+                            <option value="<?= esc($c['name']) ?>"><?= esc($c['name']) ?> (<?= esc($c['city'] ?? '') ?>)
+                            </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -787,7 +798,8 @@ foreach ($customers ?? [] as $c) {
                     <select id="entry_bill_to" class="form-select form-select-sm shadow-none party-typeahead">
                         <option value="">Select Bill To</option>
                         <?php foreach ($partyOptions ?? [] as $party): ?>
-                            <option value="<?= esc($party['value']) ?>"><?= esc($party['value']) ?> (<?= esc($party['city']) ?>)</option>
+                            <option value="<?= esc($party['value']) ?>"><?= esc($party['value']) ?>
+                                (<?= esc($party['city']) ?>)</option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -796,7 +808,8 @@ foreach ($customers ?? [] as $c) {
                     <select id="entry_consignee" class="form-select form-select-sm shadow-none party-typeahead">
                         <option value="">Select Consignee</option>
                         <?php foreach ($partyOptions ?? [] as $party): ?>
-                            <option value="<?= esc($party['value']) ?>"><?= esc($party['value']) ?> (<?= esc($party['city']) ?>)</option>
+                            <option value="<?= esc($party['value']) ?>"><?= esc($party['value']) ?>
+                                (<?= esc($party['city']) ?>)</option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -841,8 +854,10 @@ foreach ($customers ?? [] as $c) {
                     <select id="entry_docket_series" class="form-select form-select-sm shadow-none mb-1">
                         <option value="" data-mode="auto" data-prefix="DCK-">Default Auto (DCK-)</option>
                         <?php foreach (($docket_series ?? []) as $series): ?>
-                            <option value="<?= (int) $series['id'] ?>" data-mode="<?= esc($series['entry_mode']) ?>" data-prefix="<?= esc($series['prefix']) ?>">
-                                <?= esc($series['name']) ?> - <?= esc($series['prefix']) ?> (<?= $series['entry_mode'] === 'manual' ? 'Manual' : 'Auto' ?>)
+                            <option value="<?= (int) $series['id'] ?>" data-mode="<?= esc($series['entry_mode']) ?>"
+                                data-prefix="<?= esc($series['prefix']) ?>">
+                                <?= esc($series['name']) ?> - <?= esc($series['prefix']) ?>
+                                (<?= $series['entry_mode'] === 'manual' ? 'Manual' : 'Auto' ?>)
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -854,8 +869,10 @@ foreach ($customers ?? [] as $c) {
                     <select id="entry_invoice_template" class="form-select form-select-sm shadow-none mb-1">
                         <option value="">Manual Invoice No</option>
                         <?php foreach (($invoice_templates ?? []) as $tpl): ?>
-                            <option value="<?= (int) $tpl['id'] ?>" data-prefix="<?= esc($tpl['prefix']) ?>" data-gst-type="<?= esc($tpl['gst_type']) ?>">
-                                <?= esc($tpl['name']) ?> - <?= $tpl['gst_type'] === 'non_gst' ? 'Non-GST' : 'GST' ?> (<?= esc($tpl['prefix']) ?>)
+                            <option value="<?= (int) $tpl['id'] ?>" data-prefix="<?= esc($tpl['prefix']) ?>"
+                                data-gst-type="<?= esc($tpl['gst_type']) ?>">
+                                <?= esc($tpl['name']) ?> - <?= $tpl['gst_type'] === 'non_gst' ? 'Non-GST' : 'GST' ?>
+                                (<?= esc($tpl['prefix']) ?>)
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -2337,20 +2354,20 @@ foreach ($customers ?? [] as $c) {
                 items.splice(index, 1);
                 window.isDirty = true;
                 renderGrid();
-                    if (isEditMode) {
-                        autosaveBookingChanges('Item removed and saved.');
-                    } else {
-                        Swal.fire({
-                            title: 'Deleted!',
-                            text: 'Item has been removed from the grid.',
-                            icon: 'success',
-                            timer: 1000,
-                            showConfirmButton: false
-                        });
-                    }
+                if (isEditMode) {
+                    autosaveBookingChanges('Item removed and saved.');
+                } else {
+                    Swal.fire({
+                        title: 'Deleted!',
+                        text: 'Item has been removed from the grid.',
+                        icon: 'success',
+                        timer: 1000,
+                        showConfirmButton: false
+                    });
                 }
-            });
-        }
+            }
+        });
+    }
 
     function renderGrid() {
         $('#hiddenInputsContainer').empty();
@@ -3032,7 +3049,7 @@ foreach ($customers ?? [] as $c) {
 <b>5. FREIGHT & CHARGES:</b> Charges calculated on Chargeable Weight = max(Actual Weight, Volumetric Weight @ 6000 cm3/kg).
 <b>6. INSURANCE & LIABILITY:</b> High value shipments must be insured by shipper. Carrier liability for uninsured lost/damaged goods is limited to Rs. 100/-.
 <b>7. JURISDICTION:</b> All disputes subject to Pune Jurisdiction only. E. & O.E.</span>`;
-        
+
         if (el.value.trim() !== '' && !confirm('Replace current terms with sample waybill T&C template?')) {
             return;
         }
@@ -3040,7 +3057,7 @@ foreach ($customers ?? [] as $c) {
     }
 
     // Active tab persistence across form submission & reload
-    $(document).ready(function() {
+    $(document).ready(function () {
         const activeTabKey = 'activeBookingTab_' + ('<?= $booking['id'] ?? 'new' ?>');
         const savedTabTarget = localStorage.getItem(activeTabKey);
         if (savedTabTarget) {

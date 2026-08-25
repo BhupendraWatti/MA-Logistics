@@ -106,6 +106,79 @@ final class PdfInvoiceLayoutTest extends TestCase
         self::assertStringContainsString('width:8%; border-top:1px solid #000; border-bottom:1px solid #000;">LR NO.', $landscapeBody);
     }
 
+    public function testTermsPreserveAuthoredSpacingWithoutInjectedBottomMargins(): void
+    {
+        $richTerms = '<p>Introductory text</p><ol><li>Point one</li><li>Point two</li></ol><p>Closing text</p>';
+        $formatted = PdfInvoiceGenerator::formatTermsHtml($richTerms);
+
+        self::assertStringNotContainsString('margin:', $formatted);
+        self::assertStringNotContainsString('font-size:5px', $formatted);
+        self::assertStringContainsString(
+            '</p><ol>',
+            $formatted
+        );
+        self::assertStringContainsString(
+            '</li><br><li>',
+            $formatted
+        );
+
+        $plainTerms = PdfInvoiceGenerator::formatTermsHtml("Point one\nPoint two\nPoint three");
+        self::assertSame('Point one<br>Point two<br>Point three', $plainTerms);
+
+        $blankLineTerms = PdfInvoiceGenerator::formatTermsHtml("Point one\n\nPoint two");
+        self::assertSame('Point one<br><br>Point two', $blankLineTerms);
+
+        $blankParagraphTerms = PdfInvoiceGenerator::formatTermsHtml('<p>Point one</p><p><br></p><p>Point two</p>');
+        self::assertStringContainsString('</p><br><br><p>', $blankParagraphTerms);
+    }
+
+    public function testRichTermsRenderInBothPdfFormats(): void
+    {
+        $outputDir = ROOTPATH . 'tmp/pdfs/generated';
+        if (!is_dir($outputDir)) {
+            mkdir($outputDir, 0775, true);
+        }
+
+        $terms = '<p>Introductory text</p><ol><li>Point one text</li><li>Point two text</li><li>Point three text</li></ol>';
+        $generator = new PdfInvoiceGenerator();
+
+        $invoiceData = $this->fixtureData(true, 'L', 2);
+        $invoiceData['booking']['docket_terms'] = $terms;
+        $invoicePath = $outputDir . '/terms-spacing-invoice.pdf';
+        $generator->save($invoiceData, $invoicePath, 'L');
+
+        $docketData = $invoiceData;
+        $docketData['company']['company_name'] = $docketData['company']['name'];
+        $docketData['booking'] = array_merge($docketData['booking'], [
+            'booking_date' => '2026-08-25',
+            'origin' => 'PUNE',
+            'destination' => 'DELHI',
+            'mode_transport' => 'AIR',
+            'payment_type' => 'CREDIT',
+        ]);
+        $docketData['shipment'] = [
+            'docket_no' => 'DCK-SPACING-001',
+            'customer_name' => 'Spacing Test Shipper',
+            'consignee' => 'Spacing Test Consignee',
+            'pieces' => 2,
+            'actual_weight' => 10,
+            'volumetric_weight' => 12,
+            'final_chargeable_weight' => 12,
+            'rate' => 40,
+            'contents' => 'TEST GOODS',
+        ];
+        $docketData['shipperCustomer'] = [];
+        $docketData['docketNo'] = 'DCK-SPACING-001';
+        $docketPath = $outputDir . '/terms-spacing-docket.pdf';
+        $generator->save($docketData, $docketPath, 'P', 'pdfs/docket_pdf');
+
+        foreach ([$invoicePath, $docketPath] as $path) {
+            self::assertFileExists($path);
+            self::assertGreaterThan(10_000, filesize($path));
+            self::assertSame('%PDF-', file_get_contents($path, false, null, 0, 5));
+        }
+    }
+
     private function fixtureData(bool $gstApplied, string $orientation, int $rowCount): array
     {
         $rows = [];

@@ -537,12 +537,12 @@ $defaultIdentityWidth = 3 + 6 + $defaultLrWidth + $defaultInvoiceWidth + $defaul
                 <strong>Service Category : Courier &amp; Cargo</strong><br><br>
                 <strong>Terms &amp; Conditions :</strong><br><?php
                 $tcText = !empty($booking['docket_terms']) ? $booking['docket_terms'] : (!empty($customer['default_terms']) ? $customer['default_terms'] : ($company['terms_conditions'] ?? ''));
-                if (strpos($tcText, '<p>') !== false || strpos($tcText, '<span') !== false || strpos($tcText, '<div>') !== false) {
-                    echo $tcText;
-                } else {
-                    echo nl2br(esc($tcText));
-                }
-                ?><br>
+                $formattedTcText = \App\Services\PdfInvoiceGenerator::formatTermsHtml($tcText);
+                ?>
+                <div class="tc-box">
+                    <?= $formattedTcText ?>
+                </div>
+                <br>
                 <strong>Bank Details:</strong><br>
                 Account Name : <?= esc($bankDetails['name'] ?? '') ?><br>
                 Bank Name : <?= esc($bankDetails['bank_name'] ?? '') ?><br>

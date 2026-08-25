@@ -9,7 +9,7 @@ $destinationOptions = $lookups['destination'] ?? [];
 <div class="row g-4">
     <!-- LEFT COLUMN: Customer & FINANCE DETAILS -->
     <div class="col-lg-7">
-        
+
         <!-- General Info -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
@@ -18,39 +18,53 @@ $destinationOptions = $lookups['destination'] ?? [];
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-8">
-                        <label class="form-label text-muted fs-7 fw-semibold">Customer Name <span class="text-danger">*</span></label>
-                        <input type="text" name="name" class="form-control form-control-sm shadow-none fw-bold" value="<?= esc($c['name'] ?? '') ?>" required>
+                        <label class="form-label text-muted fs-7 fw-semibold">Customer Name <span
+                                class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control form-control-sm shadow-none fw-bold"
+                            value="<?= esc($c['name'] ?? '') ?>" required>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label text-muted fs-7 fw-semibold">Code</label>
-                        <input type="text" name="code" class="form-control form-control-sm shadow-none" value="<?= esc($c['code'] ?? '') ?>">
+                        <input type="text" name="code" class="form-control form-control-sm shadow-none"
+                            value="<?= esc($c['code'] ?? '') ?>">
                     </div>
                     <div class="col-12">
                         <label class="form-label text-muted fs-7 fw-semibold">Address</label>
-                        <textarea name="address" class="form-control form-control-sm shadow-none" rows="2"><?= esc($c['address'] ?? '') ?></textarea>
+                        <textarea name="address" class="form-control form-control-sm shadow-none"
+                            rows="2"><?= esc($c['address'] ?? '') ?></textarea>
                     </div>
                     <div class="col-12">
                         <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-2">
-                            <label class="form-label text-muted fs-7 fw-semibold mb-0">Default Terms &amp; Conditions <small class="text-muted">(Auto-applies to all dockets for this customer)</small></label>
-                            <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2" onclick="loadSampleTermsIntoEditor('customer_default_terms')"><i class="fas fa-file-alt me-1"></i> Sample T&amp;C</button>
+                            <label class="form-label text-muted fs-7 fw-semibold mb-0">Default Terms &amp; Conditions
+                                <small class="text-muted">(Auto-applies to all dockets for this
+                                    customer)</small></label>
+                            <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2"
+                                onclick="loadSampleTermsIntoEditor('customer_default_terms')"><i
+                                    class="fas fa-file-alt me-1"></i> Sample T&amp;C</button>
                         </div>
-                        <textarea name="default_terms" id="customer_default_terms" class="form-control form-control-sm shadow-none font-monospace" rows="3" placeholder="Enter default terms &amp; conditions for this customer..."><?= esc($c['default_terms'] ?? '') ?></textarea>
+                        <textarea name="default_terms" id="customer_default_terms"
+                            class="form-control form-control-sm shadow-none font-monospace" rows="3"
+                            placeholder="Enter default terms &amp; conditions for this customer..."><?= esc($c['default_terms'] ?? '') ?></textarea>
                     </div>
                     <div class="col-md-3">
                         <label class="form-label text-muted fs-7 fw-semibold">City</label>
-                        <input type="text" name="city" class="form-control form-control-sm shadow-none" value="<?= esc($c['city'] ?? '') ?>">
+                        <input type="text" name="city" class="form-control form-control-sm shadow-none"
+                            value="<?= esc($c['city'] ?? '') ?>">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label text-muted fs-7 fw-semibold">State</label>
-                        <input type="text" name="state" class="form-control form-control-sm shadow-none" value="<?= esc($c['state'] ?? '') ?>">
+                        <input type="text" name="state" class="form-control form-control-sm shadow-none"
+                            value="<?= esc($c['state'] ?? '') ?>">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label text-muted fs-7 fw-semibold">Pincode</label>
-                        <input type="text" name="pincode" class="form-control form-control-sm shadow-none" value="<?= esc($c['pincode'] ?? '') ?>">
+                        <input type="text" name="pincode" class="form-control form-control-sm shadow-none"
+                            value="<?= esc($c['pincode'] ?? '') ?>">
                     </div>
                     <div class="col-md-3">
                         <label class="form-label text-muted fs-7 fw-semibold">Country</label>
-                        <input type="text" name="country" class="form-control form-control-sm shadow-none" value="<?= esc($c['country'] ?? '') ?>">
+                        <input type="text" name="country" class="form-control form-control-sm shadow-none"
+                            value="<?= esc($c['country'] ?? '') ?>">
                     </div>
                 </div>
             </div>
@@ -65,26 +79,32 @@ $destinationOptions = $lookups['destination'] ?? [];
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label text-muted fs-7 fw-semibold">PAN Number</label>
-                        <input type="text" name="pan" class="form-control form-control-sm shadow-none text-uppercase" value="<?= esc($c['pan'] ?? '') ?>">
+                        <input type="text" name="pan" class="form-control form-control-sm shadow-none text-uppercase"
+                            value="<?= esc($c['pan'] ?? '') ?>">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label text-muted fs-7 fw-semibold">GST Number</label>
-                        <input type="text" name="gst_number" class="form-control form-control-sm shadow-none text-uppercase" value="<?= esc($c['gst_number'] ?? '') ?>">
+                        <input type="text" name="gst_number"
+                            class="form-control form-control-sm shadow-none text-uppercase"
+                            value="<?= esc($c['gst_number'] ?? '') ?>">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label text-muted fs-7 fw-semibold">GST State</label>
-                        <input type="text" name="gst_state" class="form-control form-control-sm shadow-none" value="<?= esc($c['gst_state'] ?? '') ?>">
+                        <input type="text" name="gst_state" class="form-control form-control-sm shadow-none"
+                            value="<?= esc($c['gst_state'] ?? '') ?>">
                     </div>
-                    
+
                     <div class="col-md-4">
                         <label class="form-label text-muted fs-7 fw-semibold">TDS Percentage (%)</label>
-                        <input type="number" step="0.01" name="tds_percentage" class="form-control form-control-sm shadow-none" value="<?= esc($c['tds_percentage'] ?? '') ?>">
+                        <input type="number" step="0.01" name="tds_percentage"
+                            class="form-control form-control-sm shadow-none"
+                            value="<?= esc($c['tds_percentage'] ?? '') ?>">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label text-muted fs-7 fw-semibold">Payment Type</label>
                         <select name="payment_type" class="form-select form-select-sm shadow-none">
                             <option value="">--Select--</option>
-                            <?php foreach($lookups['payment_type'] ?? [] as $l): ?>
+                            <?php foreach ($lookups['payment_type'] ?? [] as $l): ?>
                                 <option value="<?= esc($l['value']) ?>" <?= ($c['payment_type'] ?? '') == $l['value'] ? 'selected' : '' ?>><?= esc($l['value']) ?></option>
                             <?php endforeach; ?>
                         </select>
@@ -101,10 +121,11 @@ $destinationOptions = $lookups['destination'] ?? [];
                 </div>
             </div>
         </div>
-        
+
         <!-- Location Wise Item Rates -->
         <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+            <div
+                class="card-header bg-white border-bottom-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
                 <h6 class="fw-bold text-primary mb-0"><i class="fas fa-route me-2"></i> Location Wise Item Rates</h6>
                 <button type="button" class="btn btn-sm btn-outline-primary add-customer-rate-row">
                     <i class="fas fa-plus me-1"></i> Add Rate
@@ -132,10 +153,13 @@ $destinationOptions = $lookups['destination'] ?? [];
                                             <select name="rate_origin[]" class="form-select form-select-sm shadow-none">
                                                 <option value="">Origin</option>
                                                 <?php if ($selectedOrigin !== '' && !in_array($selectedOrigin, array_column($originOptions, 'value'), true)): ?>
-                                                    <option value="<?= esc($selectedOrigin) ?>" selected><?= esc($selectedOrigin) ?></option>
+                                                    <option value="<?= esc($selectedOrigin) ?>" selected><?= esc($selectedOrigin) ?>
+                                                    </option>
                                                 <?php endif; ?>
                                                 <?php foreach ($originOptions as $origin): ?>
-                                                    <option value="<?= esc($origin['value']) ?>" <?= $selectedOrigin === $origin['value'] ? 'selected' : '' ?>><?= esc($origin['value']) ?></option>
+                                                    <option value="<?= esc($origin['value']) ?>"
+                                                        <?= $selectedOrigin === $origin['value'] ? 'selected' : '' ?>>
+                                                        <?= esc($origin['value']) ?></option>
                                                 <?php endforeach; ?>
                                             </select>
                                         </td>
@@ -144,17 +168,29 @@ $destinationOptions = $lookups['destination'] ?? [];
                                             <select name="rate_destination[]" class="form-select form-select-sm shadow-none">
                                                 <option value="">Destination</option>
                                                 <?php if ($selectedDestination !== '' && !in_array($selectedDestination, array_column($destinationOptions, 'value'), true)): ?>
-                                                    <option value="<?= esc($selectedDestination) ?>" selected><?= esc($selectedDestination) ?></option>
+                                                    <option value="<?= esc($selectedDestination) ?>" selected>
+                                                        <?= esc($selectedDestination) ?></option>
                                                 <?php endif; ?>
                                                 <?php foreach ($destinationOptions as $destination): ?>
-                                                    <option value="<?= esc($destination['value']) ?>" <?= $selectedDestination === $destination['value'] ? 'selected' : '' ?>><?= esc($destination['value']) ?></option>
+                                                    <option value="<?= esc($destination['value']) ?>"
+                                                        <?= $selectedDestination === $destination['value'] ? 'selected' : '' ?>>
+                                                        <?= esc($destination['value']) ?></option>
                                                 <?php endforeach; ?>
                                             </select>
                                         </td>
-                                        <td><input type="text" name="rate_material_category[]" class="form-control form-control-sm shadow-none" value="<?= esc($rate['material_category'] ?? '') ?>" placeholder="Optional"></td>
-                                        <td><input type="number" step="0.01" min="0" name="rate_value[]" class="form-control form-control-sm shadow-none tabular-nums" value="<?= esc($rate['rate'] ?? '') ?>" placeholder="0.00"></td>
-                                        <td><input type="date" name="rate_effective_from[]" class="form-control form-control-sm shadow-none" value="<?= esc($rate['effective_from'] ?? date('Y-m-d')) ?>"></td>
-                                        <td><button type="button" class="btn btn-sm btn-outline-danger remove-customer-rate-row"><i class="fas fa-trash"></i></button></td>
+                                        <td><input type="text" name="rate_material_category[]"
+                                                class="form-control form-control-sm shadow-none"
+                                                value="<?= esc($rate['material_category'] ?? '') ?>" placeholder="Optional">
+                                        </td>
+                                        <td><input type="number" step="0.01" min="0" name="rate_value[]"
+                                                class="form-control form-control-sm shadow-none tabular-nums"
+                                                value="<?= esc($rate['rate'] ?? '') ?>" placeholder="0.00"></td>
+                                        <td><input type="date" name="rate_effective_from[]"
+                                                class="form-control form-control-sm shadow-none"
+                                                value="<?= esc($rate['effective_from'] ?? date('Y-m-d')) ?>"></td>
+                                        <td><button type="button"
+                                                class="btn btn-sm btn-outline-danger remove-customer-rate-row"><i
+                                                    class="fas fa-trash"></i></button></td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
@@ -163,7 +199,8 @@ $destinationOptions = $lookups['destination'] ?? [];
                                         <select name="rate_origin[]" class="form-select form-select-sm shadow-none">
                                             <option value="">Origin</option>
                                             <?php foreach ($originOptions as $origin): ?>
-                                                <option value="<?= esc($origin['value']) ?>"><?= esc($origin['value']) ?></option>
+                                                <option value="<?= esc($origin['value']) ?>"><?= esc($origin['value']) ?>
+                                                </option>
                                             <?php endforeach; ?>
                                         </select>
                                     </td>
@@ -171,104 +208,126 @@ $destinationOptions = $lookups['destination'] ?? [];
                                         <select name="rate_destination[]" class="form-select form-select-sm shadow-none">
                                             <option value="">Destination</option>
                                             <?php foreach ($destinationOptions as $destination): ?>
-                                                <option value="<?= esc($destination['value']) ?>"><?= esc($destination['value']) ?></option>
+                                                <option value="<?= esc($destination['value']) ?>">
+                                                    <?= esc($destination['value']) ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                     </td>
-                                    <td><input type="text" name="rate_material_category[]" class="form-control form-control-sm shadow-none" placeholder="Optional"></td>
-                                    <td><input type="number" step="0.01" min="0" name="rate_value[]" class="form-control form-control-sm shadow-none tabular-nums" placeholder="0.00"></td>
-                                    <td><input type="date" name="rate_effective_from[]" class="form-control form-control-sm shadow-none" value="<?= date('Y-m-d') ?>"></td>
-                                    <td><button type="button" class="btn btn-sm btn-outline-danger remove-customer-rate-row"><i class="fas fa-trash"></i></button></td>
+                                    <td><input type="text" name="rate_material_category[]"
+                                            class="form-control form-control-sm shadow-none" placeholder="Optional"></td>
+                                    <td><input type="number" step="0.01" min="0" name="rate_value[]"
+                                            class="form-control form-control-sm shadow-none tabular-nums"
+                                            placeholder="0.00"></td>
+                                    <td><input type="date" name="rate_effective_from[]"
+                                            class="form-control form-control-sm shadow-none" value="<?= date('Y-m-d') ?>">
+                                    </td>
+                                    <td><button type="button"
+                                            class="btn btn-sm btn-outline-danger remove-customer-rate-row"><i
+                                                class="fas fa-trash"></i></button></td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
-                <div class="text-muted fs-8">Leave a row blank to ignore it. Booking item entry uses the matching customer + origin + destination rate.</div>
+                <div class="text-muted fs-8">Leave a row blank to ignore it. Booking item entry uses the matching
+                    customer + origin + destination rate.</div>
             </div>
         </div>
 
         <?php if (!empty($customerRateHistory)): ?>
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-                <h6 class="fw-bold text-secondary mb-0"><i class="fas fa-history me-2"></i> Rate History</h6>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-sm align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Origin</th>
-                                <th>Destination</th>
-                                <th>Category</th>
-                                <th>Item Rate</th>
-                                <th>Effective From</th>
-                                <th>Effective To</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($customerRateHistory as $historyRate): ?>
-                                <tr>
-                                    <td><?= esc($historyRate['origin'] ?? '') ?></td>
-                                    <td><?= esc($historyRate['destination'] ?? '') ?></td>
-                                    <td><?= esc($historyRate['material_category'] ?: 'All categories') ?></td>
-                                    <td class="tabular-nums"><?= number_format((float) ($historyRate['rate'] ?? 0), 2) ?></td>
-                                    <td><?= esc($historyRate['effective_from'] ?? '') ?></td>
-                                    <td><?= esc($historyRate['effective_to'] ?? '') ?></td>
-                                    <td><span class="badge bg-secondary-subtle text-secondary">Closed</span></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                    <h6 class="fw-bold text-secondary mb-0"><i class="fas fa-history me-2"></i> Rate History</h6>
                 </div>
-                <div class="text-muted fs-8 mt-2">Closed versions are retained for audit and past-date rate lookup.</div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Origin</th>
+                                    <th>Destination</th>
+                                    <th>Category</th>
+                                    <th>Item Rate</th>
+                                    <th>Effective From</th>
+                                    <th>Effective To</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($customerRateHistory as $historyRate): ?>
+                                    <tr>
+                                        <td><?= esc($historyRate['origin'] ?? '') ?></td>
+                                        <td><?= esc($historyRate['destination'] ?? '') ?></td>
+                                        <td><?= esc($historyRate['material_category'] ?: 'All categories') ?></td>
+                                        <td class="tabular-nums"><?= number_format((float) ($historyRate['rate'] ?? 0), 2) ?>
+                                        </td>
+                                        <td><?= esc($historyRate['effective_from'] ?? '') ?></td>
+                                        <td><?= esc($historyRate['effective_to'] ?? '') ?></td>
+                                        <td><span class="badge bg-secondary-subtle text-secondary">Closed</span></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-muted fs-8 mt-2">Closed versions are retained for audit and past-date rate lookup.
+                    </div>
+                </div>
             </div>
-        </div>
         <?php endif; ?>
 
         <!-- Legacy / Generic Fields -->
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
-                <h6 class="fw-bold text-primary mb-0"><i class="fas fa-info-circle me-2"></i> Additional Information</h6>
+                <h6 class="fw-bold text-primary mb-0"><i class="fas fa-info-circle me-2"></i> Additional Information
+                </h6>
             </div>
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-6">
                         <label class="form-label text-muted fs-7 fw-semibold">MIS Email IDs</label>
-                        <textarea name="mis_email_ids" class="form-control form-control-sm shadow-none" rows="2"><?= esc($c['mis_email_ids'] ?? '') ?></textarea>
+                        <textarea name="mis_email_ids" class="form-control form-control-sm shadow-none"
+                            rows="2"><?= esc($c['mis_email_ids'] ?? '') ?></textarea>
                     </div>
                     <div class="col-6">
                         <label class="form-label text-muted fs-7 fw-semibold">MIS CC Email IDs</label>
-                        <textarea name="mis_cc_email_ids" class="form-control form-control-sm shadow-none" rows="2"><?= esc($c['mis_cc_email_ids'] ?? '') ?></textarea>
+                        <textarea name="mis_cc_email_ids" class="form-control form-control-sm shadow-none"
+                            rows="2"><?= esc($c['mis_cc_email_ids'] ?? '') ?></textarea>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-muted fs-7 fw-semibold">Other 1</label>
-                        <input type="text" name="other_1" class="form-control form-control-sm shadow-none" value="<?= esc($c['other_1'] ?? '') ?>">
+                        <input type="text" name="other_1" class="form-control form-control-sm shadow-none"
+                            value="<?= esc($c['other_1'] ?? '') ?>">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-muted fs-7 fw-semibold">Other 2</label>
-                        <input type="text" name="other_2" class="form-control form-control-sm shadow-none" value="<?= esc($c['other_2'] ?? '') ?>">
+                        <input type="text" name="other_2" class="form-control form-control-sm shadow-none"
+                            value="<?= esc($c['other_2'] ?? '') ?>">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-muted fs-7 fw-semibold">Other 3</label>
-                        <input type="text" name="other_3" class="form-control form-control-sm shadow-none" value="<?= esc($c['other_3'] ?? '') ?>">
+                        <input type="text" name="other_3" class="form-control form-control-sm shadow-none"
+                            value="<?= esc($c['other_3'] ?? '') ?>">
                     </div>
                     <div class="col-md-6">
                         <label class="form-label text-muted fs-7 fw-semibold">Other 4</label>
-                        <input type="text" name="other_4" class="form-control form-control-sm shadow-none" value="<?= esc($c['other_4'] ?? '') ?>">
+                        <input type="text" name="other_4" class="form-control form-control-sm shadow-none"
+                            value="<?= esc($c['other_4'] ?? '') ?>">
                     </div>
-                    
+
                     <div class="col-12 mt-4">
                         <h6 class="text-muted border-bottom pb-2 mb-3">Legacy Addresses</h6>
                     </div>
                     <div class="col-12">
-                        <label class="form-label text-muted fs-7 fw-semibold">Bill To <small>(Billing Address)</small></label>
-                        <textarea name="bill_to" class="form-control form-control-sm shadow-none" rows="2"><?= esc($c['bill_to'] ?? '') ?></textarea>
+                        <label class="form-label text-muted fs-7 fw-semibold">Bill To <small>(Billing
+                                Address)</small></label>
+                        <textarea name="bill_to" class="form-control form-control-sm shadow-none"
+                            rows="2"><?= esc($c['bill_to'] ?? '') ?></textarea>
                     </div>
                     <div class="col-12">
-                        <label class="form-label text-muted fs-7 fw-semibold">Consignee <small>(Default Delivery Address)</small></label>
-                        <textarea name="consignee" class="form-control form-control-sm shadow-none" rows="2"><?= esc($c['consignee'] ?? '') ?></textarea>
+                        <label class="form-label text-muted fs-7 fw-semibold">Consignee <small>(Default Delivery
+                                Address)</small></label>
+                        <textarea name="consignee" class="form-control form-control-sm shadow-none"
+                            rows="2"><?= esc($c['consignee'] ?? '') ?></textarea>
                     </div>
                 </div>
             </div>
@@ -283,71 +342,90 @@ $destinationOptions = $lookups['destination'] ?? [];
             </div>
             <div class="card-body">
                 <div class="accordion" id="contactsAccordion">
-                    
-                    <?php 
+
+                    <?php
                     $roles = [
                         'operation' => 'Operations',
-                        'purchase'  => 'Purchase',
-                        'sales'     => 'Sales',
-                        'plant_head'=> 'Plant Head',
-                        'billing'   => 'Billing'
+                        'purchase' => 'Purchase',
+                        'sales' => 'Sales',
+                        'plant_head' => 'Plant Head',
+                        'billing' => 'Billing'
                     ];
                     $i = 0;
-                    foreach ($roles as $prefix => $label): 
-                    ?>
+                    foreach ($roles as $prefix => $label):
+                        ?>
                         <div class="accordion-item border-0 mb-2 shadow-sm rounded">
                             <h2 class="accordion-header" id="heading_<?= $prefix ?>">
-                                <button class="accordion-button <?= $i > 0 ? 'collapsed' : '' ?> fw-semibold bg-light text-dark rounded" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_<?= $prefix ?>" aria-expanded="<?= $i === 0 ? 'true' : 'false' ?>">
+                                <button
+                                    class="accordion-button <?= $i > 0 ? 'collapsed' : '' ?> fw-semibold bg-light text-dark rounded"
+                                    type="button" data-bs-toggle="collapse" data-bs-target="#collapse_<?= $prefix ?>"
+                                    aria-expanded="<?= $i === 0 ? 'true' : 'false' ?>">
                                     <i class="fas fa-user-circle text-muted me-2"></i> <?= $label ?> Contact
                                 </button>
                             </h2>
-                            <div id="collapse_<?= $prefix ?>" class="accordion-collapse collapse <?= $i === 0 ? 'show' : '' ?>" data-bs-parent="#contactsAccordion">
+                            <div id="collapse_<?= $prefix ?>"
+                                class="accordion-collapse collapse <?= $i === 0 ? 'show' : '' ?>"
+                                data-bs-parent="#contactsAccordion">
                                 <div class="accordion-body bg-white border border-top-0 rounded-bottom">
                                     <div class="mb-3">
                                         <label class="form-label text-muted fs-8 fw-semibold mb-1">Name</label>
-                                        <input type="text" name="<?= $prefix ?>_contact_name" class="form-control form-control-sm shadow-none" value="<?= esc($c["{$prefix}_contact_name"] ?? '') ?>">
+                                        <input type="text" name="<?= $prefix ?>_contact_name"
+                                            class="form-control form-control-sm shadow-none"
+                                            value="<?= esc($c["{$prefix}_contact_name"] ?? '') ?>">
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label text-muted fs-8 fw-semibold mb-1">Number</label>
-                                        <input type="text" name="<?= $prefix ?>_contact_number" class="form-control form-control-sm shadow-none" value="<?= esc($c["{$prefix}_contact_number"] ?? '') ?>">
+                                        <input type="text" name="<?= $prefix ?>_contact_number"
+                                            class="form-control form-control-sm shadow-none"
+                                            value="<?= esc($c["{$prefix}_contact_number"] ?? '') ?>">
                                     </div>
                                     <div class="mb-2">
                                         <label class="form-label text-muted fs-8 fw-semibold mb-1">Email ID</label>
-                                        <input type="email" name="<?= $prefix ?>_contact_email" class="form-control form-control-sm shadow-none" value="<?= esc($c["{$prefix}_contact_email"] ?? '') ?>">
+                                        <input type="email" name="<?= $prefix ?>_contact_email"
+                                            class="form-control form-control-sm shadow-none"
+                                            value="<?= esc($c["{$prefix}_contact_email"] ?? '') ?>">
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    <?php $i++; endforeach; ?>
-                    
+                        <?php $i++; endforeach; ?>
+
                     <!-- Legacy Generic Contacts -->
                     <h6 class="fw-bold text-muted mt-4 mb-2">Legacy Contacts</h6>
                     <?php foreach ([1, 2, 3] as $p): ?>
                         <div class="accordion-item border-0 mb-2 shadow-sm rounded">
                             <h2 class="accordion-header">
-                                <button class="accordion-button collapsed fw-semibold bg-light text-dark rounded" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_legacy_<?= $p ?>">
+                                <button class="accordion-button collapsed fw-semibold bg-light text-dark rounded"
+                                    type="button" data-bs-toggle="collapse" data-bs-target="#collapse_legacy_<?= $p ?>">
                                     <i class="fas fa-user-circle text-muted me-2"></i> Generic Contact <?= $p ?>
                                 </button>
                             </h2>
-                            <div id="collapse_legacy_<?= $p ?>" class="accordion-collapse collapse" data-bs-parent="#contactsAccordion">
+                            <div id="collapse_legacy_<?= $p ?>" class="accordion-collapse collapse"
+                                data-bs-parent="#contactsAccordion">
                                 <div class="accordion-body bg-white border border-top-0 rounded-bottom">
                                     <div class="mb-3">
                                         <label class="form-label text-muted fs-8 fw-semibold mb-1">Name</label>
-                                        <input type="text" name="person<?= $p ?>_name" class="form-control form-control-sm shadow-none" value="<?= esc($c["person{$p}_name"] ?? '') ?>">
+                                        <input type="text" name="person<?= $p ?>_name"
+                                            class="form-control form-control-sm shadow-none"
+                                            value="<?= esc($c["person{$p}_name"] ?? '') ?>">
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label text-muted fs-8 fw-semibold mb-1">Phone</label>
-                                        <input type="text" name="person<?= $p ?>_phone" class="form-control form-control-sm shadow-none" value="<?= esc($c["person{$p}_phone"] ?? '') ?>">
+                                        <input type="text" name="person<?= $p ?>_phone"
+                                            class="form-control form-control-sm shadow-none"
+                                            value="<?= esc($c["person{$p}_phone"] ?? '') ?>">
                                     </div>
                                     <div class="mb-2">
                                         <label class="form-label text-muted fs-8 fw-semibold mb-1">Email</label>
-                                        <input type="email" name="person<?= $p ?>_email" class="form-control form-control-sm shadow-none" value="<?= esc($c["person{$p}_email"] ?? '') ?>">
+                                        <input type="email" name="person<?= $p ?>_email"
+                                            class="form-control form-control-sm shadow-none"
+                                            value="<?= esc($c["person{$p}_email"] ?? '') ?>">
                                     </div>
                                 </div>
                             </div>
                         </div>
                     <?php endforeach; ?>
-                    
+
                 </div>
             </div>
         </div>
@@ -372,59 +450,57 @@ $destinationOptions = $lookups['destination'] ?? [];
                 <?php endforeach; ?>
             </select>
         </td>
-        <td><input type="text" name="rate_material_category[]" class="form-control form-control-sm shadow-none" placeholder="Optional"></td>
-        <td><input type="number" step="0.01" min="0" name="rate_value[]" class="form-control form-control-sm shadow-none tabular-nums" placeholder="0.00"></td>
-        <td><input type="date" name="rate_effective_from[]" class="form-control form-control-sm shadow-none" value="<?= date('Y-m-d') ?>"></td>
-        <td><button type="button" class="btn btn-sm btn-outline-danger remove-customer-rate-row"><i class="fas fa-trash"></i></button></td>
+        <td><input type="text" name="rate_material_category[]" class="form-control form-control-sm shadow-none"
+                placeholder="Optional"></td>
+        <td><input type="number" step="0.01" min="0" name="rate_value[]"
+                class="form-control form-control-sm shadow-none tabular-nums" placeholder="0.00"></td>
+        <td><input type="date" name="rate_effective_from[]" class="form-control form-control-sm shadow-none"
+                value="<?= date('Y-m-d') ?>"></td>
+        <td><button type="button" class="btn btn-sm btn-outline-danger remove-customer-rate-row"><i
+                    class="fas fa-trash"></i></button></td>
     </tr>
 </template>
 
 <script>
-document.addEventListener('click', function (event) {
-    const addBtn = event.target.closest('.add-customer-rate-row');
-    if (addBtn) {
-        const table = addBtn.closest('.card').querySelector('.customer-rate-rows');
-        const template = document.getElementById('customerRateRowTemplate');
-        if (table && template) {
-            table.insertAdjacentHTML('beforeend', template.innerHTML.trim());
+    document.addEventListener('click', function (event) {
+        const addBtn = event.target.closest('.add-customer-rate-row');
+        if (addBtn) {
+            const table = addBtn.closest('.card').querySelector('.customer-rate-rows');
+            const template = document.getElementById('customerRateRowTemplate');
+            if (table && template) {
+                table.insertAdjacentHTML('beforeend', template.innerHTML.trim());
+            }
+        }
+
+        const removeBtn = event.target.closest('.remove-customer-rate-row');
+        if (removeBtn) {
+            const row = removeBtn.closest('tr');
+            if (row) row.remove();
+        }
+    });
+
+    function applyTermsFontSize(targetId, fontSize) {
+        const el = document.getElementById(targetId);
+        if (!el) return;
+        const start = el.selectionStart;
+        const end = el.selectionEnd;
+        const selected = el.value.substring(start, end);
+        if (selected) {
+            const replacement = `<span style="font-size:${fontSize};">${selected}</span>`;
+            el.value = el.value.substring(0, start) + replacement + el.value.substring(end);
+        } else {
+            el.value += (el.value ? '\n' : '') + `<span style="font-size:${fontSize};">Sample text in ${fontSize}</span>`;
         }
     }
 
-    const removeBtn = event.target.closest('.remove-customer-rate-row');
-    if (removeBtn) {
-        const row = removeBtn.closest('tr');
-        if (row) row.remove();
-    }
-});
+    function insertSampleWaybillTerms(targetId) {
+        const el = document.getElementById(targetId);
+        if (!el) return;
+        const sampleTerms = ``;
 
-function applyTermsFontSize(targetId, fontSize) {
-    const el = document.getElementById(targetId);
-    if (!el) return;
-    const start = el.selectionStart;
-    const end = el.selectionEnd;
-    const selected = el.value.substring(start, end);
-    if (selected) {
-        const replacement = `<span style="font-size:${fontSize};">${selected}</span>`;
-        el.value = el.value.substring(0, start) + replacement + el.value.substring(end);
-    } else {
-        el.value += (el.value ? '\n' : '') + `<span style="font-size:${fontSize};">Sample text in ${fontSize}</span>`;
+        if (el.value.trim() !== '' && !confirm('Replace current terms with sample waybill T&C template?')) {
+            return;
+        }
+        el.value = sampleTerms;
     }
-}
-
-function insertSampleWaybillTerms(targetId) {
-    const el = document.getElementById(targetId);
-    if (!el) return;
-    const sampleTerms = `<span style="font-size:6.5pt;"><b>1. ACCEPTANCE OF TERMS:</b> Tendering this consignment for carriage constitutes acceptance of all terms & conditions herein.
-<b>2. PACKAGING & MARKING:</b> The Shipper must ensure adequate packaging and legibly marked address & telephone details.
-<b>3. PROHIBITED GOODS:</b> Consignor declares consignment contains no contraband or prohibited items under state/central laws.
-<b>4. INSPECTION:</b> Carrier reserves the right to inspect any consignment tendered for carriage.
-<b>5. FREIGHT & CHARGES:</b> Charges calculated on Chargeable Weight = max(Actual Weight, Volumetric Weight @ 6000 cm3/kg).
-<b>6. INSURANCE & LIABILITY:</b> High value shipments must be insured by shipper. Carrier liability for uninsured lost/damaged goods is limited to Rs. 100/-.
-<b>7. JURISDICTION:</b> All disputes subject to Pune Jurisdiction only. E. & O.E.</span>`;
-    
-    if (el.value.trim() !== '' && !confirm('Replace current terms with sample waybill T&C template?')) {
-        return;
-    }
-    el.value = sampleTerms;
-}
 </script>
