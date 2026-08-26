@@ -1,41 +1,65 @@
-# Environment
+# Local environment and credentials
 .env
+.env.*
+!.env.example
+*.site.xml
 
-# Dependencies
+# Installed dependencies (restore with Composer/npm)
 /vendor/
-
-# Writable files
-/writable/*
-!/writable/index.html
-
-# IDE
-.vscode/
-.idea/
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Composer PHAR
+/node_modules/
 composer.phar
 
-# PHPUnit cache
+# CodeIgniter runtime state (keep only safe directory placeholders)
+/writable/*
+!/writable/.htaccess
+!/writable/index.html
+!/writable/cache/
+/writable/cache/*
+!/writable/cache/index.html
+!/writable/logs/
+/writable/logs/*
+!/writable/logs/index.html
+!/writable/session/
+/writable/session/*
+!/writable/session/index.html
+!/writable/uploads/
+/writable/uploads/*
+!/writable/uploads/index.html
+
+# User-generated production content
+/public/uploads/
+
+# Test results, caches, coverage, and generated reports
+/.phpunit.cache/
 .phpunit.result.cache
+/coverage/
+/output/
+/tmp/
+/testsprite_tests/
+/.gstack/
 
-# Node modules (if used)
-node_modules/
+# Local development and debug helpers
+/.archive/
+/samples/
+/.agents/
+/.codex/
+.vscode/
+.idea/
+*.code-workspace
+/scratch_*.php
+/test_db.php
+/drop_sort_order.php
+.playwright-mcp
+.agent
+.antigravitycli/
 
-# Temporary files
+# Temporary and operating-system files
 *.tmp
 *.temp
-/tmp/pdfs/
-/output/pdf/
-/.gstack/design-reports/
-
-# Local test/debug files
-test_db.php
-drop_sort_order.php
-testsprite_tests/tmp/config.json
+*.bak
+*.swp
+.DS_Store
+Thumbs.db
 
 # Graphify - knowledge graph output and all build artifacts
 graphify-out/
@@ -56,18 +80,3 @@ graphify_output.md
 .graphify_python
 .graphify_version
 .graphify_chunk_*.json
-
-# Antigravity IDE Metadata
-.antigravitycli/
-.playwright-mcp
-.agent
-
-# Archive Directory
-.archive/
-
-# Uploaded signatures and files
-public/uploads/
-
-testsprite_tests
-samples
-.gstack/

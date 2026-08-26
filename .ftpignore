@@ -1,0 +1,62 @@
+# Production FTP exclusions
+#
+# This file documents the paths that deployment tooling must never upload.
+# FTP clients do not apply this file automatically; configure equivalent
+# filters when uploading manually.
+
+# Source-control and local agent metadata
+/.git/
+/.github/
+/.gitignore
+/.ftpignore
+/.gstack/
+/.agents/
+/.codex/
+/.archive/
+
+# Secrets and machine-specific configuration
+/.env
+/.env.*
+/*.site.xml
+/*.code-workspace
+/.vscode/
+/.idea/
+
+# Tests, reports, documentation, and developer tooling
+/tests/
+/testsprite_tests/
+/coverage/
+/output/
+/tmp/
+/docs/
+/samples/
+/scripts/
+/phpunit.xml
+/phpunit.xml.dist
+/README.md
+/MOM_Invoice_Changes_Video_Discussion.md
+/scratch_*.php
+/test_*.php
+
+# Runtime state and deploy-local backups/reports
+/writable/cache/
+/writable/logs/
+/writable/session/
+/writable/uploads/
+/writable/debugbar/
+/writable/deploy-backups/
+/writable/deploy-reports/
+
+# User-generated content must remain owned by the live server
+/public/uploads/
+
+# Local/editor/OS artifacts
+/node_modules/
+/.phpunit.cache/
+/.phpunit.result.cache
+*.tmp
+*.temp
+*.bak
+*.swp
+.DS_Store
+Thumbs.db
