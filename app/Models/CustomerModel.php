@@ -27,7 +27,7 @@ class CustomerModel extends Model
 
     protected $validationRules = [
         'company_id' => 'required|is_natural_no_zero',
-        'name'       => 'required|min_length[3]|max_length[150]',
+        'name'       => 'required|min_length[3]|max_length[200]',
         'email'      => 'permit_empty|valid_email'
     ];
     

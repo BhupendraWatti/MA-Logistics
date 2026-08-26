@@ -566,7 +566,7 @@
 
                     <div class="ma-input-group">
                         <span class="ma-input-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
-                        <input type="text" id="ma-awb-input" class="ma-tracking-input" placeholder="e.g. PA1019318" required autocomplete="off">
+                        <input type="text" id="ma-awb-input" class="ma-tracking-input" placeholder="Enter AWB or Docket number" required autocomplete="off">
                         <button type="submit" class="ma-tracking-btn">
                             <span>Track</span>
                             <div class="ma-loader" id="ma-btn-loader"></div>
@@ -574,15 +574,6 @@
                     </div>
                 </form>
             </div>
-        </div>
-
-        <!-- Playbook Live helper -->
-        <div class="ma-demo-playbook">
-            <span class="ma-playbook-label"><i class="fa-solid fa-database me-1"></i> Live Playbook:</span>
-            <span class="ma-playbook-badge" onclick="selectSample('PA1019318')">PA1019318 (Delivered AWB)</span>
-            <span class="ma-playbook-badge" onclick="selectSample('MA-10001')">MA-10001 (Billed AWB)</span>
-            <span class="ma-playbook-badge" onclick="selectSample('MA-10002')">MA-10002 (Billed AWB)</span>
-            <span class="ma-playbook-badge" onclick="selectSample('4561712')">4561712 (Docket / AWB)</span>
         </div>
 
         <!-- Error Notification box -->
@@ -593,8 +584,8 @@
             
             <!-- Black Header Band exactly matching shared layout -->
             <div class="ma-result-header-band">
-                <span class="ma-result-awb-title" id="val-awb-header">AWB: PA1019318</span>
-                <span class="ma-result-status-title" id="val-status-header">Status: DELIVERED</span>
+                <span class="ma-result-awb-title" id="val-awb-header">AWB: -</span>
+                <span class="ma-result-status-title" id="val-status-header">Status: -</span>
             </div>
 
             <!-- Expected Delivery Date & Time (Alert Card positioned between search bar/header and results table grid) -->
@@ -674,7 +665,7 @@
 
                 <!-- Right Column: Historical logs table -->
                 <div>
-                    <h3 class="ma-table-title" id="val-history-header-title"><i class="fa-solid fa-list-check me-2 text-primary"></i>AWB: PA1019318</h3>
+                    <h3 class="ma-table-title" id="val-history-header-title"><i class="fa-solid fa-list-check me-2 text-primary"></i>AWB: -</h3>
                     <div class="ma-table-container">
                         <table class="ma-table">
                             <thead>
@@ -712,18 +703,7 @@
     <!-- ================== DYNAMIC JAVASCRIPT LOGIC ================== -->
     <script>
         // API Base Point - points to the newly developed CI4 controller API
-        const MA_ERP_API_BASE = "<?= base_url('api/track/') ?>/";
-
-        function selectSample(value) {
-            document.getElementById("ma-awb-input").value = value;
-            const selectType = document.getElementById("ma-search-type");
-            if (value === '4561712') {
-                selectType.value = 'docket';
-            } else {
-                selectType.value = 'awb';
-            }
-            initiateTrack();
-        }
+        const MA_ERP_API_BASE = "<?= rtrim(base_url('api/track'), '/') ?>/";
 
         function initiateTrack() {
             const inputField = document.getElementById("ma-awb-input");
@@ -744,10 +724,8 @@
 
             const searchType = document.getElementById("ma-search-type").value;
 
-            // Call public API endpoint using Ajax Fetch
-            // We pass searchType as both a path segment and a query string parameter to ensure 
-            // 100% compatibility across diverse hosting server configurations (e.g. Apache query rewriting vs path segments)
-            fetch(MA_ERP_API_BASE + encodeURIComponent(searchType) + "/" + encodeURIComponent(searchVal) + "?type=" + encodeURIComponent(searchType))
+            // The API route accepts exactly one path value; the optional type remains a query hint.
+            fetch(MA_ERP_API_BASE + encodeURIComponent(searchVal) + "?type=" + encodeURIComponent(searchType))
                 .then(response => {
                     if (!response.ok) {
                         return response.json().then(errData => {

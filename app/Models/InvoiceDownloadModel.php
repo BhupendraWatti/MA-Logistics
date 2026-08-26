@@ -41,14 +41,15 @@ class InvoiceDownloadModel extends Model
 
     public function getByCompanyMonth(int $companyId, string $month, int $limit = 100): array
     {
-        $start = $month . '-01 00:00:00';
-        $end = date('Y-m-t 23:59:59', strtotime($month . '-01'));
+        $start = $month . '-01';
+        $endExclusive = date('Y-m-d', strtotime($start . ' +1 month'));
 
         return $this->select('invoice_downloads.*, users.username as downloaded_by')
             ->join('users', 'users.id = invoice_downloads.user_id', 'left')
             ->where('invoice_downloads.company_id', $companyId)
-            ->where('invoice_downloads.downloaded_at >=', $start)
-            ->where('invoice_downloads.downloaded_at <=', $end)
+            ->where('COALESCE(invoice_downloads.invoice_date, invoice_downloads.from_date) >=', $start)
+            ->where('COALESCE(invoice_downloads.invoice_date, invoice_downloads.from_date) <', $endExclusive)
+            ->orderBy('COALESCE(invoice_downloads.invoice_date, invoice_downloads.from_date)', 'DESC', false)
             ->orderBy('invoice_downloads.downloaded_at', 'DESC')
             ->limit($limit)
             ->findAll();

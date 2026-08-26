@@ -74,6 +74,35 @@ class CustomerRateService
         }
     }
 
+    public function deleteCustomer(int $companyId, int $customerId): bool
+    {
+        $this->db->transBegin();
+        try {
+            if (!$this->lockCustomer($companyId, $customerId)) {
+                $this->db->transRollback();
+                return false;
+            }
+
+            $this->db->table('customer_rates')
+                ->where('company_id', $companyId)
+                ->where('customer_id', $customerId)
+                ->delete();
+            $this->db->table('customers')
+                ->where('company_id', $companyId)
+                ->where('id', $customerId)
+                ->delete();
+            if ($this->db->affectedRows() !== 1) {
+                throw new \RuntimeException('Unable to delete the customer.');
+            }
+
+            $this->commitOrFail();
+            return true;
+        } catch (\Throwable $e) {
+            $this->db->transRollback();
+            throw $e;
+        }
+    }
+
     public function saveRuntimeRate(
         int $companyId,
         string $customerName,

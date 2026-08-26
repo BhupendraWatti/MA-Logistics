@@ -104,8 +104,12 @@ class CompanyController extends BaseController
             if (!in_array($signatureFile->getMimeType(), ['image/png', 'image/jpeg', 'image/jpg', 'image/gif'])) {
                 return redirect()->back()->with('error', 'Signature must be a PNG, JPG, or GIF image.');
             }
+            $uploadPath = FCPATH . 'uploads/signatures';
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0777, true);
+            }
             $newName = 'signature_' . time() . '_' . rand(1000, 9999) . '.' . $signatureFile->getExtension();
-            $signatureFile->move(FCPATH . 'uploads/signatures', $newName);
+            $signatureFile->move($uploadPath, $newName);
             $data['signature_path'] = 'uploads/signatures/' . $newName;
             if (in_array('signature_image', $fields)) {
                 $data['signature_image'] = $data['signature_path'];
@@ -150,11 +154,17 @@ class CompanyController extends BaseController
         $companyModel = new CompanyModel();
         $company = $companyModel->find($companyId);
 
-        if (!empty($company['signature_path']) && file_exists(FCPATH . $company['signature_path'])) {
-            unlink(FCPATH . $company['signature_path']);
+        $signaturePath = $company['signature_path'] ?? $company['signature_image'] ?? '';
+        if ($signaturePath !== '' && file_exists(FCPATH . $signaturePath)) {
+            unlink(FCPATH . $signaturePath);
         }
 
-        $companyModel->update($companyId, ['signature_path' => null]);
+        $fields = \Config\Database::connect()->getFieldNames('companies');
+        $data = ['signature_path' => null];
+        if (in_array('signature_image', $fields, true)) {
+            $data['signature_image'] = null;
+        }
+        $companyModel->update($companyId, array_intersect_key($data, array_flip($fields)));
         
         return redirect()->to('/company/settings')->with('success', 'Signature deleted successfully!');
     }

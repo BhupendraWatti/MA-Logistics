@@ -6,8 +6,22 @@ This document describes all public and internal JSON API endpoints provided by t
 
 ## 1. Authentication & Base URL
 * **Base URL**: `http://localhost:8080/` (Dev) / Staging / Production Domain.
+* **Automation JSON API**: `/api/v1/*` accepts HTTP Basic Auth or the session returned by `POST /api/v1/auth/login`. Company-scoped calls require `X-Company-ID`; invalid requests return JSON `401/422/404` responses instead of redirects.
 * **Internal APIs**: All endpoints under `/api/masters/*` and `/tracking/*` require a valid session cookie (`ci_session`).
 * **Public APIs**: Tracking endpoint `/api/track/*` is publicly accessible and enables `Access-Control-Allow-Origin: *`.
+* **Public UI**: `GET /track` and `GET /tracking` render the public tracking page. `GET /` remains the authenticated ERP entry point.
+
+The `/api/v1` namespace is CSRF-exempt because it has its own HTTP authentication filter. The exemption does not apply to legacy browser form routes. See `testsprite_tests/malogistic_backend_api.md` for producer order and `testsprite_tests/malogistic_backend_api.json` for the machine-readable OpenAPI contract.
+
+### Versioned automation resources
+
+- Auth/company: `/api/v1/auth/login`, `/api/v1/auth/logout`, `/api/v1/companies`, `/api/v1/companies/select`
+- Masters: company, customers, rate lookup, transporters, drivers, airlines, and lookups under `/api/v1/masters`
+- Bookings: create/search/read/update/delete, AWB check, docket PDF, and tracking history under `/api/v1/bookings`
+- Tracking: create/update/delete under `/api/v1/tracking`
+- Consolidated invoices: generate/download/delete under `/api/v1/invoices`
+
+All resource URLs use positive integer IDs returned by producer responses. Placeholder strings and UUIDs are not valid resource identifiers.
 
 ---
 
@@ -19,6 +33,7 @@ Retrieve current status and history timeline of a consignment by AWB or Docket n
 * **URL**: `GET /api/track/{awb_or_docket_no}`
 * **Access**: Public (CORS Enabled)
 * **Parameters**: `awb_or_docket_no` (string)
+* **Client contract**: Supply the identifier as the only path value. A UI may send `?type=awb` or `?type=docket` as an optional hint, but must not add the type as another path segment.
 * **Success Response (200 OK)**:
   ```json
   {

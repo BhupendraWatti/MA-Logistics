@@ -1516,6 +1516,17 @@ public function exportExcel()
             return $this->response->setJSON([]);
         }
 
+        $fromDateValue = \DateTimeImmutable::createFromFormat('!Y-m-d', (string) $fromDate);
+        $toDateValue = \DateTimeImmutable::createFromFormat('!Y-m-d', (string) $toDate);
+        if (!$fromDateValue || !$toDateValue || $fromDateValue > $toDateValue) {
+            return $this->response->setStatusCode(422)->setJSON([
+                'status' => 'error',
+                'message' => 'Please select a valid shipment date range.',
+            ]);
+        }
+        $fromDate = $fromDateValue->format('Y-m-d');
+        $toDateExclusive = $toDateValue->modify('+1 day')->format('Y-m-d');
+
         $db = \Config\Database::connect();
         $builder = $db->table('shipment_items si')
                       ->select('si.id, si.docket_no, si.invoice_no, si.invoice_date, si.actual_weight, si.final_chargeable_weight, si.pieces, si.rate, b.booking_date, b.origin as booking_origin, b.destination as booking_destination, b.gst_applied, b.cgst_rate, b.sgst_rate, b.igst_rate, b.awb_no')
@@ -1526,8 +1537,8 @@ public function exportExcel()
                           ->orWhere('si.bill_to', $customerName)
                       ->groupEnd();
 
-        $builder->where("b.booking_date >= ", $fromDate)
-                ->where("b.booking_date <= ", $toDate);
+        $builder->where('b.booking_date >=', $fromDate)
+                ->where('b.booking_date <', $toDateExclusive);
 
         $records = $builder->orderBy('b.booking_date', 'ASC')
                            ->orderBy('si.docket_no', 'ASC')
@@ -1952,6 +1963,7 @@ public function exportExcel()
                     'message' => 'Invoice generated.',
                     'file_name' => $fileName,
                     'download_url' => base_url('logistics/all-invoices/downloads/' . $downloadId),
+                    'history_month' => date('Y-m', strtotime($pdfInvoiceDateRaw)),
                     'csrf_hash' => csrf_hash(),
                 ]);
             }

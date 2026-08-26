@@ -2217,6 +2217,8 @@ foreach ($customers ?? [] as $c) {
 
     async function saveItemToGrid() {
         const customer = $('#entry_customer').val();
+        const billTo = $('#entry_bill_to').val();
+        const consignee = $('#entry_consignee').val();
         const contents = $('#entry_contents').val() || 'Goods';
         const act_wt = parseFloat($('#entry_act_wt').val()) || 0;
         const paymentType = getEntryPaymentTypeValue();
@@ -2224,6 +2226,10 @@ foreach ($customers ?? [] as $c) {
         // BUG FIX #2 & #8: Guard against NEW_ENTRY sentinel and enforce a valid selection
         if (!customer || customer === 'NEW_ENTRY') {
             ERPUtils.showWarning("Missing Data", "Please select a valid Shipper/Customer from the list.");
+            return;
+        }
+        if (!billTo || !consignee) {
+            ERPUtils.showWarning("Missing Data", "Bill To and Consignee are required for every shipment item.");
             return;
         }
         if (act_wt < 0) {

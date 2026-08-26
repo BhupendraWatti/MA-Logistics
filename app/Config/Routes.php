@@ -118,7 +118,46 @@ $routes->get('api/masters/lookup/(:segment)',            'MasterController::apiL
 $routes->get('api/masters/company-gst',               'MasterController::apiCompanyGst');
 
 // ====== PUBLIC API ENDPOINTS ======
+$routes->get('track', 'TrackingController::index');
+$routes->get('tracking', 'TrackingController::index');
 $routes->get('api/track/(:any)', 'TrackingController::trackByAwb/$1');
+
+// ====== VERSIONED JSON API (Basic Auth or login session) ======
+$routes->post('api/v1/auth/login', 'Api\V1Controller::login');
+$routes->group('api/v1', ['filter' => 'apiBasic'], static function ($routes) {
+    $routes->post('auth/logout', 'Api\V1Controller::logout');
+    $routes->get('companies', 'Api\V1Controller::companies');
+    $routes->post('companies/select', 'Api\V1Controller::selectCompany');
+
+    $routes->get('masters/company', 'Api\V1Controller::company');
+    $routes->get('masters/customers', 'Api\V1Controller::customers');
+    $routes->get('masters/customers/(:num)', 'Api\V1Controller::customer/$1');
+    $routes->post('masters/customers', 'Api\V1Controller::createCustomer');
+    $routes->delete('masters/customers/(:num)', 'Api\V1Controller::deleteCustomer/$1');
+    $routes->post('masters/customer-rates/lookup', 'Api\V1Controller::lookupCustomerRate');
+    $routes->post('masters/dockets/generate', 'Api\V1Controller::generateDocket');
+    $routes->get('masters/transporters', 'Api\V1Controller::transporters');
+    $routes->get('masters/drivers', 'Api\V1Controller::drivers');
+    $routes->get('masters/airlines', 'Api\V1Controller::airlines');
+    $routes->get('masters/lookups/(:segment)', 'Api\V1Controller::lookups/$1');
+
+    $routes->post('bookings/check-awb', 'Api\V1Controller::checkAwb');
+    $routes->match(['get', 'post'], 'bookings/search', 'Api\V1Controller::searchBookings');
+    $routes->post('bookings', 'Api\V1Controller::createBooking');
+    $routes->get('bookings/(:num)', 'Api\V1Controller::booking/$1');
+    $routes->match(['put', 'patch', 'post'], 'bookings/(:num)', 'Api\V1Controller::updateBooking/$1');
+    $routes->delete('bookings/(:num)', 'Api\V1Controller::deleteBooking/$1');
+    $routes->post('bookings/(:num)/delete', 'Api\V1Controller::deleteBooking/$1');
+    $routes->get('bookings/(:num)/docket-pdf', 'Api\V1Controller::docketPdf/$1');
+    $routes->get('bookings/(:num)/tracking', 'Api\V1Controller::trackingHistory/$1');
+
+    $routes->post('tracking', 'Api\V1Controller::saveTracking');
+    $routes->delete('tracking/(:num)', 'Api\V1Controller::deleteTracking/$1');
+    $routes->post('tracking/(:num)/delete', 'Api\V1Controller::deleteTracking/$1');
+    $routes->post('invoices/consolidated', 'Api\V1Controller::consolidatedInvoice');
+    $routes->get('invoices/downloads/(:num)', 'Api\V1Controller::invoiceDownload/$1');
+    $routes->delete('invoices/downloads/(:num)', 'Api\V1Controller::deleteInvoiceDownload/$1');
+});
 
 // DEFAULT FALLBACK (LAST!)
 $routes->get('(:segment)', 'Logistics::index');

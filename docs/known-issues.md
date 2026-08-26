@@ -8,6 +8,18 @@ This document tracks known issues, technical limitations, accepted workarounds, 
 * **Resolved in CHG-016**: Consolidated invoice PDF generation now auto-generates company-scoped financial-year invoice numbers, persists them to selected shipment rows, and reuses finalized numbers for reprints.
 * **Resolved in CHG-019**: Edit-mode Save Item now autosaves booking changes, default bank accounts are preselected in invoice generation, duplicate AWB/docket feedback appears during entry, default invoices place only the first four active charges into columns, and later charges flow into Other Charges.
 * **Resolved in CHG-023**: Customer rates are immutable versions with one database-enforced active scope, exact O&D lookup no longer falls back to generic rows, and the blank session save-path override no longer redirects PHP sessions to `D:\xampp\tmp`.
+* **Resolved in CHG-031**: Customer delete now verifies a transactional tenant-scoped operation, 200-character customer names match the schema, Company Settings exposes signature upload controls, and `/track` plus `/tracking` are public page aliases.
+* **Resolved in CHG-032**: Public tracking now uses the actual single-segment API contract, billing history uses invoice month, shipment To Date is fully inclusive, and incomplete booking parties are rejected before an item enters the grid.
+
+## TestSprite Run Classification (2026-08-26)
+
+* **Product defects fixed**: customer deletion, long customer-detail preservation, missing signature control, and missing public tracking page routes.
+* **Seed-data dependent**: tracking lookup and consolidated invoice generation still require the test to create/select valid company-scoped records and use a real unique AWB. The UI no longer advertises nonexistent sample AWBs.
+* **Fixture dependent**: POD, logo, and signature upload tests must attach a valid image file; a blocked result caused by no selected file is not an application failure.
+* **Intentional behavior**: Total Chargeable Weight is derived from shipment-item chargeable weights and remains read-only at booking level; item-level overrides are the supported audited workflow. Billing Mode and PDF Layout remain accessible native radio controls in All Invoices.
+* **Access boundary**: `/track` and `/tracking` are public. `/` remains the protected ERP root and redirects unauthenticated users to login by design.
+* **Billing-month correction**: July billing PDFs generated in August now appear when July is selected in All Downloads; generation time remains visible but no longer determines the month bucket.
+* **Generated-history focus**: After PDF generation, the page now selects the generated invoice's billing month before refreshing All Downloads. Records remain restricted to the selected company.
 
 ---
 

@@ -144,6 +144,22 @@
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-12">
+                                <label for="signature_image" class="form-label text-muted fs-7 fw-semibold">Invoice Footer Signature <small class="text-muted">(PNG, JPG, or GIF)</small></label>
+                                <input type="file" id="signature_image" name="signature_image" class="form-control form-control-sm shadow-none" accept="image/png, image/jpeg, image/jpg, image/gif">
+                                <small class="text-muted d-block mt-1">This signature is printed in the authorized-signatory area of invoice PDFs.</small>
+                                <?php $signature = $company['signature_path'] ?? $company['signature_image'] ?? ''; ?>
+                                <?php if (!empty($signature) && file_exists(FCPATH . $signature)): ?>
+                                    <div class="d-flex align-items-center gap-3 mt-3">
+                                        <img src="<?= base_url(esc($signature)) ?>" alt="Current invoice signature" class="border rounded bg-white p-1" style="max-height: 70px; max-width: 180px; object-fit: contain;">
+                                        <a href="<?= base_url('company/settings/deleteSignature') ?>" class="btn btn-outline-danger btn-sm" onclick="return confirm('Are you sure you want to delete the invoice signature?');">
+                                            <i class="fas fa-trash me-1"></i> Delete Signature
+                                        </a>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="text-muted fs-8 mt-2">No invoice signature uploaded yet.</div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="col-12">
                                 <label class="form-label text-muted fs-7 fw-semibold">Terms &amp; Conditions <small class="text-muted">(printed on all invoices - supports multi-line numbered points)</small></label>
                                 <textarea name="terms_conditions" class="form-control form-control-sm shadow-none" rows="6" placeholder="1. Difference if any may be notified within 7 days of receipt of bills.&#10;2. Subject to Pune Jurisdiction.&#10;3. E & O.E.&#10;4. Draw Cheque in favour of &quot;MA LOGISTICS&quot;"><?= esc($company['terms_conditions'] ?? '') ?></textarea>
                             </div>

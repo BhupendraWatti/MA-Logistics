@@ -117,6 +117,26 @@ final class CustomerRateServiceTest extends TestCase
         self::assertSame(1, $this->db->table('customer_rates')->where('company_id', 2)->where('is_active', 1)->countAllResults());
     }
 
+    public function testCustomerDetailsRoundTripAndDeleteRemainTenantScoped(): void
+    {
+        $service = new CustomerRateService($this->db);
+        $name = str_repeat('N', 200);
+        $address = "Warehouse 17, Long Industrial Estate\nLoading Gate B, Pune 411001";
+        $customerId = $service->createCustomer(1, $this->customerPost([
+            ['Delhi', 'Mumbai', 'Steel', 10, '2026-08-01'],
+        ], ['name' => $name, 'address' => $address]));
+
+        $customer = $this->db->table('customers')->where('id', $customerId)->get()->getRowArray();
+        self::assertSame($name, $customer['name']);
+        self::assertSame($address, $customer['address']);
+        self::assertFalse($service->deleteCustomer(2, $customerId));
+        self::assertSame(1, $this->db->table('customers')->where('id', $customerId)->countAllResults());
+
+        self::assertTrue($service->deleteCustomer(1, $customerId));
+        self::assertSame(0, $this->db->table('customers')->where('id', $customerId)->countAllResults());
+        self::assertSame(0, $this->db->table('customer_rates')->where('customer_id', $customerId)->countAllResults());
+    }
+
     public function testSameDayReplacementWinsAndPastDateUsesClosedVersion(): void
     {
         $service = new CustomerRateService($this->db);
@@ -173,8 +193,9 @@ final class CustomerRateServiceTest extends TestCase
         $db->query('CREATE TABLE customers (
             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             company_id INT UNSIGNED NOT NULL,
-            name VARCHAR(150) NOT NULL,
+            name VARCHAR(200) NOT NULL,
             email VARCHAR(150) NULL,
+            address TEXT NULL,
             created_at DATETIME NULL,
             updated_at DATETIME NULL
         ) ENGINE=InnoDB');
@@ -197,7 +218,7 @@ final class CustomerRateServiceTest extends TestCase
         $db->query('CREATE UNIQUE INDEX uq_customer_rates_active_scope ON customer_rates (company_id, customer_id, active_scope_key)');
     }
 
-    private function customerPost(array $rates): array
+    private function customerPost(array $rates, array $overrides = []): array
     {
         $post = ['name' => 'Test Customer'];
         foreach ($rates as [$origin, $destination, $category, $rate, $effectiveFrom]) {
@@ -207,7 +228,7 @@ final class CustomerRateServiceTest extends TestCase
             $post['rate_value'][] = $rate;
             $post['rate_effective_from'][] = $effectiveFrom;
         }
-        return $post;
+        return array_merge($post, $overrides);
     }
 
     private function insertCustomer(int $companyId, string $name): int

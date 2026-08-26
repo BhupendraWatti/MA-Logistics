@@ -20,7 +20,7 @@ $destinationOptions = $lookups['destination'] ?? [];
                     <div class="col-md-8">
                         <label class="form-label text-muted fs-7 fw-semibold">Customer Name <span
                                 class="text-danger">*</span></label>
-                        <input type="text" name="name" class="form-control form-control-sm shadow-none fw-bold"
+                        <input type="text" name="name" maxlength="200" class="form-control form-control-sm shadow-none fw-bold"
                             value="<?= esc($c['name'] ?? '') ?>" required>
                     </div>
                     <div class="col-md-4">

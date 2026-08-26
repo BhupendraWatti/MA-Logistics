@@ -205,7 +205,7 @@ graph LR
    - Adding a milestone (`POST /tracking/save`) uploads image files to `public/uploads/pod/`.
    - Writes event record to `tracking_status_logs` and updates `bookings.current_status`.
 3. **Public Tracking API**:
-   - Customers query `GET /api/track/{awb_or_docket_no}` $\rightarrow$ [TrackingApi.php](file:///d:/Company%20Work/Company%20projects/MAlogistic/app/Controllers/Api/TrackingApi.php).
+   - Customers query `GET /api/track/{awb_or_docket_no}` $\rightarrow$ [TrackingController.php](file:///d:/Company%20Work/Company%20projects/MAlogistic/app/Controllers/TrackingController.php). The identifier is the only path value; the public page does not depend on external carrier/demo records.
 
 ---
 

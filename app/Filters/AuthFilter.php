@@ -13,7 +13,7 @@ class AuthFilter implements FilterInterface
         
         // PUBLIC ROUTES
         $cleanUri = ltrim($uri, '/');
-        $publicRoutes = ['login', 'auth/attemptLogin', 'auth/logout', 'company-selection', 'logistics/clearCompany'];
+        $publicRoutes = ['login', 'auth/attemptLogin', 'auth/logout', 'company-selection', 'logistics/clearCompany', 'track', 'tracking'];
         if (strpos($cleanUri, 'api/track') === 0 || in_array($cleanUri, $publicRoutes)) {
             return;
         }

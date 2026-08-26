@@ -14,6 +14,7 @@ use CodeIgniter\Filters\PerformanceMetrics;
 use CodeIgniter\Filters\SecureHeaders;
 
 use App\Filters\AuthFilter;   // AuthFilter Added
+use App\Filters\ApiBasicAuthFilter;
 
 class Filters extends BaseFilters
 {
@@ -37,6 +38,7 @@ class Filters extends BaseFilters
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
         'auth'          => AuthFilter::class,  // Adding AuthFilter
+        'apiBasic'      => ApiBasicAuthFilter::class,
     ];
 
     /**
@@ -72,13 +74,14 @@ class Filters extends BaseFilters
      */
     public array $globals = [
         'before' => [
-            'auth' => ['except' => ['login', 'auth/*', 'register', 'api/track/*']],   // Auth Added Here
+            'auth' => ['except' => ['login', 'auth/*', 'register', 'track', 'tracking', 'api/track/*', 'api/v1/*']],   // Auth Added Here
             // 'honeypot',
             'csrf' => ['except' => [
                 'logistics/ajax-datatable', 
                 'masters/ajax-datatable/*', 
                 'admin/ajax-datatable',
                 'api/track/*',
+                'api/v1/*',
                 'masters/dockets/preview',
                 'masters/dockets/generate',
                 'logistics/all-invoices/search',

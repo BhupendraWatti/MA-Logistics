@@ -19,6 +19,11 @@ class TrackingController extends BaseController
         $this->bookingModel = new BookingModel();
     }
 
+    public function index(): string
+    {
+        return view('public_track');
+    }
+
     public function getHistory($booking_id)
     {
         $history = $this->trackingModel->where('booking_id', $booking_id)->orderBy('event_date', 'DESC')->orderBy('event_time', 'DESC')->findAll();

@@ -640,6 +640,9 @@ async function generatePdfWithSavePicker() {
         if (result.download_url) {
             window.open(result.download_url, '_blank');
         }
+        if (result.history_month) {
+            $('#downloadHistoryMonth').val(result.history_month);
+        }
         refreshDownloadHistory();
     } catch (error) {
         Swal.fire('Download Failed', error.message || 'Unable to generate invoice PDF.', 'error');

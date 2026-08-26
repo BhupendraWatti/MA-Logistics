@@ -2,6 +2,40 @@
 
 This file tracks every technical change, feature implementation, refactoring, and pending scope addition performed on the M.A. Logistics ERP project.
 
+## TestSprite Remediation
+
+### [CHG-033] Focus All Downloads on the Generated Invoice Billing Month
+* **Status**: Completed and regression tested
+* **Priority**: High
+* **Requirement**: Preserve the client-required company-scoped consolidated-invoice archive while making a newly generated historical invoice immediately visible in All Downloads.
+* **Root Cause**: PDF generation saved the correct billing month, but the browser refreshed the previously selected month, usually the current month, making a historical invoice appear missing.
+* **Implementation**: The AJAX generation response now returns `history_month` from the persisted invoice billing date, and the All Invoices page selects that month before refreshing download history.
+* **Preserved Rules**: Download history remains tenant-scoped, billing-month based, and dependent on real generated invoice records; no cross-company data or synthetic production invoices were introduced.
+* **Files Modified**: `app/Controllers/Logistics.php`, `app/Views/logistics/all_invoices.php`, regression tests, and synchronized documentation.
+
+### [CHG-032] Tracking Request Contract, Billing-Month History, Invoice Date Range, and Booking Party Guard
+* **Status**: Completed and regression tested
+* **Priority**: High
+* **Requirement**: Re-investigate the remaining four failed TestSprite scenarios against documented product rules and correct only confirmed application defects.
+* **Root Cause**: The public page inserted an unsupported search-type path segment into the single-value tracking API and advertised nonexistent sample AWBs; All Downloads filtered by generation timestamp instead of invoice billing month; shipment search treated the selected end date as midnight; and the item drawer allowed blank Bill To/Consignee values that the backend correctly rejected, rolling back booking creation.
+* **Implementation**: Restored the documented `/api/track/{awb_or_docket}` request shape and removed fake live samples; changed download history to invoice/from-date billing months; made shipment date ranges end-date inclusive using a next-day exclusive boundary; and aligned drawer validation with backend party requirements.
+* **Preserved Rules**: Total Chargeable Weight remains the read-only sum of shipment-item chargeable weights, and consolidated invoices still require real eligible shipment data. Upload tests still require actual image fixtures.
+* **QA**: Added failing-first model/surface regressions, PHP lint, full PHPUnit, local HTTP/API smoke checks, and reassessment of all eight TestSprite outcomes.
+
+---
+
+### [CHG-031] Customer Integrity, Signature UI, and Public Tracking Entry Points
+* **Status**: Completed and regression tested
+* **Priority**: High
+* **Requirement**: Resolve the actionable defects reported by the 52-case TestSprite run without changing valid data-dependent or calculated workflows.
+* **Root Cause**: Customer deletion reported success without verifying a tenant-scoped delete or cleaning rate rows; customer validation allowed fewer characters than the database schema; signature upload handling existed without a visible Company Settings control; and the public tracking view/API existed without public page routes.
+* **Implementation**: Added transactional tenant-scoped customer/rate deletion with explicit JSON outcomes, aligned customer names to 200 characters and preserved full addresses, exposed signature upload/preview/delete controls with upload-directory creation, and added unauthenticated `/track` and `/tracking` page aliases. The ERP root remains the authenticated login entry point.
+* **Test Classification**: The remaining TestSprite results depend on seeded AWB/customer/invoice/shipment records, required upload fixtures, or intentional calculated/read-only controls. They are documented in `known-issues.md` rather than converted into product regressions.
+* **Files Modified**: Customer service/controller/model/form, Company Settings/controller, tracking controller/routes/filters, regression tests, and project documentation.
+* **QA**: PHP lint, transactional MySQL regression coverage, product-surface route/control assertions, full PHPUnit suite, and public-route smoke testing.
+
+---
+
 ## Latest PDF Fix
 
 ### [CHG-030] Deterministic Terms & Conditions Spacing in TCPDF
@@ -378,6 +412,15 @@ This file tracks every technical change, feature implementation, refactoring, an
 * **Requirement**: Consolidate and structure project knowledge base into standardized, modular markdown files linked via `gemini.md`.
 * **Implementation**: Created `rules.md`, `changes.md`, `functionality.md`, `architecture.md`, `database.md`, `api.md`, `known-issues.md`, `testing.md`, `README.md`, and updated `gemini.md`.
 * **Files Modified**: `docs/*`
+
+---
+
+### [CHG-020] Versioned JSON Automation API
+* **Status**: Completed
+* **Priority**: High
+* **Requirement**: Allow TestSprite backend tests to authenticate without browser redirects and create/capture real booking, tracking, and invoice IDs.
+* **Implementation**: Added isolated `/api/v1` Basic/session authentication, explicit `X-Company-ID` tenant context, structured JSON errors, resource producer/consumer endpoints, PDF streaming, and test-artifact cleanup. Legacy browser authentication and CSRF behavior is unchanged.
+* **Files Modified**: `app/Filters/ApiBasicAuthFilter.php`, `app/Controllers/Api/V1Controller.php`, `app/Config/Filters.php`, `app/Config/Routes.php`, `testsprite_tests/malogistic_backend_api.*`, and API/testing documentation.
 
 ---
 

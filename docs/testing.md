@@ -39,10 +39,24 @@ This document outlines the testing strategy, manual smoke test procedures, perfo
 | **TC046** | All Invoice GST/Non-GST Field Rules | Render GST and Non-GST consolidated invoices; GST output contains company GSTIN/SAC/PAN, customer tax identity, applicable tax columns, taxable total and gross total, while Non-GST output omits tax-only identities and zero GST columns. | PASS (PHPUnit + RENDERED) |
 | **TC047** | All Invoice Landscape/Portrait Fidelity | Render 70-row A4 landscape and portrait All Invoices with an uploaded logo configured; both outputs omit the logo, keep the page-one metadata clear of the table, repeat table headings on continuation pages, preserve serial numbers, and finish with an intact 60/40 footer. | PASS (PHPUnit + RENDERED) |
 | **TC048** | Portrait Total Column Rebalancing | Render a default portrait All Invoice with Docket, Pickup, and Delivery columns; Total narrows from its previous residual width while LR No., Invoice Number, Origin, and Destination expand, all table widths remain aligned, and landscape/NX/Brembo proportions are unchanged. | PASS (PHPUnit + RENDERED) |
+| **TC049** | Customer Detail/Delete Integrity | Save a 200-character customer name and multiline address, verify exact round-trip, reject cross-company deletion, then delete the correct tenant record and its customer-rate rows atomically. | PASS (PHPUnit) |
+| **TC050** | Company Signature Control | Verify Company Settings exposes an accessible signature image upload plus current-signature preview/delete behavior. | PASS (PHPUnit SURFACE) |
+| **TC051** | Public Tracking Aliases | Request `/track` and `/tracking` while logged out; both render the public view, while internal `/tracking/history/{id}` remains authenticated. | PASS (PHPUnit SURFACE + SMOKE) |
+| **TC052** | Calculated Weight and Invoice Option Contract | Verify total chargeable weight remains read-only/derived from items and All Invoices retains native billing-mode and layout-orientation radio controls. | PASS (PHPUnit SURFACE) |
+| **TC053** | Public Tracking Request Contract | Enter a real AWB/Docket on `/track`; the browser requests `/api/track/{identifier}` with no extra type path segment and renders the returned record. | PASS (PHPUnit SURFACE + HTTP SMOKE) |
+| **TC054** | Invoice Billing Month and Inclusive To Date | Verify a July invoice generated in August appears under July, and a shipment timestamped late on the selected To Date appears in Shipment Records. | PASS (PHPUnit MODEL + SURFACE) |
+| **TC055** | Booking Party Preflight Guard | Attempt to save an item without Bill To or Consignee; the drawer blocks it before grid insertion, while a complete item proceeds to transactional booking save. | PASS (PHPUnit SURFACE + LOG EVIDENCE) |
+| **TC056** | Generated Historical Invoice History Focus | Generate a consolidated PDF for a historical billing month while another month is selected; the response identifies the billing month and All Downloads selects it before refreshing the tenant-scoped history. | PASS (PHPUnit SURFACE) |
 
 ---
 
 ## 1. Manual Smoke Test Plan (Production / Staging)
+
+### TestSprite JSON API producer-consumer smoke
+
+Run against `/api/v1` with Basic Auth and `X-Company-ID`: list companies/customers, create a unique booking and capture `data.booking_id`, patch/read it, create tracking and capture `data.tracking_id`, generate/download an invoice and capture `data.invoice_download_id`, then delete invoice, tracking, and booking fixtures. Also verify missing authentication returns JSON 401, missing company context returns JSON 422, and nonexistent numeric resources return JSON 404.
+
+The automated contract surface is covered by `tests/BackendJsonApiSurfaceTest.php`. Exact payloads and TestSprite variable names are in `testsprite_tests/malogistic_backend_api.md`.
 
 Execute this 10-minute smoke test before signing off on any production deployment:
 

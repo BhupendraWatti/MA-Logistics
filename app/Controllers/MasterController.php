@@ -194,8 +194,28 @@ class MasterController extends BaseController
     public function deleteCustomer(int $id)
     {
         if ($r = $this->requireAdmin()) return $r;
-        (new CustomerModel())->where('id', $id)->where('company_id', $this->companyId())->delete();
-        return $this->response->setJSON(['success' => true]);
+        try {
+            $deleted = (new CustomerRateService())->deleteCustomer($this->companyId(), $id);
+            if (!$deleted) {
+                return $this->response->setStatusCode(404)->setJSON([
+                    'success' => false,
+                    'message' => 'Customer not found.',
+                    'csrf_hash' => csrf_hash(),
+                ]);
+            }
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Customer deleted successfully.',
+                'csrf_hash' => csrf_hash(),
+            ]);
+        } catch (\Throwable $e) {
+            log_message('error', '[Customer delete] ' . $e->getMessage());
+            return $this->response->setStatusCode(500)->setJSON([
+                'success' => false,
+                'message' => 'Unable to delete the customer. Please try again.',
+                'csrf_hash' => csrf_hash(),
+            ]);
+        }
     }
 
     public function lookupCustomerRate()

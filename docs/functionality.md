@@ -19,13 +19,18 @@ This document provides a comprehensive functional description of all modules, bu
 * **Multi-page invoice continuation**: The company and invoice-detail header prints once on page 1. Overflow pages begin near the top with the repeated billing-table column headings, and shipment serial numbers continue from the preceding page without restarting.
 * **Runtime uniqueness feedback**: AWB uniqueness is checked while the AWB field is edited. Docket uniqueness is checked while editing the item drawer and again before Save Item accepts the row, preventing late save-time validation from discarding filled form data.
 * **Default invoice bank selection**: The All Invoices generator preselects the company default bank account when one is configured; backend invoice generation still falls back to the default bank, then first bank, then legacy company bank fields.
-* **Month-wise invoice download history**: All Downloads filters saved consolidated PDFs by selected month, shows the month billing total from `invoice_downloads.total_amount`, shows who generated each bill, and allows permitted users to delete a saved PDF/history row.
+* **Month-wise invoice download history**: All Downloads filters saved consolidated PDFs by their invoice billing month (`invoice_date`, with `from_date` fallback), regardless of when the PDF was generated. It shows the month billing total from `invoice_downloads.total_amount`, shows who generated each bill, and allows permitted users to delete a saved PDF/history row.
+* **Generated-invoice history focus**: After a consolidated PDF is generated, All Downloads automatically selects that invoice's billing month before refreshing, so a historical invoice generated in a later month is immediately visible without weakening company isolation.
 * **Draft recovery hardening**: Draft saves keep the local browser recovery copy until a non-draft booking save succeeds, reducing data-loss risk when a draft submit is rejected by server validation.
 * **Invoice Master prefixes**: Admins manage company-scoped invoice types with Name, GST/Non-GST type, and Prefix. Booking item entry exposes those prefixes beside Invoice No so staff assign the intended GST/Non-GST invoice series during shipment entry. All Invoices reads the saved prefix to warn about GST mismatches without blocking invoice generation.
 * **Docket Master prefixes**: Admins manage company-scoped docket prefixes as Auto Increment or Manual. Booking item entry exposes the configured prefixes; auto prefixes generate with a locked sequence row, while manual prefixes leave the docket number editable.
 * **Location-wise customer item rates**: Customer Master edits one active version per Customer + Origin + Destination + optional material category and shows closed versions read-only. Changes and removals close prior date ranges; they do not erase rate history. Supplied O&D must match exactly (case-insensitive), while category-specific rates retain precedence over blank-category rates.
 * **Concurrent customer-rate saves**: Customer/rate writes use one transaction and a tenant-scoped customer-row lock. Repeated same-rate saves return the current version; stale differing saves return a reload-required conflict instead of silently overwriting another user.
 * **Invoice PDF save picker**: All Invoices generates and records the PDF first, then shows an explicit “Choose save location” action. Supported Chromium secure contexts invoke `showSaveFilePicker()` directly from that click. Cancellation is not an error; unsupported/insecure contexts use normal download and show a fallback notice.
+* **Customer integrity operations**: Customer names accept the database-supported 200 characters, address text round-trips unchanged, and customer deletion is tenant-scoped and transactional with related customer-rate rows.
+* **Public tracking page**: `/track` and `/tracking` render the public AWB/Docket lookup without a login. The page calls the single-segment `/api/track/{awb_or_docket}` contract and does not advertise hardcoded records that may not exist. `/` remains the ERP login entry point, and internal tracking history/update routes remain authenticated.
+* **Inclusive invoice shipment dates**: All Invoices includes every shipment through the selected To Date, including records whose `booking_date` contains a time later that day.
+* **Booking party validation**: Shipment items require Customer, Bill To, and Consignee before entering the manifest grid, matching backend validation and preventing a late transaction rollback.
 
 ---
 
@@ -76,6 +81,14 @@ Core operational engine for creating, viewing, editing, tracking, and invoicing 
 
 ---
 
+## Test Automation JSON API
+
+The ERP exposes an isolated `/api/v1` surface for deterministic backend automation. It supports Basic Auth or API login sessions, explicit company context, tenant/branch-scoped resources, structured JSON errors, and producer IDs for bookings, tracking events, customers, and saved consolidated invoices. Existing browser workflows continue using their original session, redirect, and CSRF contracts.
+
+Responsible files: `app/Controllers/Api/V1Controller.php`, `app/Filters/ApiBasicAuthFilter.php`, `app/Config/Routes.php`, and `app/Config/Filters.php`.
+
+---
+
 ## 2. Master Data Management
 
 ### Purpose
@@ -92,6 +105,7 @@ Centralized administrative registry for operational assets, customer profiles, s
 4. **Company Settings (`company/settings.php`)**:
    - Manages active company profiles, SAC/PAN credentials, default tax rates (CGST/SGST/IGST), custom invoice print Terms & Conditions text, digital signature uploads (`public/uploads/signatures/`), and **Company Logo Upload & Branding** (`public/uploads/logos/`).
    - Admins can upload company logos (PNG, JPG, WEBP, GIF up to 2MB) with live preview thumbnails and a Delete Logo action. Uploaded logos render dynamically in PDF invoice and waybill headers.
+   - Admins can upload, preview, replace, and delete the invoice-footer signature (PNG, JPG, or GIF) from the same settings page.
 
 ### Responsible Files
 * **Controllers**: `app/Controllers/MasterController.php`, `app/Controllers/CompanyController.php`
@@ -112,6 +126,8 @@ Provides full tracking history visibility and proof-of-delivery (POD) document m
    - Accepts image uploads (JPEG/PNG) and digital signature signatures when marking shipment as *Delivered*.
 3. **Asynchronous Tracking API**:
    - Public tracking endpoint (`/api/track/{awb_no}`) and internal tracking timeline drawer (`/tracking/history/{booking_id}`).
+4. **Public Tracking Page**:
+   - `/track` and `/tracking` load the public lookup view; authentication is bypassed only for those exact aliases and the read-only tracking API.
 
 ### Responsible Files
 * **Controllers**: `app/Controllers/Logistics.php` (tracking actions), `app/Controllers/Api/TrackingApi.php`
