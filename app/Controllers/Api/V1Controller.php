@@ -330,6 +330,7 @@ class V1Controller extends BaseController
             ];
             $model = new TrackingHistoryModel();
             $trackingId = (int) ($data['tracking_id'] ?? $data['id'] ?? 0);
+            $isUpdate = $trackingId > 0;
             if ($trackingId > 0) {
                 $existing = $model->where('booking_id', $bookingId)->find($trackingId);
                 if (!$existing) {
@@ -345,7 +346,7 @@ class V1Controller extends BaseController
                 $trackingId = (int) $model->getInsertID();
             }
             (new BookingModel())->update($bookingId, ['status' => $row['status']]);
-            return $this->success(['tracking_id' => $trackingId, 'booking_id' => $bookingId], 'Tracking saved.', $trackingId ? 201 : 200);
+            return $this->success(['tracking_id' => $trackingId, 'booking_id' => $bookingId], 'Tracking saved.', $isUpdate ? 200 : 201);
         });
     }
 
@@ -384,7 +385,13 @@ class V1Controller extends BaseController
             if (!$itemIds) {
                 return $this->error('booking_id, booking_ids, or item_ids is required.', 422);
             }
-            $items = $db->table('shipment_items si')->select('si.*')->join('bookings b', 'b.id = si.booking_id')->where('b.company_id', $companyId)->whereIn('si.id', $itemIds)->get()->getResultArray();
+            $itemBuilder = $db->table('shipment_items si')
+                ->select('si.*')
+                ->join('bookings b', 'b.id = si.booking_id')
+                ->where('b.company_id', $companyId)
+                ->whereIn('si.id', $itemIds);
+            $this->applyBranchScope($itemBuilder, 'b.branch_id');
+            $items = $itemBuilder->get()->getResultArray();
             if (!$items || count($items) !== count(array_unique($itemIds))) {
                 return $this->error('One or more shipment items were not found.', 404);
             }
@@ -506,10 +513,10 @@ class V1Controller extends BaseController
         return $builder->get()->getRowArray() ?: null;
     }
 
-    private function applyBranchScope($builder): void
+    private function applyBranchScope($builder, string $column = 'branch_id'): void
     {
         if (session()->get('role') !== 'admin') {
-            $builder->where('branch_id', (int) (session()->get('branch_id') ?? 1));
+            $builder->where($column, (int) (session()->get('branch_id') ?? 1));
         }
     }
 

@@ -11,7 +11,7 @@ This document describes all public and internal JSON API endpoints provided by t
 * **Public APIs**: Tracking endpoint `/api/track/*` is publicly accessible and enables `Access-Control-Allow-Origin: *`.
 * **Public UI**: `GET /track` and `GET /tracking` render the public tracking page. `GET /` remains the authenticated ERP entry point.
 
-The `/api/v1` namespace is CSRF-exempt because it has its own HTTP authentication filter. The exemption does not apply to legacy browser form routes. See `testsprite_tests/malogistic_backend_api.md` for producer order and `testsprite_tests/malogistic_backend_api.json` for the machine-readable OpenAPI contract.
+The `/api/v1` namespace is CSRF-exempt because it has its own HTTP authentication filter. The exemption does not apply to legacy browser form routes.
 
 ### Versioned automation resources
 

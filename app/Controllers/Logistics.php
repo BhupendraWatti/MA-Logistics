@@ -1517,8 +1517,12 @@ public function exportExcel()
         }
 
         $fromDateValue = \DateTimeImmutable::createFromFormat('!Y-m-d', (string) $fromDate);
+        $fromDateErrors = \DateTimeImmutable::getLastErrors();
         $toDateValue = \DateTimeImmutable::createFromFormat('!Y-m-d', (string) $toDate);
-        if (!$fromDateValue || !$toDateValue || $fromDateValue > $toDateValue) {
+        $toDateErrors = \DateTimeImmutable::getLastErrors();
+        $fromDateInvalid = !$fromDateValue || ($fromDateErrors !== false && ($fromDateErrors['warning_count'] > 0 || $fromDateErrors['error_count'] > 0));
+        $toDateInvalid = !$toDateValue || ($toDateErrors !== false && ($toDateErrors['warning_count'] > 0 || $toDateErrors['error_count'] > 0));
+        if ($fromDateInvalid || $toDateInvalid || $fromDateValue > $toDateValue) {
             return $this->response->setStatusCode(422)->setJSON([
                 'status' => 'error',
                 'message' => 'Please select a valid shipment date range.',

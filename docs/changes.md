@@ -420,7 +420,7 @@ This file tracks every technical change, feature implementation, refactoring, an
 * **Priority**: High
 * **Requirement**: Allow TestSprite backend tests to authenticate without browser redirects and create/capture real booking, tracking, and invoice IDs.
 * **Implementation**: Added isolated `/api/v1` Basic/session authentication, explicit `X-Company-ID` tenant context, structured JSON errors, resource producer/consumer endpoints, PDF streaming, and test-artifact cleanup. Legacy browser authentication and CSRF behavior is unchanged.
-* **Files Modified**: `app/Filters/ApiBasicAuthFilter.php`, `app/Controllers/Api/V1Controller.php`, `app/Config/Filters.php`, `app/Config/Routes.php`, `testsprite_tests/malogistic_backend_api.*`, and API/testing documentation.
+* **Files Modified**: `app/Filters/ApiBasicAuthFilter.php`, `app/Controllers/Api/V1Controller.php`, `app/Config/Filters.php`, `app/Config/Routes.php`, and API/testing documentation.
 
 ---
 

@@ -39,6 +39,7 @@ class ApiBasicAuthFilter implements FilterInterface
 
     public static function establishSession(array $user): void
     {
+        session()->regenerate(true);
         session()->set([
             'user_id'  => (int) $user['id'],
             'username' => (string) $user['username'],
@@ -61,7 +62,8 @@ class ApiBasicAuthFilter implements FilterInterface
         if (stripos($header, 'Basic ') === 0) {
             $decoded = base64_decode(substr($header, 6), true);
             if (is_string($decoded) && str_contains($decoded, ':')) {
-                return array_map('trim', explode(':', $decoded, 2));
+                [$username, $password] = explode(':', $decoded, 2);
+                return [trim($username), $password];
             }
         }
 

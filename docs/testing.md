@@ -56,7 +56,7 @@ This document outlines the testing strategy, manual smoke test procedures, perfo
 
 Run against `/api/v1` with Basic Auth and `X-Company-ID`: list companies/customers, create a unique booking and capture `data.booking_id`, patch/read it, create tracking and capture `data.tracking_id`, generate/download an invoice and capture `data.invoice_download_id`, then delete invoice, tracking, and booking fixtures. Also verify missing authentication returns JSON 401, missing company context returns JSON 422, and nonexistent numeric resources return JSON 404.
 
-The automated contract surface is covered by `tests/BackendJsonApiSurfaceTest.php`. Exact payloads and TestSprite variable names are in `testsprite_tests/malogistic_backend_api.md`.
+The release contract was validated with producer-consumer API smoke tests. Temporary TestSprite/OpenAPI contracts and release-only surface tests are removed before production packaging.
 
 Execute this 10-minute smoke test before signing off on any production deployment:
 
