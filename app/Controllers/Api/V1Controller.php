@@ -46,7 +46,7 @@ class V1Controller extends BaseController
 
             return $this->success([
                 'user' => $this->publicUser($user),
-                'companies' => (new CompanyModel())->orderBy('name')->findAll(),
+                'companies' => array_map(fn (array $company) => $this->publicCompany($company), (new CompanyModel())->orderBy('name')->findAll()),
                 'auth_type' => 'session_or_basic',
                 'csrf_required' => false,
             ], 'Login successful.');
@@ -61,7 +61,7 @@ class V1Controller extends BaseController
 
     public function companies(): ResponseInterface
     {
-        return $this->run(fn () => $this->success((new CompanyModel())->orderBy('name')->findAll()));
+        return $this->run(fn () => $this->success(array_map(fn (array $company) => $this->publicCompany($company), (new CompanyModel())->orderBy('name')->findAll())));
     }
 
     public function selectCompany(): ResponseInterface
@@ -73,13 +73,18 @@ class V1Controller extends BaseController
                 return $this->error('A valid company_id is required.', 422);
             }
             session()->set(['selected_company_id' => $id, 'selected_company_name' => $company['name'] ?? $company['company_name'] ?? '']);
-            return $this->success(['company' => $company, 'company_id' => $id], 'Company selected.');
+            return $this->success(['company' => $this->publicCompany($company), 'company_id' => $id], 'Company selected.');
         });
     }
 
     public function company(): ResponseInterface
     {
-        return $this->run(fn () => $this->success((new CompanyModel())->find($this->companyId())));
+        return $this->run(function () {
+            if (session()->get('role') !== 'admin') {
+                throw new \RuntimeException('Admin access required.', 403);
+            }
+            return $this->success((new CompanyModel())->find($this->companyId()));
+        });
     }
 
     public function customers(): ResponseInterface
@@ -596,6 +601,11 @@ class V1Controller extends BaseController
     private function publicUser(array $user): array
     {
         return array_intersect_key($user, array_flip(['id', 'username', 'email', 'role', 'branch_id', 'can_create', 'can_edit', 'can_delete']));
+    }
+
+    private function publicCompany(array $company): array
+    {
+        return array_intersect_key($company, array_flip(['id', 'name', 'company_name']));
     }
 
     private function success($data = null, string $message = '', int $status = 200): ResponseInterface
