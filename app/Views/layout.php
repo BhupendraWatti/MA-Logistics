@@ -2,6 +2,9 @@
 <html>
 <head>
     <title>Logistics ERP Operational Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="<?= base_url('favicon.png') ?>?v=<?= is_file(FCPATH . 'favicon.png') ? filemtime(FCPATH . 'favicon.png') : '1' ?>">
+    <link rel="shortcut icon" type="image/png" href="<?= base_url('favicon.png') ?>?v=<?= is_file(FCPATH . 'favicon.png') ? filemtime(FCPATH . 'favicon.png') : '1' ?>">
     <!-- ANTI-CACHE HEADERS -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -22,7 +25,7 @@
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
     
-    <link href="<?= base_url('css/style.css') ?>" rel="stylesheet">
+    <link href="<?= base_url('css/style.css') ?>?v=<?= is_file(FCPATH . 'css/style.css') ? filemtime(FCPATH . 'css/style.css') : '1' ?>" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
         /* ERP Table Overrides */
@@ -70,8 +73,8 @@
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <a class="sidebar-brand d-flex justify-content-center align-items-center py-2 w-100" href="<?= base_url('logistics') ?>">
-                    <img src="<?= base_url('images/logo.png') ?>" alt="MA Logistic" class="img-fluid" style="max-height: 50px; width: auto;">
+                <a class="sidebar-brand w-100" href="<?= base_url('logistics') ?>" aria-label="MA Logistics dashboard">
+                    <img src="<?= base_url('images/logo.png') ?>?v=<?= is_file(FCPATH . 'images/logo.png') ? filemtime(FCPATH . 'images/logo.png') : '1' ?>" alt="MA Logistics" class="sidebar-logo">
                 </a>
             </div>
             

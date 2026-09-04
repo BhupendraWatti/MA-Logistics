@@ -531,18 +531,9 @@ $defaultIdentityWidth = 3 + 6 + $defaultLrWidth + $defaultInvoiceWidth + $defaul
             </td>
         </tr>
 
-        <!-- Option C: independent 60/40 footer cells keep long terms away from the signature. -->
+        <!-- Keep this bounded block unbreakable; legal terms render separately below. -->
         <tr>
             <td colspan="12" style="width:60%; vertical-align:top; padding:6px; line-height:1.35;">
-                <strong>Service Category : Courier &amp; Cargo</strong><br><br>
-                <strong>Terms &amp; Conditions :</strong><br><?php
-                $tcText = !empty($booking['docket_terms']) ? $booking['docket_terms'] : (!empty($customer['default_terms']) ? $customer['default_terms'] : ($company['terms_conditions'] ?? ''));
-                $formattedTcText = \App\Services\PdfInvoiceGenerator::formatTermsHtml($tcText);
-                ?>
-                <div class="tc-box">
-                    <?= $formattedTcText ?>
-                </div>
-                <br>
                 <strong>Bank Details:</strong><br>
                 Account Name : <?= esc($bankDetails['name'] ?? '') ?><br>
                 Bank Name : <?= esc($bankDetails['bank_name'] ?? '') ?><br>
@@ -564,5 +555,41 @@ $defaultIdentityWidth = 3 + 6 + $defaultLrWidth + $defaultInvoiceWidth + $defaul
                 Authorised signatory
             </td>
         </tr>
+    </table>
+
+    <?php
+    $tcText = !empty($booking['docket_terms']) ? $booking['docket_terms'] : (!empty($customer['default_terms']) ? $customer['default_terms'] : ($company['terms_conditions'] ?? ''));
+    $formattedTcText = \App\Services\PdfInvoiceGenerator::formatTermsHtml($tcText);
+    $termsRowHtml = preg_replace('/<li\b[^>]*>/i', '-&nbsp; ', $formattedTcText);
+    $termsRowHtml = preg_replace('/<\/(?:p|li|ol|ul)>/i', '<br>', (string) $termsRowHtml);
+    $termsRowHtml = preg_replace('/<(?:p|ol|ul)\b[^>]*>/i', '', (string) $termsRowHtml);
+    $termsRows = preg_split('/<br\s*\/?\s*>/i', (string) $termsRowHtml) ?: [];
+    $termsRows = array_values(array_filter(array_map(
+        static function (string $row): string {
+            $row = trim(strip_tags($row, '<b><strong><i><em>'));
+
+            return (string) preg_replace('/<(b|strong|i|em)\b[^>]*>/i', '<$1>', $row);
+        },
+        $termsRows
+    ), static fn (string $row): bool => $row !== ''));
+    if ($termsRows === []) {
+        $termsRows[] = 'Not specified.';
+    }
+    ?>
+    <table class="invoice-terms-table" cellpadding="4" cellspacing="0"
+        style="width:100%; font-size:<?= $isPortrait ? '6.2' : '7.2' ?>px; line-height:1.25; border-collapse:collapse; font-family:helvetica;">
+        <tr nobr="true">
+            <td style="width:100%; vertical-align:top; border-top:1px solid #000; border-left:1px solid #000; border-right:1px solid #000;">
+                <strong>Service Category : Courier &amp; Cargo</strong><br>
+                <strong>Terms &amp; Conditions :</strong>
+            </td>
+        </tr>
+        <?php foreach ($termsRows as $index => $termsRow): ?>
+            <tr nobr="true">
+                <td style="width:100%; vertical-align:top; border-left:1px solid #000; border-right:1px solid #000;<?= $index === array_key_last($termsRows) ? ' border-bottom:1px solid #000;' : '' ?>">
+                    <?= $termsRow ?>
+                </td>
+            </tr>
+        <?php endforeach; ?>
     </table>
 <?php endif; ?>

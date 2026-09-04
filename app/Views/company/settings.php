@@ -161,7 +161,8 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label text-muted fs-7 fw-semibold">Terms &amp; Conditions <small class="text-muted">(printed on all invoices - supports multi-line numbered points)</small></label>
-                                <textarea name="terms_conditions" class="form-control form-control-sm shadow-none" rows="6" placeholder="1. Difference if any may be notified within 7 days of receipt of bills.&#10;2. Subject to Pune Jurisdiction.&#10;3. E & O.E.&#10;4. Draw Cheque in favour of &quot;MA LOGISTICS&quot;"><?= esc($company['terms_conditions'] ?? '') ?></textarea>
+                                <textarea name="terms_conditions" class="form-control shadow-none company-terms-editor" rows="12" placeholder="1. Difference if any may be notified within 7 days of receipt of bills.&#10;2. Subject to Pune Jurisdiction.&#10;3. E & O.E.&#10;4. Draw Cheque in favour of &quot;MA LOGISTICS&quot;"><?= esc($company['terms_conditions'] ?? '') ?></textarea>
+                                <small class="text-muted d-block mt-1">Long terms will continue inside a bordered section on the following invoice page when needed.</small>
                             </div>
                         </div>
                     </div>
@@ -190,6 +191,11 @@
 <style>
 .fs-7 { font-size: 0.85rem; }
 .fs-8 { font-size: 0.75rem; }
+.company-terms-editor {
+    min-height: 260px !important;
+    line-height: 1.5;
+    resize: vertical;
+}
 </style>
 
 <?= $this->endSection() ?>

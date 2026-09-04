@@ -4,7 +4,7 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header text-center bg-white border-bottom-0 pt-4 pb-2">
-                <img src="<?= base_url('images/logo.png') ?>" alt="MA Logistic" class="img-fluid mb-3" style="max-height: 80px; width: auto;">
+                <img src="<?= base_url('images/logo.png') ?>?v=<?= is_file(FCPATH . 'images/logo.png') ? filemtime(FCPATH . 'images/logo.png') : '1' ?>" alt="MA Logistics" class="login-logo mb-3">
             </div>
             <div class="card-body">
                 <?= form_open('/auth/attemptLogin') ?>

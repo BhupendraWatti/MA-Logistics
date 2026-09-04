@@ -37,16 +37,40 @@ body {
 }
 
 .sidebar-header {
-    padding: 24px 20px;
+    min-height: 154px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
 }
 
 .sidebar-brand {
     display: flex;
     align-items: center;
+    justify-content: center;
     color: var(--primary-color);
     text-decoration: none;
     font-weight: 600;
     font-size: 1.1rem;
+}
+
+.sidebar-logo {
+    display: block;
+    width: 100%;
+    max-width: 208px;
+    max-height: 114px;
+    height: auto;
+    object-fit: contain;
+}
+
+.login-logo {
+    display: block;
+    width: 100%;
+    max-width: 280px;
+    max-height: 154px;
+    height: auto;
+    object-fit: contain;
+    margin-right: auto;
+    margin-left: auto;
 }
 
 .sidebar-brand i {

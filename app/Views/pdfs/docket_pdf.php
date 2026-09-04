@@ -440,20 +440,36 @@ $renderCharge = static function (float $amount) use ($isHalfPrint): string {
 <?php if (!empty($docketTerms)): ?>
     <?php
     $formattedDocketTerms = \App\Services\PdfInvoiceGenerator::formatTermsHtml($docketTerms);
+    $docketTermsRowHtml = preg_replace('/<li\b[^>]*>/i', '-&nbsp; ', $formattedDocketTerms);
+    $docketTermsRowHtml = preg_replace('/<\/(?:p|li|ol|ul)>/i', '<br>', (string) $docketTermsRowHtml);
+    $docketTermsRowHtml = preg_replace('/<(?:p|ol|ul)\b[^>]*>/i', '', (string) $docketTermsRowHtml);
+    $docketTermsRows = preg_split('/<br\s*\/?\s*>/i', (string) $docketTermsRowHtml) ?: [];
+    $docketTermsRows = array_values(array_filter(array_map(
+        static function (string $row): string {
+            $row = trim(strip_tags($row, '<b><strong><i><em>'));
+
+            return (string) preg_replace('/<(b|strong|i|em)\b[^>]*>/i', '<$1>', $row);
+        },
+        $docketTermsRows
+    ), static fn (string $row): bool => $row !== ''));
+    if ($docketTermsRows === []) {
+        $docketTermsRows[] = 'Not specified.';
+    }
     ?>
-    <table cellpadding="0" cellspacing="0" style="width: 100%; margin-top: 8px; border: 1.5px solid #000;">
-        <tr>
-            <td style="background-color: #f1f5f9; border-bottom: 1px solid #000; padding: 4px 7px; font-size: 8pt; font-weight: bold; color: #0f172a; text-transform: uppercase;">
+    <table class="docket-terms-table" cellpadding="4" cellspacing="0"
+        style="width: 100%; border-collapse: collapse; font-family: helvetica;">
+        <tr nobr="true">
+            <td style="background-color: #f1f5f9; border-top: 1.5px solid #000; border-right: 1.5px solid #000; border-bottom: 1px solid #000; border-left: 1.5px solid #000; padding: 4px 7px; font-family: helvetica; font-size: 8pt; line-height: 1.2; font-weight: bold; color: #0f172a; text-transform: uppercase;">
                 TERMS &amp; CONDITIONS
             </td>
         </tr>
-        <tr>
-            <td style="padding: 6px 8px; font-size: 7.5pt; line-height: 1.35; color: #000000; background-color: #ffffff;">
-                <div class="tc-container">
-                    <?= $formattedDocketTerms ?>
-                </div>
-            </td>
-        </tr>
+        <?php foreach ($docketTermsRows as $index => $docketTermsRow): ?>
+            <tr nobr="true">
+                <td style="padding: 4px 7px; font-family: helvetica; font-size: 7.2pt; line-height: 1.25; color: #000000; background-color: #ffffff; border-right: 1.5px solid #000; border-left: 1.5px solid #000;<?= $index === array_key_last($docketTermsRows) ? ' border-bottom: 1.5px solid #000;' : '' ?>">
+                    <?= $docketTermsRow ?>
+                </td>
+            </tr>
+        <?php endforeach; ?>
     </table>
 <?php endif; ?>
 </body>

@@ -179,6 +179,95 @@ final class PdfInvoiceLayoutTest extends TestCase
         }
     }
 
+    public function testLongInvoiceTermsAreOutsideTheUnbreakableSummaryBlock(): void
+    {
+        $data = $this->fixtureData(true, 'L', 2);
+        $data['renderSection'] = 'body';
+        $longTerms = '';
+        for ($i = 1; $i <= 40; $i++) {
+            $longTerms .= sprintf(
+                '<p>TERM-LINE-%02d: These invoice terms must remain inside the legal-terms section and paginate safely.</p>',
+                $i
+            );
+        }
+        $data['booking']['docket_terms'] = $longTerms;
+
+        $body = view('pdfs/invoice', $data);
+        $summaryStart = strpos($body, '<table nobr="true"');
+        $termsStart = strpos($body, 'class="invoice-terms-table"');
+
+        self::assertNotFalse($summaryStart);
+        self::assertNotFalse($termsStart);
+        self::assertGreaterThan($summaryStart, $termsStart);
+
+        $summaryHtml = substr($body, $summaryStart, $termsStart - $summaryStart);
+        self::assertStringNotContainsString('Terms &amp; Conditions', $summaryHtml);
+        self::assertStringContainsString('Bank Details:', $summaryHtml);
+        self::assertStringContainsString('Authorised signatory', $summaryHtml);
+
+        $outputDir = ROOTPATH . 'tmp/pdfs/generated';
+        if (!is_dir($outputDir)) {
+            mkdir($outputDir, 0775, true);
+        }
+
+        $path = $outputDir . '/long-terms-invoice.pdf';
+        (new PdfInvoiceGenerator())->save($data, $path, 'L');
+        self::assertFileExists($path);
+        self::assertGreaterThan(10_000, filesize($path));
+        self::assertSame('%PDF-', file_get_contents($path, false, null, 0, 5));
+    }
+
+    public function testLongDocketTermsUsePageBreakSafeRows(): void
+    {
+        $data = $this->fixtureData(true, 'P', 1);
+        $longTerms = '';
+        for ($i = 1; $i <= 40; $i++) {
+            $longTerms .= sprintf(
+                '<p>DOCKET-TERM-%02d: These docket terms must retain their compact styling and paginate in order.</p>',
+                $i
+            );
+        }
+
+        $data['company']['company_name'] = $data['company']['name'];
+        $data['booking'] = array_merge($data['booking'], [
+            'booking_date' => '2026-08-25',
+            'origin' => 'PUNE',
+            'destination' => 'HYDERABAD',
+            'mode_transport' => 'ROAD',
+            'payment_type' => 'CREDIT',
+            'docket_terms' => $longTerms,
+        ]);
+        $data['shipment'] = [
+            'docket_no' => 'DCK-LONG-TERMS',
+            'customer_name' => 'Docket Terms Test Shipper',
+            'consignee' => 'Docket Terms Test Consignee',
+            'pieces' => 3,
+            'actual_weight' => 1,
+            'volumetric_weight' => 0,
+            'final_chargeable_weight' => 1,
+            'rate' => 0,
+            'contents' => 'TEST GOODS',
+        ];
+        $data['shipperCustomer'] = [];
+        $data['docketNo'] = 'DCK-LONG-TERMS';
+
+        $body = view('pdfs/docket_pdf', $data);
+        self::assertStringContainsString('class="docket-terms-table"', $body);
+        self::assertStringNotContainsString('class="tc-container"', $body);
+        self::assertGreaterThanOrEqual(41, substr_count($body, 'nobr="true"'));
+
+        $outputDir = ROOTPATH . 'tmp/pdfs/generated';
+        if (!is_dir($outputDir)) {
+            mkdir($outputDir, 0775, true);
+        }
+
+        $path = $outputDir . '/long-terms-docket.pdf';
+        (new PdfInvoiceGenerator())->save($data, $path, 'P', 'pdfs/docket_pdf');
+        self::assertFileExists($path);
+        self::assertGreaterThan(10_000, filesize($path));
+        self::assertSame('%PDF-', file_get_contents($path, false, null, 0, 5));
+    }
+
     private function fixtureData(bool $gstApplied, string $orientation, int $rowCount): array
     {
         $rows = [];

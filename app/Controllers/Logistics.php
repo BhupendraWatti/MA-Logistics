@@ -1376,7 +1376,14 @@ public function exportExcel()
     $scriptPath = ROOTPATH . 'scripts/generate_xlsx.py';
     $cmd = 'python ' . escapeshellarg($scriptPath) . ' ' . escapeshellarg($tempJson) . ' ' . escapeshellarg($tempXlsx);
     
-    exec($cmd, $output, $returnVar);
+    $output = [];
+    $returnVar = 1;
+
+    if (function_exists('exec')) {
+        exec($cmd, $output, $returnVar);
+    } else {
+        $output[] = 'PHP exec() is unavailable on this server.';
+    }
     
     if ($returnVar !== 0 || !file_exists($tempXlsx)) {
         @unlink($tempJson);
@@ -1859,7 +1866,12 @@ public function exportExcel()
                 $scriptPath = ROOTPATH . 'scripts/generate_xlsx.py';
                 $cmd = 'python ' . escapeshellarg($scriptPath) . ' ' . escapeshellarg($tempJson) . ' ' . escapeshellarg($tempXlsx);
                 
-                exec($cmd, $outputCmd, $returnVar);
+                $outputCmd = [];
+                $returnVar = 1;
+
+                if (function_exists('exec')) {
+                    exec($cmd, $outputCmd, $returnVar);
+                }
                 
                 if ($returnVar !== 0 || !file_exists($tempXlsx)) {
                     @unlink($tempJson);
