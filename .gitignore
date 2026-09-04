@@ -80,3 +80,4 @@ graphify_output.md
 .graphify_python
 .graphify_version
 .graphify_chunk_*.json
+*.py

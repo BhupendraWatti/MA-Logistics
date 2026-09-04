@@ -224,7 +224,10 @@ class TrackingController extends BaseController
 
             // Fetch tracking history
             $history = $db->table('tracking_history')
-                          ->where('booking_id', $booking['id'])
+                          ->groupStart()
+                              ->where('booking_id', $booking['id'])
+                              ->orWhere('awb_no', $booking['awb_no'])
+                          ->groupEnd()
                           ->orderBy('event_date', 'DESC')
                           ->orderBy('event_time', 'DESC')
                           ->get()->getResultArray();
@@ -233,14 +236,27 @@ class TrackingController extends BaseController
             $deliveryTime = '-';
             $receiverName = '-';
 
+            // 1. Determine Current Status from latest history event or booking status
+            $currentStatus = !empty($history[0]['status']) ? $history[0]['status'] : (!empty($booking['status']) ? $booking['status'] : 'Billed');
+
+            // 2. Check for Delivered event in tracking history
             foreach ($history as $event) {
                 if (isset($event['status']) && stripos($event['status'], 'Delivered') !== false) {
                     $deliveryDate = $event['event_date'] ?? '-';
-                    $deliveryTime = $event['event_time'] ?? '-';
+                    $deliveryTime = !empty($event['event_time']) ? substr($event['event_time'], 0, 5) : '-';
                     break;
                 }
             }
 
+            // 3. Fallback delivery date/time if status is Delivered but event date missing
+            if ($deliveryDate === '-' && stripos($currentStatus, 'Delivered') !== false) {
+                if (!empty($booking['updated_at'])) {
+                    $deliveryDate = date('Y-m-d', strtotime($booking['updated_at']));
+                    $deliveryTime = date('H:i', strtotime($booking['updated_at']));
+                }
+            }
+
+            // 4. Determine Receiver Name
             foreach ($history as $event) {
                 if (!empty($event['receiver_name']) && trim($event['receiver_name']) !== '-') {
                     $receiverName = trim($event['receiver_name']);
@@ -255,9 +271,11 @@ class TrackingController extends BaseController
             $formattedHistory = [];
             foreach ($history as $event) {
                 $formattedHistory[] = [
+                    'id'            => $event['id'] ?? '',
                     'date'          => $event['event_date'] ?? '-',
                     'time'          => $event['event_time'] ?? '-',
                     'location'      => $event['current_location'] ?? '-',
+                    'status'        => $event['status'] ?? '-',
                     'activity'      => $event['status'] ?? '-',
                     'remarks'       => $event['remarks'] ?? '-',
                     'receiver_name' => $event['receiver_name'] ?? '',
@@ -271,22 +289,25 @@ class TrackingController extends BaseController
                 $latestRemark = $booking['status'] ?? 'Billed';
             }
 
+            $expectedDeliveryDate = !empty($booking['expected_delivery_date']) ? $booking['expected_delivery_date'] : '-';
+            $expectedDeliveryTime = !empty($booking['expected_delivery_time']) ? substr($booking['expected_delivery_time'], 0, 5) : '-';
+
             $formattedBooking = [
-                'awb_no'         => $booking['awb_no'] ?? '-',
-                'current_status' => $booking['status'] ?? 'Billed',
-                'latest_remark'  => $latestRemark,
-                'booking_date'   => $booking['booking_date'] ?? '-',
-                'consignor_name' => !empty($shipDetails['customers']) ? $shipDetails['customers'] : '-',
-                'consignee_name' => !empty($shipDetails['consignees']) ? $shipDetails['consignees'] : '-',
-                'origin'         => $booking['origin'] ?? '-',
-                'destination'    => $booking['destination'] ?? '-',
-                'total_pieces'   => $booking['total_pieces'] ?? '0',
-                'delivery_date'  => $deliveryDate,
-                'delivery_time'  => $deliveryTime,
-                'receiver_name'  => $receiverName,
-                'forwarding_no'  => !empty($shipDetails['dockets']) ? $shipDetails['dockets'] : '-',
-                'expected_delivery_date' => $booking['expected_delivery_date'] ?? '-',
-                'expected_delivery_time' => $booking['expected_delivery_time'] ? substr($booking['expected_delivery_time'], 0, 5) : '-',
+                'awb_no'                 => $booking['awb_no'] ?? '-',
+                'current_status'         => $currentStatus,
+                'latest_remark'          => $latestRemark,
+                'booking_date'           => $booking['booking_date'] ?? '-',
+                'consignor_name'         => !empty($shipDetails['customers']) ? $shipDetails['customers'] : '-',
+                'consignee_name'         => !empty($shipDetails['consignees']) ? $shipDetails['consignees'] : '-',
+                'origin'                 => $booking['origin'] ?? '-',
+                'destination'            => $booking['destination'] ?? '-',
+                'total_pieces'           => $booking['total_pieces'] ?? '0',
+                'delivery_date'          => $deliveryDate,
+                'delivery_time'          => $deliveryTime,
+                'receiver_name'          => $receiverName,
+                'forwarding_no'          => !empty($shipDetails['dockets']) ? $shipDetails['dockets'] : '-',
+                'expected_delivery_date' => $expectedDeliveryDate,
+                'expected_delivery_time' => $expectedDeliveryTime,
             ];
 
             session_write_close();

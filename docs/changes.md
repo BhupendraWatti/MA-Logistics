@@ -489,3 +489,34 @@ The following 6 change requests have been formally cataloged into the official P
 * **Status**: ✅ **Implemented** (Phase 2 requirement delivered in Phase 1)
 * **How It Works**: Replaced the original "10 fixed fields" spec with a `+ Add Field` approach. Each added field has an editable label (heading) and numeric value. Values flow through to booking totals, PDF invoice (OTHER CHG column), and sales charges. Global booking-level surcharges also support dynamic label+value pairs via `+ Add Surcharge` button.
 * **Implementation Reference**: See [CHG-012] above.
+
+### [CHG-014] CMS WordPress Tracking Component — Shipment Tracking History Table & View Switcher
+* **Module**: WordPress Tracking Plugin (`ma-logistics-tracking`) & Public Tracking API (`TrackingController.php`)
+* **Status**: ✅ **Implemented & Verified Live**
+* **Context & Problem**: The user reported that the tracking table was missing on the public tracking page (`marlexpress.com/track-your-order/`). The public component was previously hiding `#ma-history-table-box` and only rendering a dot timeline, which showed "0 Events" because `api/track/` was querying history solely by `booking_id`.
+* **Changes Made**:
+  1. **Table View Primary Display**: Added the **Shipment Tracking History Table** matching the ERP drawer layout (`#`, `DATE`, `TIME`, `LOCATION`, `STATUS`, `REMARKS`) with styled status pills (`Arrived at Hub`, `In Transit`, `Delivered`, `Picked Up`), location pin icon, and receiver tag (`Receiver: {name}`).
+  2. **View Switcher**: Added an intuitive switcher allowing users to toggle between **Table View** (default) and **Milestone Timeline**.
+  3. **Tracking Query Fallback**: Enhanced `TrackingController.php` to query `tracking_history` by both `booking_id` and `awb_no`.
+  4. **Data Sync**: Verified and synced tracking events for `PA1020150` in database so real-time milestone events populate accurately.
+  5. **Deployment & Cache**: Deployed plugin v1.0.3 to `marlexpress.com`, purged LiteSpeed cache, and verified via Playwright automated testing with full visual confirmation.
+
+### [CHG-015] Delivery Status & Date-Time Display + ERP Tracking Drawer Fix
+* **Module**: ERP Tracking Drawer (`pod_tracking_drawer.php`), Public Tracking API (`TrackingController.php`), & WordPress Tracking Plugin (`ma-logistics-tracking` v1.0.4)
+* **Status**: ✅ **Implemented & Verified Live**
+* **Context & Problem**:
+  1. When updating AWB `PA1020150` to `Delivered` in the ERP tracking drawer, the client-side JavaScript threw a blocking error: *"Status Date & Time must be less than Expected Delivery Date & Time"*, preventing staff from submitting delivery updates or any event happening on/after expected delivery time.
+  2. On the public tracking page (`marlexpress.com/track-your-order/`), the left-side Consignment Details table was not displaying `Expected Delivery`, `Delivered Date & Time`, and `Current Status` was not showing `Delivered`.
+* **Changes Made**:
+  1. **ERP Drawer Fix**: Removed erroneous JavaScript validation check in `app/Views/logistics/pod_tracking_drawer.php` (`eventDateTime >= expDateTime`), allowing valid delivery and delayed milestone submissions. Deployed to staging server.
+  2. **Backend API Enhancements**: Updated `TrackingController.php` on `granthinfotech.online`:
+     - Dynamically computes `currentStatus` prioritizing `$history[0]['status']` if available, falling back to `$booking['status']`.
+     - Extracts `delivery_date` and `delivery_time` directly from `Delivered` history milestones.
+     - Extracts `expected_delivery_date` and `expected_delivery_time` from booking data.
+  3. **Plugin v1.0.4 Frontend**: Updated `wp-plugin/ma-logistics-tracking/assets/js/ma-tracking.js` and `ma-logistics-tracking.php` on `marlexpress.com`:
+     - Populates `val-status` as bold green `Delivered` (`#15803d`).
+     - Populates `val-expected-delivery` (e.g. `2026-09-04 at 18:00`).
+     - Populates `val-delivery-datetime` (e.g. `2026-09-04 at 15:45`) in green bold.
+     - Positions top route airplane icon at 100% destination upon delivery.
+  4. **Deployment & Verification**: Deployed v1.0.4 to `marlexpress.com`, purged LiteSpeed cache, and verified with Playwright test. All fields confirmed active.
+

@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name: MA Logistics Tracking
- * Plugin URI:  https://granthinfotech.online/
- * Description: High-performance, mobile-responsive live shipment tracking component for MA Logistics ERP with URL deep-linking and interactive milestone timeline.
- * Version:     1.0.0
- * Author:      MARL Express & Granth Infotech
- * Author URI:  https://granthinfotech.in/
+ * Plugin URI:  https://marlexpress.com/
+ * Description: High-performance, mobile-responsive live shipment tracking component for MARL Express & MA Logistics ERP with URL deep-linking and interactive milestone timeline.
+ * Version:     1.0.5
+ * Author:      MARL Express
+ * Author URI:  https://marlexpress.com/
  * License:     GPL-2.0+
  * Text Domain: ma-tracking
  */
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
 
-define('MA_TRACKING_VERSION', '1.0.0');
+define('MA_TRACKING_VERSION', '1.0.5');
 define('MA_TRACKING_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MA_TRACKING_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -50,6 +50,7 @@ class MALogisticsTracking {
      *
      * Supported attributes:
      * - api_url: ERP API endpoint (default: https://granthinfotech.online/api/track/)
+     * - site_url: Site URL (default: current site URL https://marlexpress.com/)
      * - title: Form title (default: Track Shipment)
      * - subtitle: Form subtitle
      * - placeholder: Input placeholder
@@ -59,6 +60,7 @@ class MALogisticsTracking {
     public function render_shortcode($atts = []) {
         $atts = shortcode_atts([
             'api_url'       => 'https://granthinfotech.online/api/track/',
+            'site_url'      => home_url('/'),
             'title'         => 'Track Shipment',
             'subtitle'      => 'Enter your AWB No. or Docket No. to view real-time package logs.',
             'placeholder'   => 'e.g. 04637824 or DCK-10383',
@@ -72,7 +74,8 @@ class MALogisticsTracking {
 
         // Pass dynamic config to JavaScript
         wp_localize_script('ma-tracking-js', 'maTrackingConfig', [
-            'apiUrl' => trailingslashit(esc_url_raw($atts['api_url'])),
+            'apiUrl'  => trailingslashit(esc_url_raw($atts['api_url'])),
+            'siteUrl' => trailingslashit(esc_url_raw($atts['site_url'])),
         ]);
 
         $custom_style = '';
@@ -210,34 +213,54 @@ class MALogisticsTracking {
                         </table>
                     </div>
 
-                    <!-- Right Column: Interactive Milestone Timeline -->
+                    <!-- Right Column: Shipment Tracking History -->
                     <div class="ma-timeline-column">
-                        <div class="ma-timeline-header-row">
-                            <h3 class="ma-section-title" id="val-history-header-title">Tracking Milestone Events</h3>
-                            <span class="ma-events-counter" id="val-events-count">0 Events</span>
+                        <div class="ma-history-header-card">
+                            <div class="ma-history-title-group">
+                                <h3 class="ma-history-title">
+                                    <svg class="ma-title-clock-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                    Shipment Tracking History
+                                </h3>
+                                <span class="ma-history-awb-badge" id="val-table-awb-badge">AWB: -</span>
+                                <span class="ma-events-counter" id="val-events-count">0 Events</span>
+                            </div>
+                            <div class="ma-view-switcher">
+                                <button type="button" class="ma-switcher-btn active" id="btn-show-table" onclick="maSwitchView('table')">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+                                    Table View
+                                </button>
+                                <button type="button" class="ma-switcher-btn" id="btn-show-timeline" onclick="maSwitchView('timeline')">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="9"/><line x1="12" y1="15" x2="12" y2="22"/></svg>
+                                    Timeline
+                                </button>
+                            </div>
                         </div>
 
-                        <!-- Modern Milestone Timeline List -->
-                        <div class="ma-timeline-wrapper" id="ma-timeline-items">
-                            <!-- Populated dynamically via JS -->
-                        </div>
-
-                        <!-- Fallback Table View (Toggleable or Mobile View) -->
-                        <div class="ma-table-container" id="ma-history-table-box" style="display: none;">
-                            <table class="ma-table">
+                        <!-- 1. Table View (PRIMARY & DEFAULT) -->
+                        <div class="ma-table-container" id="ma-history-table-box">
+                            <table class="ma-history-table">
                                 <thead>
                                     <tr>
-                                        <th>Date</th>
-                                        <th>Time</th>
-                                        <th>Location</th>
-                                        <th>Activity</th>
-                                        <th>Remarks</th>
+                                        <th style="width: 5%;">#</th>
+                                        <th style="width: 16%;">DATE</th>
+                                        <th style="width: 12%;">TIME</th>
+                                        <th style="width: 18%;">LOCATION</th>
+                                        <th style="width: 18%;">STATUS</th>
+                                        <th style="width: 31%;">REMARKS</th>
                                     </tr>
                                 </thead>
                                 <tbody id="ma-tracking-table-rows">
-                                    <!-- Dynamic rows go here -->
+                                    <!-- Populated dynamically via JS -->
                                 </tbody>
                             </table>
+                        </div>
+
+                        <!-- 2. Milestone Timeline (Alternative View) -->
+                        <div class="ma-timeline-wrapper" id="ma-timeline-items" style="display: none;">
+                            <!-- Populated dynamically via JS -->
                         </div>
                     </div>
 

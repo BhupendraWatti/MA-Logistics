@@ -1,41 +1,37 @@
 === MA Logistics Tracking ===
-Contributors: granthinfotech
+Contributors: marlexpress
 Tags: tracking, logistics, awb, courier, elementor
 Requires at least: 5.8
-Tested up to: 7.0.4
-Stable tag: 1.0.0
+Tested up to: 6.7
+Requires PHP: 7.4
+Stable tag: 1.0.5
 License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-High-performance, responsive shipment tracking shortcode for MA Logistics ERP with URL deep-linking and interactive milestone timeline.
+High-performance, mobile-responsive live shipment tracking component for MARL Express & MA Logistics ERP with URL deep-linking and interactive milestone timeline.
 
 == Description ==
 
-MA Logistics Tracking embeds a lightweight tracking component into any WordPress page or Elementor template.
-It communicates directly with the MA Logistics ERP public API (`https://granthinfotech.online/api/track/`), rendering consignment metadata and tracking timeline logs.
+MA Logistics Tracking is an enterprise tracking plugin built for MARL Express (https://marlexpress.com/).
+It communicates with the MA Logistics ERP public API (`https://granthinfotech.online/api/track/`), rendering consignment metadata and tracking timeline logs.
 
-== Installation ==
+Features:
+* Zero Dependencies: Pure Vanilla JavaScript and scoped modern CSS.
+* URL Parameter Auto-Tracking: Direct deep links (`https://marlexpress.com/track-your-order/?awb=04637824`) automatically initiate searches.
+* One-Click Shareable Links: Clipboard copy button for instant sharing via WhatsApp or SMS.
+* Dual View: Consignment details summary table alongside an interactive vertical milestone timeline.
+* Performance-Engineered: Scripts and styles only load on pages where `[ma_tracking]` is rendered.
 
-1. Upload the `ma-logistics-tracking` folder to the `/wp-content/plugins/` directory.
-2. Activate the plugin through the 'Plugins' menu in WordPress.
-3. Place `[ma_tracking]` inside any WordPress post, page, or Elementor Shortcode widget.
+== Shortcode Usage ==
 
-== Shortcode Attributes ==
-
+Standard usage:
 `[ma_tracking]`
 
 Customizable attributes:
+* `site_url` — Your website URL (Default: `https://marlexpress.com/`)
 * `api_url` — Custom ERP tracking API URL (Default: `https://granthinfotech.online/api/track/`)
-* `title` — Search card heading (Default: `Track Shipment`)
-* `subtitle` — Search card description
-* `placeholder` — Search input placeholder
-* `button_text` — Submit button text (Default: `Track`)
-* `primary_color` — Primary theme accent color (Default: `#2563eb`)
-
-Example:
-`[ma_tracking primary_color="#f48b24" title="Track Consignment"]`
-
-== Deep Linking ==
-
-Support direct customer links:
-`https://yourdomain.com/track-your-order/?awb=04637824`
-When visited, the page automatically populates the input and executes the search.
+* `title` — Form heading (Default: `Track Shipment`)
+* `subtitle` — Form subheading
+* `placeholder` — Search input placeholder (Default: `e.g. 04637824 or DCK-10383`)
+* `button_text` — Submit button label (Default: `Track`)
+* `primary_color` — Custom brand accent color (e.g. `#f48b24`)

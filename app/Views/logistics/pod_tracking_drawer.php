@@ -218,14 +218,6 @@ $(document).ready(function() {
                 Swal.fire('Validation Error', 'Expected Delivery Date & Time must be greater than Booking Date (' + bookingDateStr + ')', 'error');
                 return false;
             }
-
-            if (eventDateVal) {
-                let eventDateTime = new Date(eventDateVal + 'T' + eventTimeVal);
-                if (eventDateTime >= expDateTime) {
-                    Swal.fire('Validation Error', 'Status Date & Time must be less than Expected Delivery Date & Time', 'error');
-                    return false;
-                }
-            }
         }
         
         let formData = new FormData(this);
