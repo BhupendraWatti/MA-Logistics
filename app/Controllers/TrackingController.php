@@ -34,7 +34,8 @@ class TrackingController extends BaseController
         return $this->response->setJSON([
             'status' => 'success',
             'data' => $history,
-            'booking' => $booking
+            'booking' => $booking,
+            'csrf_hash' => csrf_hash(),
         ]);
     }
 

@@ -37,7 +37,7 @@ composer.phar
 /tmp/
 /testsprite_tests/
 /.gstack/
-
+tests
 # Local development and debug helpers
 /.archive/
 /samples/

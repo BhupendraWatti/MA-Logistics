@@ -3,7 +3,7 @@
  * Plugin Name: MA Logistics Tracking
  * Plugin URI:  https://marlexpress.com/
  * Description: High-performance, mobile-responsive live shipment tracking component for MARL Express & MA Logistics ERP with URL deep-linking and interactive milestone timeline.
- * Version:     1.0.5
+ * Version:     1.0.6
  * Author:      MARL Express
  * Author URI:  https://marlexpress.com/
  * License:     GPL-2.0+
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
 
-define('MA_TRACKING_VERSION', '1.0.5');
+define('MA_TRACKING_VERSION', '1.0.6');
 define('MA_TRACKING_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MA_TRACKING_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -23,6 +23,16 @@ class MALogisticsTracking {
     public function __construct() {
         add_action('wp_enqueue_scripts', [$this, 'register_assets']);
         add_shortcode('ma_tracking', [$this, 'render_shortcode']);
+        add_action('init', [$this, 'purge_cache_after_update'], PHP_INT_MAX);
+    }
+
+    public function purge_cache_after_update() {
+        if (get_option('ma_tracking_version') === MA_TRACKING_VERSION) {
+            return;
+        }
+
+        do_action('litespeed_purge_all');
+        update_option('ma_tracking_version', MA_TRACKING_VERSION);
     }
 
     /**
@@ -49,7 +59,7 @@ class MALogisticsTracking {
      * Render Tracking Component Shortcode: [ma_tracking]
      *
      * Supported attributes:
-     * - api_url: ERP API endpoint (default: https://granthinfotech.online/api/track/)
+     * - api_url: ERP API endpoint (default: https://erp.malogistics.co.in/api/track/)
      * - site_url: Site URL (default: current site URL https://marlexpress.com/)
      * - title: Form title (default: Track Shipment)
      * - subtitle: Form subtitle
@@ -59,7 +69,7 @@ class MALogisticsTracking {
      */
     public function render_shortcode($atts = []) {
         $atts = shortcode_atts([
-            'api_url'       => 'https://granthinfotech.online/api/track/',
+            'api_url'       => 'https://erp.malogistics.co.in/api/track/',
             'site_url'      => home_url('/'),
             'title'         => 'Track Shipment',
             'subtitle'      => 'Enter your AWB No. or Docket No. to view real-time package logs.',

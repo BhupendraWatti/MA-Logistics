@@ -204,6 +204,8 @@ $(document).ready(function() {
     // Form Submit
     $('#trackingForm').on('submit', function(e) {
         e.preventDefault();
+
+        refreshTrackingCsrf();
         
         let bookingDateStr = window.currentBookingDate;
         let expDateVal = $('#track_expected_delivery_date').val();
@@ -294,6 +296,7 @@ function loadTrackingHistory(bookingId) {
             _: new Date().getTime() // Cache-busting parameter
         },
         success: function(response) {
+            refreshTrackingCsrf(response.csrf_hash);
             if(response.status === 'success' && response.data) {
                 if (response.booking) {
                     let bookingDate = response.booking.booking_date || '';
@@ -407,7 +410,7 @@ function deleteTracking(id, bookingId) {
                 url: '<?= base_url("tracking/delete/") ?>' + id,
                 type: 'POST',
                 data: {
-                    '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+                    '<?= csrf_token() ?>': $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(response) {
                     if(response.status === 'success') {
@@ -425,6 +428,14 @@ function deleteTracking(id, bookingId) {
             });
         }
     });
+}
+
+function refreshTrackingCsrf(hash) {
+    const token = hash || $('meta[name="csrf-token"]').attr('content');
+    if (!token) return;
+
+    $('meta[name="csrf-token"]').attr('content', token);
+    $('#trackingForm input[name="<?= csrf_token() ?>"]').val(token);
 }
 </script>
 
