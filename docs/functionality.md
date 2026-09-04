@@ -128,8 +128,15 @@ Provides full tracking history visibility and proof-of-delivery (POD) document m
    - Public tracking endpoint (`/api/track/{awb_no}`) and internal tracking timeline drawer (`/tracking/history/{booking_id}`).
 4. **Public Tracking Page**:
    - `/track` and `/tracking` load the public lookup view; authentication is bypassed only for those exact aliases and the read-only tracking API.
+5. **WordPress CMS Tracking Component & Shortcode (`[ma_tracking]`)**:
+   - Packaged as standalone plugin `ma-logistics-tracking` for WordPress/Elementor.
+   - Embeds into any CMS page (e.g. `https://website.granthinfotech.online/track-your-order/`).
+   - Supports URL query parameter deep-linking (`?awb=...`), copyable share links, route overview banner, and interactive vertical milestone event timelines with zero jQuery dependency.
+   - Restructures the tracking presentation so Elementor manages static content (headings, FAQs, helpdesk) while ERP data remains the single source of truth.
 
 ### Responsible Files
-* **Controllers**: `app/Controllers/Logistics.php` (tracking actions), `app/Controllers/Api/TrackingApi.php`
-* **Models**: `app/Models/TrackingStatusLogModel.php`, `app/Models/BookingModel.php`
-* **Views**: `app/Views/logistics/tracking_drawer.php`, public tracking view
+* **Controllers**: `app/Controllers/Logistics.php` (tracking actions), `app/Controllers/TrackingController.php` (`trackByAwb`)
+* **Models**: `app/Models/TrackingHistoryModel.php`, `app/Models/BookingModel.php`
+* **Views**: `app/Views/logistics/tracking_drawer.php`, `app/Views/public_track.php`
+* **WordPress Plugin**: `wp-plugin/ma-logistics-tracking/ma-logistics-tracking.php`, `assets/css/ma-tracking.css`, `assets/js/ma-tracking.js`
+

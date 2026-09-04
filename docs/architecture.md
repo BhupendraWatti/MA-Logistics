@@ -74,3 +74,37 @@ To prevent table cell height blowouts when dynamic Terms & Conditions expand, th
 ## 4. Datatables & Server-Side Pagination
 The booking list grid in `manage_bookings.php` uses server-side processing via `Logistics::ajaxDatatable()`.
 * **Optimization**: Batch joins and index `idx_bookings_company_id (company_id, id DESC)` guarantee sub-100ms response times for $100,000+$ booking records.
+
+---
+
+## 5. External CMS Integration & WordPress Tracking Component
+
+The ERP exposes a public, CORS-enabled read-only tracking API (`GET /api/track/{awb_or_docket_no}`) consumed by external marketing and corporate portals.
+
+```mermaid
+graph TD
+    subgraph WordPress CMS website.granthinfotech.online
+        Editor[Elementor Page Builder] --> StaticContent[Static Marketing CMS: Hero, FAQs, Help]
+        Editor --> ShortcodeWidget[Elementor Shortcode Widget: ma_tracking]
+        ShortcodeWidget --> WPPlugin[MA Logistics Tracking Plugin wp-content/plugins/ma-logistics-tracking/]
+        WPPlugin --> Assets[ma-tracking.css & ma-tracking.js]
+    end
+
+    subgraph User Browser
+        Assets --> UserUI[Interactive Search & Milestone Timeline]
+        UserUI -->|Deep Link Auto-Detection ?awb=...| AutoSearch[Auto Query on Load]
+        UserUI -->|Client-Side Fetch| LiveAPI[ERP Public Tracking API GET /api/track/{awb}]
+    end
+
+    subgraph MA Logistics ERP granthinfotech.online
+        LiveAPI --> TrackingCtrl[TrackingController::trackByAwb]
+        TrackingCtrl --> DB[(MySQL: bookings, shipment_items, tracking_history)]
+        TrackingCtrl -->|JSON Response| UserUI
+    end
+```
+
+### Separation of Concerns
+1. **WordPress CMS / Elementor**: Controls visual branding, hero banners, FAQ accordions, branch details, and page layouts without modifying any backend code.
+2. **WordPress Plugin (`ma-logistics-tracking`)**: Encapsulates all tracking UI markup, CSS variables, URL query parameter deep-linking (`?awb=...`), copyable share links, and asynchronous state transitions.
+3. **ERP Single Source of Truth**: The CodeIgniter 4 ERP remains the authoritative backend database for consignment manifesting, status logs, POD uploads, and real-time shipment updates.
+

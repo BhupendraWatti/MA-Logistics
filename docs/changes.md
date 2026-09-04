@@ -4,6 +4,32 @@ This file tracks every technical change, feature implementation, refactoring, an
 
 ## TestSprite Remediation
 
+### [CHG-034] WordPress CMS Tracking Component & Plugin Integration (Elementor Shortcode [ma_tracking])
+* **Status**: Completed; deployed and verified live
+* **Priority**: High
+* **Requirement**: Decouple the WordPress tracking page from 17.8KB of hardcoded inline HTML/CSS/JS in Elementor. Provide a reusable, theme-independent WordPress component that connects to the existing MA Logistics ERP Tracking API, supports URL deep-linking, renders responsive milestone timelines, and allows Elementor to manage all static CMS marketing content.
+* **Root Cause**: The tracking page previously embedded raw inline code inside an Elementor HTML widget. This was brittle, prevented clean CMS edits in Elementor, lacked URL query parameter auto-tracking for customer notifications (WhatsApp/SMS), forced horizontal scrolling on mobile screens with wide tables, and risked data loss on theme or builder updates.
+* **Implementation**:
+  - Developed the **MA Logistics Tracking** WordPress plugin (`wp-plugin/ma-logistics-tracking/`) exposing shortcode `[ma_tracking]`.
+  - Registered scoped stylesheet (`assets/css/ma-tracking.css`) and pure Vanilla JavaScript controller (`assets/js/ma-tracking.js`) with zero external dependencies (no jQuery).
+  - Enqueue assets conditionally only on pages containing `[ma_tracking]` or on the dedicated tracking page, preserving website performance.
+  - Implemented **URL Deep-Linking**: Visiting `/track-your-order/?awb=04637824` auto-fills the search input and executes live tracking immediately on page load.
+  - Added a **Share Tracking Link** button that copies direct deep-links to clipboard with visual feedback.
+  - Designed an interactive **Vertical Milestone Timeline** alongside the Consignment Details table, featuring origin $\rightarrow$ destination route indicators and status color-coding (Green for Delivered, Blue for Active/In-Transit).
+  - Uploaded and activated the plugin via FTP at `/website/wp-content/plugins/ma-logistics-tracking/` on `https://website.granthinfotech.online/`.
+  - Migrated Elementor page ID 7 (`track-your-order`) to the clean `[ma_tracking]` shortcode widget, backing up original Elementor meta and clearing builder caches.
+  - Deployed to production on `marlexpress.com` (`103.86.176.249:21` at `/public_html/wp-content/plugins/ma-logistics-tracking/`), purged previous malformed files, activated the plugin, and verified shortcode execution and asset delivery.
+* **Files Modified / Created**:
+  - `wp-plugin/ma-logistics-tracking/ma-logistics-tracking.php`
+  - `wp-plugin/ma-logistics-tracking/assets/css/ma-tracking.css`
+  - `wp-plugin/ma-logistics-tracking/assets/js/ma-tracking.js`
+  - `wp-plugin/ma-logistics-tracking/README.txt`
+  - `wp-plugin/ma-logistics-tracking.zip`
+  - Synchronized documentation in `docs/changes.md`, `docs/architecture.md`, `docs/api.md`, `docs/functionality.md`, and `docs/project_summary.md`.
+* **QA & Live Verification**: Verified live on `https://website.granthinfotech.online/track-your-order/?awb=04637824` with real consignment `04637824`, asserting live ERP API communication, route display, 51-box parcel manifest, and milestone event timeline.
+
+---
+
 ### [CHG-033] Focus All Downloads on the Generated Invoice Billing Month
 * **Status**: Completed and regression tested
 * **Priority**: High

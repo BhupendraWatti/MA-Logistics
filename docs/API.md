@@ -74,6 +74,11 @@ Retrieve current status and history timeline of a consignment by AWB or Docket n
   }
   ```
 
+* **Client Consumers**:
+  1. **Built-in ERP Public UI**: `GET /track` and `GET /tracking` (renders `app/Views/public_track.php`).
+  2. **WordPress CMS Plugin (`[ma_tracking]`)**: Embedded on marketing site `https://website.granthinfotech.online/track-your-order/`. Calls this endpoint asynchronously via Vanilla JS, parses booking/history payloads, supports URL deep-linking (`?awb={awb_no}`), and renders responsive consignment metadata and vertical milestone event timelines.
+
+
 ---
 
 ## 3. Internal Master Data APIs (JSON)
