@@ -123,7 +123,7 @@ class BookingModel extends Model
                    'action'     => $log['action'],
                    'username'   => $log['username'] ?: 'Unknown',
                    'user_id'    => $log['user_id'] ?: '-',
-                   'created_at' => date('d-M-Y H:i', strtotime($log['created_at']))
+                   'created_at' => date('d.m.Y H:i', strtotime($log['created_at']))
                ];
            }
        }

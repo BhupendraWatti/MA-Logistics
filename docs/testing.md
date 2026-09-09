@@ -47,6 +47,7 @@ This document outlines the testing strategy, manual smoke test procedures, perfo
 | **TC054** | Invoice Billing Month and Inclusive To Date | Verify a July invoice generated in August appears under July, and a shipment timestamped late on the selected To Date appears in Shipment Records. | PASS (PHPUnit MODEL + SURFACE) |
 | **TC055** | Booking Party Preflight Guard | Attempt to save an item without Bill To or Consignee; the drawer blocks it before grid insertion, while a complete item proceeds to transactional booking save. | PASS (PHPUnit SURFACE + LOG EVIDENCE) |
 | **TC056** | Generated Historical Invoice History Focus | Generate a consolidated PDF for a historical billing month while another month is selected; the response identifies the billing month and All Downloads selects it before refreshing the tenant-scoped history. | PASS (PHPUnit SURFACE) |
+| **TC057** | Frontend Date Presentation | Render ERP lists/details, tracking histories, consolidated invoice/docket views, saved-invoice history, and report exports; every human-visible full date uses `DD.MM.YYYY`, while machine-readable input/API/storage values remain unchanged. | PASS (PHP LINT + PHPUnit) |
 
 ---
 

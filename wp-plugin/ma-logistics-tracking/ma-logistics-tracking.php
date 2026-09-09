@@ -3,7 +3,7 @@
  * Plugin Name: MA Logistics Tracking
  * Plugin URI:  https://marlexpress.com/
  * Description: High-performance, mobile-responsive live shipment tracking component for MARL Express & MA Logistics ERP with URL deep-linking and interactive milestone timeline.
- * Version:     1.0.6
+ * Version:     1.0.8
  * Author:      MARL Express
  * Author URI:  https://marlexpress.com/
  * License:     GPL-2.0+
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
 
-define('MA_TRACKING_VERSION', '1.0.6');
+define('MA_TRACKING_VERSION', '1.0.8');
 define('MA_TRACKING_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MA_TRACKING_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -82,19 +82,27 @@ class MALogisticsTracking {
         wp_enqueue_style('ma-tracking-css');
         wp_enqueue_script('ma-tracking-js');
 
-        // Pass dynamic config to JavaScript
-        wp_localize_script('ma-tracking-js', 'maTrackingConfig', [
+        $config_data = [
             'apiUrl'  => trailingslashit(esc_url_raw($atts['api_url'])),
             'siteUrl' => trailingslashit(esc_url_raw($atts['site_url'])),
-        ]);
+        ];
+
+        // Pass dynamic config to JavaScript via standard WP localization
+        wp_localize_script('ma-tracking-js', 'maTrackingConfig', $config_data);
 
         $custom_style = '';
         if ($atts['primary_color'] !== '#2563eb') {
             $custom_style = sprintf(' style="--ma-primary: %s;"', esc_attr($atts['primary_color']));
         }
 
+        $config_json = wp_json_encode($config_data);
+
         ob_start();
         ?>
+        <!-- Inlined config failsafe for FSE Block Themes and caching plugins -->
+        <script>
+            window.maTrackingConfig = window.maTrackingConfig || <?php echo $config_json; ?>;
+        </script>
         <!-- ================== MA LOGISTICS CMS TRACKING COMPONENT ================== -->
         <div class="ma-tracking-container"<?php echo $custom_style; ?> id="ma-tracking-root">
             

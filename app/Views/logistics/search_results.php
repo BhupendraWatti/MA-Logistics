@@ -32,7 +32,7 @@
                         <tr>
                             <td><strong><?= esc($booking['awb_no']) ?></strong></td>
                             <td><?= esc($booking['company_name']) ?></td>
-                            <td><?= date('d-M-Y H:i', strtotime($booking['booking_date'])) ?></td>
+                            <td><?= date('d.m.Y H:i', strtotime($booking['booking_date'])) ?></td>
                             <td>
                                 <small class="text-muted"><?= esc($booking['origin']) ?> → <?= esc($booking['destination']) ?></small>
                             </td>

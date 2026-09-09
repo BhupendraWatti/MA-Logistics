@@ -255,14 +255,14 @@
                         <?php if (!empty($downloads ?? [])): ?>
                             <?php foreach ($downloads as $download): ?>
                                 <tr class="download-history-row">
-                                    <td class="ps-3"><?= esc(date('d-M-Y H:i', strtotime($download['downloaded_at']))) ?></td>
+                                    <td class="ps-3"><?= esc(date('d.m.Y H:i', strtotime($download['downloaded_at']))) ?></td>
                                     <td class="fw-semibold text-primary"><?= esc($download['invoice_no']) ?></td>
                                     <td><?= esc($download['customer_name']) ?></td>
                                     <td><?= esc($download['bill_to'] ?: '-') ?></td>
                                     <td>
-                                        <?= !empty($download['from_date']) ? esc(date('d-M-Y', strtotime($download['from_date']))) : '-' ?>
+                                        <?= !empty($download['from_date']) ? esc(date('d.m.Y', strtotime($download['from_date']))) : '-' ?>
                                         to
-                                        <?= !empty($download['to_date']) ? esc(date('d-M-Y', strtotime($download['to_date']))) : '-' ?>
+                                        <?= !empty($download['to_date']) ? esc(date('d.m.Y', strtotime($download['to_date']))) : '-' ?>
                                     </td>
                                     <td class="text-end fw-semibold">₹<?= esc(number_format((float) ($download['total_amount'] ?? 0), 2)) ?></td>
                                     <td><span class="badge bg-light text-dark border"><?= esc(ucfirst($download['layout_orientation'])) ?></span></td>

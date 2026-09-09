@@ -399,7 +399,7 @@ class InvoiceService
         foreach ($shipments as $item) {
             // Client invoice grid date must reflect the booking date.
             $rawDate = $item['booking_date'] ?? $item['invoice_date'] ?? null;
-            $date    = $rawDate ? date('d.m.y', strtotime($rawDate)) : '-';
+            $date    = $rawDate ? date('d.m.Y', strtotime($rawDate)) : '-';
 
             // Origin / Destination: use JOIN'd booking fields if present
             $originRaw = $item['booking_origin']      ?? $fallbackOrigin;

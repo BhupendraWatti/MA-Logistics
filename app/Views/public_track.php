@@ -704,6 +704,7 @@
     <script>
         // API Base Point - points to the newly developed CI4 controller API
         const MA_ERP_API_BASE = "<?= rtrim(base_url('api/track'), '/') ?>/";
+        const formatDisplayDate = value => String(value || '-').slice(0, 10).split('-').reverse().join('.');
 
         function initiateTrack() {
             const inputField = document.getElementById("ma-awb-input");
@@ -769,7 +770,7 @@
             
             let expText = '-';
             if (b.expected_delivery_date && b.expected_delivery_date !== '-') {
-                expText = b.expected_delivery_date;
+                expText = formatDisplayDate(b.expected_delivery_date);
                 if (b.expected_delivery_time && b.expected_delivery_time !== '-') {
                     expText += " at " + b.expected_delivery_time;
                 }
@@ -788,14 +789,14 @@
 
             // Populate Left Side Bordered Info Table
             document.getElementById("val-awb-no").innerText = b.awb_no;
-            document.getElementById("val-booking-date").innerText = b.booking_date;
+            document.getElementById("val-booking-date").innerText = formatDisplayDate(b.booking_date);
             document.getElementById("val-consignor").innerText = b.consignor_name;
             document.getElementById("val-consignee").innerText = b.consignee_name;
             document.getElementById("val-origin").innerText = b.origin;
             document.getElementById("val-destination").innerText = b.destination;
             document.getElementById("val-pieces").innerText = b.total_pieces;
             document.getElementById("val-status").innerText = b.latest_remark;
-            document.getElementById("val-delivery-date").innerText = b.delivery_date;
+            document.getElementById("val-delivery-date").innerText = formatDisplayDate(b.delivery_date);
             document.getElementById("val-delivery-time").innerText = b.delivery_time;
             document.getElementById("val-receiver").innerText = b.receiver_name;
             document.getElementById("val-forwarding").innerText = b.forwarding_no;
@@ -832,7 +833,7 @@
                 }
                 
                 tr.innerHTML = `
-                    <td style="font-weight: 500;">${row.date}</td>
+                    <td style="font-weight: 500;">${formatDisplayDate(row.date)}</td>
                     <td style="color: #475569;">${row.time}</td>
                     <td style="font-weight: 600; color: #1e293b;">${row.location}</td>
                     <td>

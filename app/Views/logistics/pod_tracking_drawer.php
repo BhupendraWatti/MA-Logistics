@@ -139,6 +139,7 @@
 <?php $this->section('scripts') ?>
 <script>
 let trackingDataTable;
+const formatTrackingDate = value => String(value || '-').slice(0, 10).split('-').reverse().join('.');
 
 $(document).ready(function() {
     // Initialize DataTable
@@ -217,7 +218,7 @@ $(document).ready(function() {
             let bookingDate = new Date(bookingDateStr + 'T00:00:00');
             let expDateTime = new Date(expDateVal + 'T' + expTimeVal);
             if (expDateTime <= bookingDate) {
-                Swal.fire('Validation Error', 'Expected Delivery Date & Time must be greater than Booking Date (' + bookingDateStr + ')', 'error');
+                Swal.fire('Validation Error', 'Expected Delivery Date & Time must be greater than Booking Date (' + formatTrackingDate(bookingDateStr) + ')', 'error');
                 return false;
             }
         }
@@ -348,7 +349,7 @@ function loadTrackingHistory(bookingId) {
 
                     rows.push([
                         `<span class="text-muted">${index + 1}</span>`,
-                        `<span class="fw-medium">${item.event_date}</span>`,
+                        `<span class="fw-medium">${formatTrackingDate(item.event_date)}</span>`,
                         displayTime,
                         `<span class="fw-bold text-dark"><i class="fa-solid fa-location-dot me-1 text-primary"></i>${item.current_location}</span>`,
                         badge,

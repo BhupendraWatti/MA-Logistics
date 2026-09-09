@@ -261,8 +261,8 @@ $destinationOptions = $lookups['destination'] ?? [];
                                         <td><?= esc($historyRate['material_category'] ?: 'All categories') ?></td>
                                         <td class="tabular-nums"><?= number_format((float) ($historyRate['rate'] ?? 0), 2) ?>
                                         </td>
-                                        <td><?= esc($historyRate['effective_from'] ?? '') ?></td>
-                                        <td><?= esc($historyRate['effective_to'] ?? '') ?></td>
+                                        <td><?= !empty($historyRate['effective_from']) ? esc(date('d.m.Y', strtotime($historyRate['effective_from']))) : '' ?></td>
+                                        <td><?= !empty($historyRate['effective_to']) ? esc(date('d.m.Y', strtotime($historyRate['effective_to']))) : '' ?></td>
                                         <td><span class="badge bg-secondary-subtle text-secondary">Closed</span></td>
                                     </tr>
                                 <?php endforeach; ?>

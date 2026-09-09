@@ -91,7 +91,7 @@
                                 <span class="text-muted" style="font-size: 0.85rem;"><?= esc($booking['consignee'] ?? '-') ?></span>
                             </td>
                             <td>
-                                <span class="fw-semibold"><?= !empty($booking['created_at']) ? esc(date('d-M-Y H:i', strtotime($booking['created_at']))) : '-' ?></span>
+                                <span class="fw-semibold"><?= !empty($booking['created_at']) ? esc(date('d.m.Y H:i', strtotime($booking['created_at']))) : '-' ?></span>
                             </td>
                             <td><?= esc($booking['created_by_name'] ?? 'Unknown') ?></td>
                             <td><span class="text-dark fw-medium"><?= $booking['total_pieces'] ?></span></td>

@@ -9,7 +9,7 @@
     // Auto-detect API base URL from wp_localize_script or fallback
     const API_BASE = (typeof window.maTrackingConfig !== 'undefined' && window.maTrackingConfig.apiUrl)
         ? window.maTrackingConfig.apiUrl.replace(/\/+$/, '') + '/'
-        : 'https://granthinfotech.online/api/track/';
+        : 'https://erp.malogistics.co.in/api/track/';
 
     const SITE_BASE = (typeof window.maTrackingConfig !== 'undefined' && window.maTrackingConfig.siteUrl)
         ? window.maTrackingConfig.siteUrl.replace(/\/+$/, '') + '/'
@@ -116,7 +116,7 @@
 
         // Left Column Table Fields
         setText('val-awb-no', b.awb_no || '-');
-        setText('val-booking-date', b.booking_date || '-');
+        setText('val-booking-date', formatToDotDate(b.booking_date));
         setText('val-consignor', b.consignor_name || '-');
         setText('val-consignee', b.consignee_name || '-');
         setText('val-origin', b.origin || '-');
@@ -139,7 +139,7 @@
         // Expected Delivery
         let expectedText = '-';
         if (b.expected_delivery_date && b.expected_delivery_date !== '-') {
-            expectedText = b.expected_delivery_date;
+            expectedText = formatToDotDate(b.expected_delivery_date);
             if (b.expected_delivery_time && b.expected_delivery_time !== '-') {
                 let expTime = b.expected_delivery_time;
                 if (expTime.length > 5) expTime = expTime.substring(0, 5);
@@ -151,7 +151,7 @@
         // Delivered Date & Time
         let deliveryCombined = '-';
         if (b.delivery_date && b.delivery_date !== '-') {
-            deliveryCombined = b.delivery_date;
+            deliveryCombined = formatToDotDate(b.delivery_date);
             if (b.delivery_time && b.delivery_time !== '-') {
                 let delTime = b.delivery_time;
                 if (delTime.length > 5) delTime = delTime.substring(0, 5);
@@ -162,7 +162,7 @@
             for (let i = 0; i < h.length; i++) {
                 const act = (h[i].status || h[i].activity || '').toUpperCase();
                 if (act.indexOf('DELIVERED') !== -1) {
-                    deliveryCombined = h[i].date || '-';
+                    deliveryCombined = formatToDotDate(h[i].date);
                     if (h[i].time && h[i].time !== '-') {
                         let delTime = h[i].time;
                         if (delTime.length > 5) delTime = delTime.substring(0, 5);
@@ -255,7 +255,7 @@
             // Date
             const tdDate = document.createElement('td');
             tdDate.className = 'ma-td-date';
-            tdDate.textContent = ev.date || '-';
+            tdDate.textContent = formatToDotDate(ev.date);
             tr.appendChild(tdDate);
 
             // Time (HH:mm)
@@ -343,7 +343,7 @@
                     '<span class="ma-timeline-badge">' + escapeHtml(ev.location || 'Hub') + '</span>' +
                 '</div>' +
                 '<div class="ma-timeline-meta">' +
-                    '<span>&#128197; ' + escapeHtml(ev.date || '-') + '</span>' +
+                    '<span>&#128197; ' + escapeHtml(formatToDotDate(ev.date)) + '</span>' +
                     '<span>&#9200; ' + escapeHtml(ev.time || '-') + '</span>' +
                 '</div>' +
                 remarksHtml;
@@ -394,6 +394,33 @@
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
+    }
+
+    /**
+     * Format any date string (YYYY-MM-DD, DD-MM-YYYY, YYYY/MM/DD, ISO) into DD.MM.YYYY
+     */
+    function formatToDotDate(val) {
+        if (!val || val === '-' || val === 'Pending / Not Scheduled') return val || '-';
+        const str = String(val).trim();
+        const datePart = str.split(' ')[0];
+        const parts = datePart.split(/[-/.]/);
+        if (parts.length === 3) {
+            // YYYY-MM-DD
+            if (parts[0].length === 4) {
+                const yyyy = parts[0];
+                const mm = parts[1].padStart(2, '0');
+                const dd = parts[2].padStart(2, '0');
+                return dd + '.' + mm + '.' + yyyy;
+            }
+            // DD-MM-YYYY
+            if (parts[2].length === 4) {
+                const dd = parts[0].padStart(2, '0');
+                const mm = parts[1].padStart(2, '0');
+                const yyyy = parts[2];
+                return dd + '.' + mm + '.' + yyyy;
+            }
+        }
+        return val;
     }
 
     /**

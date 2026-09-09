@@ -12,7 +12,7 @@
                 <h4 class="mb-0 fw-bold text-dark">Booking Details: <span class="text-primary"><?= esc($booking['awb_no']) ?></span></h4>
             </div>
             <div class="text-muted fs-8 ms-5 ps-4">
-                <i class="fas fa-clock me-1"></i> Last modified: <?= date('Y-m-d h:i A', strtotime($booking['updated_at'] ?? $booking['booking_date'])) ?> by <span class="fw-bold"><?= esc($booking['created_by_name']) ?></span>
+                <i class="fas fa-clock me-1"></i> Last modified: <?= date('d.m.Y h:i A', strtotime($booking['updated_at'] ?? $booking['booking_date'])) ?> by <span class="fw-bold"><?= esc($booking['created_by_name']) ?></span>
             </div>
         </div>
         <div class="d-flex align-items-center gap-2">
@@ -41,7 +41,7 @@
                 </div>
                 <div class="col-6 col-md-2">
                     <div class="text-uppercase text-muted fs-8 fw-bold mb-1">BOOKING DATE</div>
-                    <div class="fw-bold fs-6 text-dark"><?= date('Y-m-d', strtotime($booking['booking_date'])) ?></div>
+                    <div class="fw-bold fs-6 text-dark"><?= date('d.m.Y', strtotime($booking['booking_date'])) ?></div>
                 </div>
                 <div class="col-6 col-md-3">
                     <div class="text-uppercase text-muted fs-8 fw-bold mb-1">COMPANY</div>
@@ -427,7 +427,7 @@
                                 ?>
                                 <tr>
                                     <td class="ps-4 text-muted"><?= $index + 1 ?></td>
-                                    <td class="fw-medium"><?= esc($entry['event_date']) ?></td>
+                                    <td class="fw-medium"><?= !empty($entry['event_date']) ? esc(date('d.m.Y', strtotime($entry['event_date']))) : '-' ?></td>
                                     <td><?= esc($displayTime) ?></td>
                                     <td class="fw-bold text-dark">
                                         <i class="fa-solid fa-location-dot me-1 text-primary"></i><?= esc($entry['current_location']) ?>

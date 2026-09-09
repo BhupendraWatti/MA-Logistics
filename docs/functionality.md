@@ -4,6 +4,7 @@ This document provides a comprehensive functional description of all modules, bu
 
 ## Current Backend Behavior Additions
 
+* **Frontend date presentation**: Human-visible dates across ERP grids/details, tracking histories, PDF invoices/dockets, saved-invoice history, and report exports use `DD.MM.YYYY`. Times remain unchanged where already shown. Database values, API payloads, native date controls, comparisons, and filenames retain their machine-readable formats.
 * **All Invoice layout rules**: Consolidated invoices support both A4 landscape and portrait. The All Invoice header is deliberately text-only and does not use the uploaded logo. GSTIN/SAC/PAN identity rows, customer GST/PAN, GST table columns, and GST summary rows appear only for GST-applied invoices with configured rates. Non-GST output removes those tax-only fields. Portrait applies compact type and cell padding while preserving invoice data. Final pages show taxable amount, applicable tax components, gross amount, amount in words, a 60/40 terms-and-bank/signature footer, and repeated table headings on continuation pages.
 * **Customer docket binding and layout**: Individual docket PDFs receive the raw shipment row plus resolved Company and Customer Master data after invoice aggregation. Company logo/contact/GST, booking route/date/mode, shipper and consignee names/addresses/phones, item quantities/weights/dimensions, payment type, contents, and calculated charges are dynamic. Unsupported Form No., Method of Pkg., and Declared Weight substitutions are omitted instead of printing unrelated values. Missing fields remain blank rather than falling back to sample company or shipment values. The Full Print includes amounts; Half Print suppresses them while retaining operational fields.
 * **Docket contents persistence**: The shipment drawer exposes **Said to Contain** as a required item field. `BookingService` persists it to `shipment_items.contents`; Part No. remains independent and optional.
@@ -139,4 +140,3 @@ Provides full tracking history visibility and proof-of-delivery (POD) document m
 * **Models**: `app/Models/TrackingHistoryModel.php`, `app/Models/BookingModel.php`
 * **Views**: `app/Views/logistics/tracking_drawer.php`, `app/Views/public_track.php`
 * **WordPress Plugin**: `wp-plugin/ma-logistics-tracking/ma-logistics-tracking.php`, `assets/css/ma-tracking.css`, `assets/js/ma-tracking.js`
-

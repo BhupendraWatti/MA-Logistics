@@ -30,6 +30,16 @@ final class PdfInvoiceLayoutTest extends TestCase
         self::assertStringNotContainsString('I.GST', $nonGstBody);
     }
 
+    public function testVisibleInvoiceDatesUseDotSeparatedFourDigitYears(): void
+    {
+        $data = $this->fixtureData(true, 'L', 1);
+        $data['renderSection'] = 'header';
+        self::assertStringContainsString('31.07.2026', view('pdfs/invoice', $data));
+
+        $data['renderSection'] = 'body';
+        self::assertStringContainsString('01.07.2026', view('pdfs/invoice', $data));
+    }
+
     public function testLandscapeAndPortraitInvoicesRenderAsPdf(): void
     {
         $outputDir = ROOTPATH . 'tmp/pdfs/generated';
@@ -328,8 +338,8 @@ final class PdfInvoiceLayoutTest extends TestCase
             'customerGst' => $gstApplied ? '27AADCN6042M1Z7' : '',
             'customerPan' => $gstApplied ? 'AADCN6042M' : '',
             'invoiceNo' => 'MA-26-27/001',
-            'invoicePeriod' => '01/07/2026 TO 31/07/2026',
-            'invoiceDate' => '31/07/2026',
+            'invoicePeriod' => '01.07.2026 TO 31.07.2026',
+            'invoiceDate' => '31.07.2026',
             'billingBranch' => 'PUNE',
             'modeTransport' => 'AIR',
             'shipmentRows' => $rows,

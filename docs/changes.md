@@ -2,6 +2,16 @@
 
 This file tracks every technical change, feature implementation, refactoring, and pending scope addition performed on the M.A. Logistics ERP project.
 
+## Latest Frontend Date Change
+
+### [CHG-035] Standardize Human-Visible Dates as DD.MM.YYYY
+* **Status**: Completed and regression tested
+* **Priority**: Medium
+* **Requirement**: Show every human-visible full date as `DD.MM.YYYY` without changing existing workflows.
+* **Implementation**: Updated ERP grids/details, tracking histories, consolidated invoice/docket presentation, saved-invoice history, CSV/XLSX report date cells, and the public tracking page. Preserved ISO database/API/input values, date comparisons, timestamps, month selectors, and generated filenames.
+* **Files Modified**: Presentation-only formatters in `app/Controllers/Logistics.php`, `app/Models/BookingModel.php`, `app/Services/InvoiceService.php`, affected `app/Views/`, regression tests, and synchronized documentation. The existing WordPress tracking formatter already uses the required format and was preserved.
+* **QA**: PHP syntax checks, targeted PHPUnit date-format regression, full PHPUnit suite, and a repository scan for legacy human-visible date format strings.
+
 ## TestSprite Remediation
 
 ### [CHG-034] WordPress CMS Tracking Component & Plugin Integration (Elementor Shortcode [ma_tracking])
@@ -519,4 +529,3 @@ The following 6 change requests have been formally cataloged into the official P
      - Populates `val-delivery-datetime` (e.g. `2026-09-04 at 15:45`) in green bold.
      - Positions top route airplane icon at 100% destination upon delivery.
   4. **Deployment & Verification**: Deployed v1.0.4 to `marlexpress.com`, purged LiteSpeed cache, and verified with Playwright test. All fields confirmed active.
-

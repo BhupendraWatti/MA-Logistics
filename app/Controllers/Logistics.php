@@ -757,7 +757,7 @@ public function companySelection()
         $row['total_weight'] = number_format((float) $row['total_weight'], 1);
         $row['total_amount'] = number_format((float) $row['total_amount'], 0);
         $time = !empty($row['created_at']) ? date('H:i', strtotime($row['created_at'])) : '00:00';
-        $row['booking_date'] = date('d-M-Y', strtotime($row['booking_date'])) . ' ' . $time;
+        $row['booking_date'] = date('d.m.Y', strtotime($row['booking_date'])) . ' ' . $time;
         $row['can_edit'] = $canEdit;
         $row['can_delete'] = $canDelete;
         $row['last_action'] = $bookingLogs[$row['id']] ?? null;
@@ -1268,15 +1268,15 @@ public function exportExcel()
                 $item['invoice_no'] ?? '',
                 $item['part_no'] ?? '',
                 
-                !empty($booking['booking_date']) ? date('d-m-Y', strtotime($booking['booking_date'])) : '',
+                !empty($booking['booking_date']) ? date('d.m.Y', strtotime($booking['booking_date'])) : '',
                 $booking['origin'] ?? '',
                 $booking['destination'] ?? '',
                 $booking['mode_transport'] ?? '',
                 $booking['status'] ?? '',
                 
-                !empty($booking['expected_delivery_date']) ? date('d-m-Y', strtotime($booking['expected_delivery_date'])) : '',
+                !empty($booking['expected_delivery_date']) ? date('d.m.Y', strtotime($booking['expected_delivery_date'])) : '',
                 !empty($booking['expected_delivery_time']) ? substr($booking['expected_delivery_time'], 0, 5) : '',
-                !empty($item['invoice_date']) ? date('d-m-Y', strtotime($item['invoice_date'])) : '',
+                !empty($item['invoice_date']) ? date('d.m.Y', strtotime($item['invoice_date'])) : '',
                 $item['bill_to'] ?? '',
                 
                 $actualWt,
@@ -1288,7 +1288,7 @@ public function exportExcel()
                 floatval($item['final_chargeable_weight'] ?? 0),
                 intval($item['pieces'] ?? 0),
                 $item['eway_bill_no'] ?? '',
-                !empty($item['eway_bill_date']) ? date('d-m-Y', strtotime($item['eway_bill_date'])) : '',
+                !empty($item['eway_bill_date']) ? date('d.m.Y', strtotime($item['eway_bill_date'])) : '',
                 
                 $rate,
                 $freight,
@@ -1489,9 +1489,9 @@ public function exportExcel()
         $downloads = (new InvoiceDownloadModel())->getByCompanyMonth((int) $companyId, $month, 100);
         $monthTotal = 0.0;
         foreach ($downloads as &$download) {
-            $download['downloaded_at_display'] = !empty($download['downloaded_at']) ? date('d-M-Y H:i', strtotime($download['downloaded_at'])) : '-';
-            $download['from_date_display'] = !empty($download['from_date']) ? date('d-M-Y', strtotime($download['from_date'])) : '-';
-            $download['to_date_display'] = !empty($download['to_date']) ? date('d-M-Y', strtotime($download['to_date'])) : '-';
+            $download['downloaded_at_display'] = !empty($download['downloaded_at']) ? date('d.m.Y H:i', strtotime($download['downloaded_at'])) : '-';
+            $download['from_date_display'] = !empty($download['from_date']) ? date('d.m.Y', strtotime($download['from_date'])) : '-';
+            $download['to_date_display'] = !empty($download['to_date']) ? date('d.m.Y', strtotime($download['to_date'])) : '-';
             $download['total_amount_display'] = number_format((float) ($download['total_amount'] ?? 0), 2);
             $download['view_url'] = base_url('logistics/all-invoices/downloads/' . $download['id']);
             $download['delete_url'] = base_url('logistics/all-invoices/downloads/delete/' . $download['id']);
@@ -1561,7 +1561,7 @@ public function exportExcel()
         // Format dates for UI
         foreach ($records as &$r) {
             $dateVal = $r['booking_date'] ?? null;
-            $r['display_date'] = date('d-M-Y', strtotime($dateVal));
+            $r['display_date'] = date('d.m.Y', strtotime($dateVal));
             $r['invoice_template_name'] = '';
             $r['invoice_template_gst_type'] = '';
             $r['invoice_template_prefix'] = '';
@@ -1775,15 +1775,15 @@ public function exportExcel()
                         $item['invoice_no'] ?? '',
                         $item['part_no'] ?? '',
                         
-                        !empty($booking['booking_date']) ? date('d-m-Y', strtotime($booking['booking_date'])) : '',
+                        !empty($booking['booking_date']) ? date('d.m.Y', strtotime($booking['booking_date'])) : '',
                         $booking['origin'] ?? '',
                         $booking['destination'] ?? '',
                         $booking['mode_transport'] ?? '',
                         $booking['status'] ?? '',
                         
-                        !empty($booking['expected_delivery_date']) ? date('d-m-Y', strtotime($booking['expected_delivery_date'])) : '',
+                        !empty($booking['expected_delivery_date']) ? date('d.m.Y', strtotime($booking['expected_delivery_date'])) : '',
                         !empty($booking['expected_delivery_time']) ? substr($booking['expected_delivery_time'], 0, 5) : '',
-                        !empty($item['invoice_date']) ? date('d-m-Y', strtotime($item['invoice_date'])) : '',
+                        !empty($item['invoice_date']) ? date('d.m.Y', strtotime($item['invoice_date'])) : '',
                         $item['bill_to'] ?? '',
                         
                         $actualWt,
@@ -1795,7 +1795,7 @@ public function exportExcel()
                         floatval($item['final_chargeable_weight'] ?? 0),
                         intval($item['pieces'] ?? 0),
                         $item['eway_bill_no'] ?? '',
-                        !empty($item['eway_bill_date']) ? date('d-m-Y', strtotime($item['eway_bill_date'])) : '',
+                        !empty($item['eway_bill_date']) ? date('d.m.Y', strtotime($item['eway_bill_date'])) : '',
                         
                         $rate,
                         $freight,
@@ -1915,7 +1915,7 @@ public function exportExcel()
             );
 
             // ── Period ──────────────────────────────────────────────────────
-            $invoicePeriod = date('d/m/Y', strtotime($bookingDateStartRaw)) . ' TO ' . date('d/m/Y', strtotime($bookingDateEndRaw));
+            $invoicePeriod = date('d.m.Y', strtotime($bookingDateStartRaw)) . ' TO ' . date('d.m.Y', strtotime($bookingDateEndRaw));
 
             $viewData = $invoiceService->assembleViewData([
                 'company'              => $companyData,
@@ -1925,7 +1925,7 @@ public function exportExcel()
                 'customerPan'          => $customerInfo['pan'],
                 'invoiceNo'            => $invoiceNo,
                 'invoicePeriod'        => $invoicePeriod,
-                'invoiceDate'          => date('d/m/Y', strtotime($pdfInvoiceDateRaw)),
+                'invoiceDate'          => date('d.m.Y', strtotime($pdfInvoiceDateRaw)),
                 'billingBranch'        => trim(explode(',', $shipments[0]['booking_origin'] ?? 'PUNE')[0]),
                 'modeTransport'        => strtoupper($shipments[0]['booking_mode'] ?? 'AIR'),
                 'shipmentRows'         => $rowData['rows'],
@@ -1939,7 +1939,7 @@ public function exportExcel()
                 'bookingSacCode'       => $companyData['sac_code']       ?? '',
                 'bookingSignaturePath' => $companyData['signature_path'] ?? '',
                 'activeCharges'        => $activeCharges,
-                'dueDate'              => !empty($dueDate) ? date('d/m/Y', strtotime($dueDate)) : '',
+                'dueDate'              => !empty($dueDate) ? date('d.m.Y', strtotime($dueDate)) : '',
                 'booking'              => [
                     'gst_applied' => $gstApplied ? 1 : 0,
                     'narration'   => $remark,

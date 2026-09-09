@@ -10,10 +10,10 @@ $totalCols = ($isNx ? 13 : 14) + $taxColumnCount;
 $tableFontSize = $isPortrait ? 6.2 : 8;
 $tableHeaderFontSize = $isPortrait ? 5.8 : 7;
 $tableCellPadding = $isPortrait ? 0.9 : 2;
-$displayDate = static function (array $row) use ($isPortrait): string {
+$displayDate = static function (array $row): string {
     $raw = $row['dateRaw'] ?? '';
     if ($raw !== '' && strtotime($raw) !== false) {
-        return date($isPortrait ? 'd-m-y' : 'd/m/Y', strtotime($raw));
+        return date('d.m.Y', strtotime($raw));
     }
     return (string) ($row['date'] ?? '');
 };
