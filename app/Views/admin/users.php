@@ -74,12 +74,9 @@
                     <div class="border rounded p-2 bg-light" style="max-height: 160px; overflow-y: auto;">
                         <?php foreach (($companies ?? []) as $company): ?>
                             <div class="form-check mb-1">
-                                <input class="form-check-input" type="checkbox" name="company_ids[]" value="<?= $company['id'] ?>" id="comp_check_<?= $company['id'] ?>" <?= ((int)$company['id'] === 1) ? 'checked' : '' ?>>
+                                <input class="form-check-input" type="checkbox" name="company_ids[]" value="<?= $company['id'] ?>" id="comp_check_<?= $company['id'] ?>" <?= (!empty($company['is_root'])) ? 'checked' : '' ?>>
                                 <label class="form-check-label fs-7" for="comp_check_<?= $company['id'] ?>">
                                     <?= esc($company['name']) ?>
-                                    <?php if ((int)$company['id'] === 1 || !empty($company['is_root'])): ?>
-                                        <span class="badge bg-primary ms-1" style="font-size: 0.65rem;">Root</span>
-                                    <?php endif; ?>
                                 </label>
                             </div>
                         <?php endforeach; ?>
@@ -144,7 +141,7 @@
                         <select id="assignCompanyId" class="form-select form-select-sm shadow-none" data-no-track="true">
                             <?php foreach (($companies ?? []) as $comp): ?>
                                 <option value="<?= $comp['id'] ?>">
-                                    <?= esc($comp['name']) ?><?= ((int)$comp['id'] === 1 || !empty($comp['is_root'])) ? ' (Root)' : '' ?>
+                                    <?= esc($comp['name']) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
@@ -392,8 +389,7 @@
 
         let html = '';
         assignments.forEach(item => {
-            const isRoot = (parseInt(item.company_id) === 1 || parseInt(item.is_root) === 1);
-            const rootBadge = isRoot ? '<span class="badge bg-primary ms-1" style="font-size: 0.65rem;">Root</span>' : '';
+            const rootBadge = '';
 
             let roleBadge = 'bg-info text-dark';
             if (item.role === 'admin') roleBadge = 'bg-danger';

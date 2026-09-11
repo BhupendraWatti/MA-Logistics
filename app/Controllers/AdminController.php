@@ -12,15 +12,13 @@ class AdminController extends BaseController
      */
     private function checkRootAdmin(): bool
     {
-        $selectedCompanyId = session()->get('selected_company_id');
-        $isRootCompany = session()->get('is_root_company');
+        $isRootCompany = (int) session()->get('is_root_company');
         $permissions = session()->get('permissions') ?? [];
         $userRole = session()->get('role') ?? 'user';
 
         $hasUserMgmt = ($userRole === 'admin' || !empty($permissions['can_delete']));
-        $isRoot = ($isRootCompany || (int)$selectedCompanyId === 1);
 
-        if (!$hasUserMgmt || !$isRoot) {
+        if (!$hasUserMgmt || !$isRootCompany) {
             return false;
         }
         return true;
@@ -28,10 +26,13 @@ class AdminController extends BaseController
 
     private function isSoleActiveRootAdmin(int $userId): bool
     {
+        $rootComp = (new \App\Models\CompanyModel())->getRootCompany();
+        $rootId = (int) ($rootComp['id'] ?? 2);
+
         $rootAdmins = \Config\Database::connect()->table('user_company_access uca')
             ->select('uca.user_id')
             ->join('users u', 'u.id = uca.user_id')
-            ->where('uca.company_id', 1)
+            ->where('uca.company_id', $rootId)
             ->where('uca.role', 'admin')
             ->where('uca.is_active', 1)
             ->where('u.is_active', 1)

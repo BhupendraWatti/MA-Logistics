@@ -17,6 +17,9 @@ class CompanyModel extends Model
 
     public function getRootCompany(): ?array
     {
-        return $this->where('is_root', 1)->first() ?? $this->find(1);
+        return $this->where('is_root', 1)->first() 
+            ?? $this->where('name', 'MA LOGISTICS')->first() 
+            ?? $this->find(2) 
+            ?? $this->find(1);
     }
 }

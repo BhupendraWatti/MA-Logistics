@@ -74,10 +74,8 @@ class AuthFilter implements FilterInterface
 
         // ADMIN PANEL - Root Admin with User Management only
         if (strpos($cleanUri, 'admin') === 0) {
-            $selectedCompanyId = session()->get('selected_company_id');
             $isRootCompany = session()->get('is_root_company');
-            $isRoot = ($isRootCompany || (int)$selectedCompanyId === 1);
-            if (!$canUserMgmt || !$isRoot) {
+            if (!$canUserMgmt || !$isRootCompany) {
                 return redirect()->to('/logistics/manage')->with('error', 'User Management is centralized under MA Logistic root administration.');
             }
         }

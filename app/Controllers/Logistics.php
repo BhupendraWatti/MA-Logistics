@@ -88,7 +88,10 @@ class Logistics extends BaseController
             return false;
         }
 
-        $access = (new \App\Models\UserCompanyAccessModel())->getUserAccess($userId, 1);
+        $rootCompany = (new \App\Models\CompanyModel())->getRootCompany();
+        $rootCompanyId = (int) ($rootCompany['id'] ?? 2);
+
+        $access = (new \App\Models\UserCompanyAccessModel())->getUserAccess($userId, $rootCompanyId);
         return $access
             && (int) ($access['is_active'] ?? 0) === 1
             && ($access['role'] ?? '') === 'admin';
@@ -544,7 +547,7 @@ public function companySelection()
         
         if ($company) {
             $compName = $company['name'] ?? $company['company_name'] ?? ('Company #' . $companyId);
-            $isRoot = (int) ($company['is_root'] ?? ($company['id'] == 1));
+            $isRoot = (int) ($company['is_root'] ?? 0);
 
             session()->set([
                 'selected_company_id'   => $companyId,
@@ -655,17 +658,17 @@ public function companySelection()
         return redirect()->to('/company-selection')->with('error', 'MA Logistic root administrator access required to delete companies!');
     }
 
-    // Protect root company
-    if ((int) $id === 1) {
-        return redirect()->back()->with('error', 'The root company MA Logistic cannot be deleted.');
-    }
-
     try {
         $companyModel = new CompanyModel();
         $company = $companyModel->find($id);
 
         if (!$company) {
             return redirect()->back()->with('error', 'Company not found!');
+        }
+
+        // Protect root company
+        if ((int) $id === 1 || (int) $id === 2 || !empty($company['is_root']) || strcasecmp(trim($company['name'] ?? ''), 'MA LOGISTICS') === 0) {
+            return redirect()->back()->with('error', 'The root company MA Logistic cannot be deleted.');
         }
 
         $compName = $company['name'] ?? $company['company_name'] ?? ('Company #' . $id);

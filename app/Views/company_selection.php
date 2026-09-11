@@ -2,11 +2,11 @@
 <?= $this->section('content') ?>
 <?php
     $isRootAdmin = false;
-    if (session()->get('role') === 'admin' && (session()->get('selected_company_id') == 1 || session()->get('is_root_company'))) {
+    if (session()->get('role') === 'admin' && !empty(session()->get('is_root_company'))) {
         $isRootAdmin = true;
     }
     foreach (($companies ?? []) as $c) {
-        if (((int) $c['id'] === 1 || !empty($c['is_root'])) && ($c['role'] ?? '') === 'admin') {
+        if (!empty($c['is_root']) && ($c['role'] ?? '') === 'admin') {
             $isRootAdmin = true;
             break;
         }
@@ -62,7 +62,7 @@
                         <tbody class="border-top-0">
                             <?php foreach($companies as $company): ?>
                                 <?php
-                                    $isRoot = ((int)$company['id'] === 1 || !empty($company['is_root']));
+                                    $isRoot = !empty($company['is_root']);
                                     $role = $company['role'] ?? 'user';
                                     $roleBadge = 'bg-info text-dark';
                                     if ($role === 'admin') $roleBadge = 'bg-danger';
@@ -72,9 +72,6 @@
                                     <td class="ps-4 fw-semibold text-dark company-name">
                                         <i class="fas fa-building text-primary me-2"></i>
                                         <?= esc($company['name']) ?>
-                                        <?php if ($isRoot): ?>
-                                            <span class="badge bg-primary ms-2"><i class="fas fa-crown me-1"></i> Root</span>
-                                        <?php endif; ?>
                                     </td>
                                     <td>
                                         <span class="badge <?= $roleBadge ?> fw-semibold"><?= esc(ucfirst($role)) ?></span>

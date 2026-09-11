@@ -132,7 +132,7 @@
                     $userRole       = session()->get('role') ?? 'user';
                     $isAdmin        = ($userRole === 'admin');
                     $canMasterEntry = (($permissions['can_create'] ?? 0) == 1 || $userRole === 'admin');
-                    $canUserMgmt    = ((($permissions['can_delete'] ?? 0) == 1 || $userRole === 'admin') && ((int)session()->get('selected_company_id') === 1 || session()->get('is_root_company')));
+                    $canUserMgmt    = ((($permissions['can_delete'] ?? 0) == 1 || $userRole === 'admin') && !empty(session()->get('is_root_company')));
                 ?>
                 
                 <?php if ($canMasterEntry): ?>
@@ -223,9 +223,6 @@
                     <div class="dropdown">
                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle shadow-none fw-semibold" type="button" data-bs-toggle="dropdown">
                             <i class="fas fa-building text-primary me-1"></i> <?= esc(session()->get('selected_company_name')) ?>
-                            <?php if (session()->get('selected_company_id') == 1 || session()->get('is_root_company')): ?>
-                                <span class="badge bg-primary ms-1" style="font-size: 0.68rem;">Root</span>
-                            <?php endif; ?>
                             <span class="badge bg-secondary ms-1" style="font-size: 0.68rem;"><?= esc(ucfirst(session()->get('role') ?? 'user')) ?></span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-1">
