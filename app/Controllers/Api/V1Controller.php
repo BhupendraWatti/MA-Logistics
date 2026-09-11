@@ -16,6 +16,7 @@ use App\Models\ShipmentItemModel;
 use App\Models\TrackingHistoryModel;
 use App\Models\TransporterModel;
 use App\Models\UserModel;
+use App\Models\UserCompanyAccessModel;
 use App\Services\BookingService;
 use App\Services\CustomerRateService;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -44,9 +45,11 @@ class V1Controller extends BaseController
             }
             ApiBasicAuthFilter::establishSession($user);
 
+            $assignedCompanies = (new UserCompanyAccessModel())->getUserCompanies((int) $user['id'], true);
+
             return $this->success([
                 'user' => $this->publicUser($user),
-                'companies' => array_map(fn (array $company) => $this->publicCompany($company), (new CompanyModel())->orderBy('name')->findAll()),
+                'companies' => array_map(fn (array $company) => $this->publicCompany($company), $assignedCompanies),
                 'auth_type' => 'session_or_basic',
                 'csrf_required' => false,
             ], 'Login successful.');
@@ -61,29 +64,63 @@ class V1Controller extends BaseController
 
     public function companies(): ResponseInterface
     {
-        return $this->run(fn () => $this->success(array_map(fn (array $company) => $this->publicCompany($company), (new CompanyModel())->orderBy('name')->findAll())));
+        return $this->run(function () {
+            $userId = (int) session()->get('user_id');
+            $companies = (new UserCompanyAccessModel())->getUserCompanies($userId, true);
+            return $this->success(array_map(fn (array $company) => $this->publicCompany($company), $companies));
+        });
     }
 
     public function selectCompany(): ResponseInterface
     {
         return $this->run(function () {
             $id = (int) ($this->payload()['company_id'] ?? 0);
-            $company = $id > 0 ? (new CompanyModel())->find($id) : null;
-            if (!$company) {
+            if ($id <= 0) {
                 return $this->error('A valid company_id is required.', 422);
             }
-            session()->set(['selected_company_id' => $id, 'selected_company_name' => $company['name'] ?? $company['company_name'] ?? '']);
-            return $this->success(['company' => $this->publicCompany($company), 'company_id' => $id], 'Company selected.');
+            $userId = (int) session()->get('user_id');
+            $accessModel = new UserCompanyAccessModel();
+            $access = $accessModel->getUserAccess($userId, $id);
+            if (!$access || !(int) ($access['is_active'] ?? 0)) {
+                return $this->error('You do not have access to this company.', 403);
+            }
+            $company = (new CompanyModel())->find($id);
+            if (!$company) {
+                return $this->error('Company not found.', 404);
+            }
+            $isRoot = ((int) $company['id'] === 1) || ((int) ($company['is_root'] ?? 0) === 1);
+            session()->set([
+                'selected_company_id'   => $id,
+                'selected_company_name' => $company['name'] ?? $company['company_name'] ?? '',
+                'is_root_company'       => $isRoot ? 1 : 0,
+                'role'                  => (string) ($access['role'] ?? 'user'),
+                'permissions'           => [
+                    'can_create' => (int) ($access['can_create'] ?? 0),
+                    'can_edit'   => (int) ($access['can_edit'] ?? 0),
+                    'can_delete' => (int) ($access['can_delete'] ?? 0),
+                ]
+            ]);
+            return $this->success([
+                'company' => $this->publicCompany($company),
+                'company_id' => $id,
+                'role' => $access['role'],
+                'permissions' => [
+                    'can_create' => (int) $access['can_create'],
+                    'can_edit'   => (int) $access['can_edit'],
+                    'can_delete' => (int) $access['can_delete'],
+                ]
+            ], 'Company selected.');
         });
     }
 
     public function company(): ResponseInterface
     {
         return $this->run(function () {
+            $companyId = $this->companyId();
             if (session()->get('role') !== 'admin') {
                 throw new \RuntimeException('Admin access required.', 403);
             }
-            return $this->success((new CompanyModel())->find($this->companyId()));
+            return $this->success((new CompanyModel())->find($companyId));
         });
     }
 
@@ -113,7 +150,7 @@ class V1Controller extends BaseController
     public function deleteCustomer(int $id): ResponseInterface
     {
         return $this->run(function () use ($id) {
-            $this->requirePermission('can_delete');
+            $this->requirePermission('can_create');
             if (!(new CustomerRateService())->deleteCustomer($this->companyId(), $id)) {
                 return $this->error('Customer not found.', 404);
             }
@@ -124,7 +161,7 @@ class V1Controller extends BaseController
     public function generateDocket(): ResponseInterface
     {
         return $this->run(function () {
-            $this->companyId();
+            $this->requirePermission('can_create');
             $this->request->setGlobal('post', $this->payload());
             $controller = new \App\Controllers\MasterController();
             $controller->initController($this->request, $this->response, service('logger'));
@@ -242,7 +279,7 @@ class V1Controller extends BaseController
     public function updateBooking(int $id): ResponseInterface
     {
         return $this->run(function () use ($id) {
-            $this->requirePermission('can_edit');
+            $this->requirePermission('can_create');
             $companyId = $this->companyId();
             $current = $this->fullBooking($id, $companyId);
             if (!$current) {
@@ -260,7 +297,7 @@ class V1Controller extends BaseController
     public function deleteBooking(int $id): ResponseInterface
     {
         return $this->run(function () use ($id) {
-            $this->requirePermission('can_delete');
+            $this->requirePermission('can_create');
             $companyId = $this->companyId();
             if (!$this->tenantBooking($id, $companyId)) {
                 return $this->error('Booking not found.', 404);
@@ -286,6 +323,7 @@ class V1Controller extends BaseController
     public function docketPdf(int $bookingId): ResponseInterface
     {
         return $this->run(function () use ($bookingId) {
+            $this->requirePermission('can_create');
             $companyId = $this->companyId();
             if (!$this->tenantBooking($bookingId, $companyId)) {
                 return $this->error('Booking not found.', 404);
@@ -303,6 +341,7 @@ class V1Controller extends BaseController
     public function trackingHistory(int $bookingId): ResponseInterface
     {
         return $this->run(function () use ($bookingId) {
+            $this->requirePermission('can_edit');
             $booking = $this->tenantBooking($bookingId, $this->companyId());
             if (!$booking) {
                 return $this->error('Booking not found.', 404);
@@ -315,6 +354,7 @@ class V1Controller extends BaseController
     public function saveTracking(): ResponseInterface
     {
         return $this->run(function () {
+            $this->requirePermission('can_edit');
             $data = $this->payload();
             $bookingId = (int) ($data['booking_id'] ?? 0);
             $booking = $this->tenantBooking($bookingId, $this->companyId());
@@ -358,6 +398,7 @@ class V1Controller extends BaseController
     public function deleteTracking(int $id): ResponseInterface
     {
         return $this->run(function () use ($id) {
+            $this->requirePermission('can_edit');
             $model = new TrackingHistoryModel();
             $row = $model->find($id);
             if (!$row || !$this->tenantBooking((int) $row['booking_id'], $this->companyId())) {
@@ -374,6 +415,7 @@ class V1Controller extends BaseController
     public function consolidatedInvoice(): ResponseInterface
     {
         return $this->run(function () {
+            $this->requirePermission('can_create');
             $companyId = $this->companyId();
             $data = $this->payload();
             $bookingIds = $data['booking_ids'] ?? (isset($data['booking_id']) ? [$data['booking_id']] : []);
@@ -447,7 +489,7 @@ class V1Controller extends BaseController
     public function deleteInvoiceDownload(int $id): ResponseInterface
     {
         return $this->run(function () use ($id) {
-            $this->requirePermission('can_delete');
+            $this->requirePermission('can_create');
             $model = new InvoiceDownloadModel();
             $download = $model->where('company_id', $this->companyId())->find($id);
             if (!$download) {
@@ -504,10 +546,27 @@ class V1Controller extends BaseController
     {
         $data = $this->payload();
         $id = (int) ($this->request->getHeaderLine('X-Company-ID') ?: $this->request->getGet('company_id') ?: ($data['company_id'] ?? session()->get('selected_company_id') ?? 0));
-        if ($id <= 0 || !(new CompanyModel())->find($id)) {
+        $company = $id > 0 ? (new CompanyModel())->find($id) : null;
+        if (!$company) {
             throw new \InvalidArgumentException('Select a valid company using X-Company-ID or POST /api/v1/companies/select.');
         }
-        session()->set('selected_company_id', $id);
+
+        $access = (new UserCompanyAccessModel())->getUserAccess((int) session()->get('user_id'), $id);
+        if (!$access || !(int) ($access['is_active'] ?? 0)) {
+            throw new \RuntimeException('You do not have access to this company.', 403);
+        }
+
+        session()->set([
+            'selected_company_id'   => $id,
+            'selected_company_name' => $company['name'] ?? $company['company_name'] ?? '',
+            'is_root_company'       => ((int) ($company['is_root'] ?? 0) === 1 || $id === 1) ? 1 : 0,
+            'role'                  => (string) ($access['role'] ?? 'user'),
+            'permissions'           => [
+                'can_create' => (int) ($access['can_create'] ?? 0),
+                'can_edit'   => (int) ($access['can_edit'] ?? 0),
+                'can_delete' => (int) ($access['can_delete'] ?? 0),
+            ],
+        ]);
         return $id;
     }
 
@@ -593,6 +652,7 @@ class V1Controller extends BaseController
 
     private function requirePermission(string $permission): void
     {
+        $this->companyId();
         if (session()->get('role') !== 'admin' && !(int) (session()->get('permissions')[$permission] ?? 0)) {
             throw new \RuntimeException('Permission denied.', 403);
         }
@@ -605,7 +665,7 @@ class V1Controller extends BaseController
 
     private function publicCompany(array $company): array
     {
-        return array_intersect_key($company, array_flip(['id', 'name', 'company_name']));
+        return array_intersect_key($company, array_flip(['id', 'name', 'company_name', 'is_root', 'role', 'can_create', 'can_edit', 'can_delete']));
     }
 
     private function success($data = null, string $message = '', int $status = 200): ResponseInterface

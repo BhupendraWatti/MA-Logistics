@@ -19,6 +19,15 @@ class TrackingController extends BaseController
         $this->bookingModel = new BookingModel();
     }
 
+    private function checkTrackingPermission(): bool
+    {
+        if (session()->get('role') === 'admin') {
+            return true;
+        }
+        $permissions = session()->get('permissions') ?? [];
+        return !empty($permissions['can_edit']);
+    }
+
     public function index(): string
     {
         return view('public_track');
@@ -26,9 +35,33 @@ class TrackingController extends BaseController
 
     public function getHistory($booking_id)
     {
-        $history = $this->trackingModel->where('booking_id', $booking_id)->orderBy('event_date', 'DESC')->orderBy('event_time', 'DESC')->findAll();
-        
+        if (!$this->checkTrackingPermission()) {
+            session_write_close();
+            return $this->response->setStatusCode(403)->setJSON([
+                'status'  => 'error',
+                'message' => 'Tracking & POD permission denied'
+            ]);
+        }
+
         $booking = $this->bookingModel->find($booking_id);
+        if (!$booking) {
+            session_write_close();
+            return $this->response->setStatusCode(404)->setJSON([
+                'status'  => 'error',
+                'message' => 'Booking not found'
+            ]);
+        }
+
+        $companyId = session()->get('selected_company_id');
+        if ($companyId && (int) $booking['company_id'] !== (int) $companyId) {
+            session_write_close();
+            return $this->response->setStatusCode(403)->setJSON([
+                'status'  => 'error',
+                'message' => 'Unauthorized: Booking belongs to another company'
+            ]);
+        }
+
+        $history = $this->trackingModel->where('booking_id', $booking_id)->orderBy('event_date', 'DESC')->orderBy('event_time', 'DESC')->findAll();
         
         session_write_close(); // Prevent database session write shutdown errors overriding 200 OK status
         return $this->response->setJSON([
@@ -41,8 +74,49 @@ class TrackingController extends BaseController
 
     public function saveUpdate()
     {
+        if (!$this->checkTrackingPermission()) {
+            session_write_close();
+            return $this->response->setStatusCode(403)->setJSON([
+                'status'  => 'error',
+                'message' => 'Tracking & POD permission denied'
+            ]);
+        }
+
         try {
             $postData = $this->request->getPost();
+            $bookingId = $postData['booking_id'] ?? null;
+            if (!$bookingId) {
+                return $this->response->setStatusCode(400)->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Booking ID is required'
+                ]);
+            }
+
+            $booking = $this->bookingModel->find($bookingId);
+            if (!$booking) {
+                return $this->response->setStatusCode(404)->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Booking not found'
+                ]);
+            }
+
+            $companyId = session()->get('selected_company_id');
+            if ($companyId && (int) $booking['company_id'] !== (int) $companyId) {
+                return $this->response->setStatusCode(403)->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Unauthorized: Booking belongs to another company'
+                ]);
+            }
+
+            if (!empty($postData['id'])) {
+                $existingTrack = $this->trackingModel->find($postData['id']);
+                if (!$existingTrack || (int) $existingTrack['booking_id'] !== (int) $bookingId) {
+                    return $this->response->setStatusCode(400)->setJSON([
+                        'status'  => 'error',
+                        'message' => 'Invalid tracking record'
+                    ]);
+                }
+            }
             
             // Handle file upload
             $proofImage = null;
@@ -129,14 +203,39 @@ class TrackingController extends BaseController
 
     public function deleteUpdate($id)
     {
+        if (!$this->checkTrackingPermission()) {
+            session_write_close();
+            return $this->response->setStatusCode(403)->setJSON([
+                'status'  => 'error',
+                'message' => 'Tracking & POD permission denied'
+            ]);
+        }
+
         // Find the record first to get the booking_id
         $trackingRecord = $this->trackingModel->find($id);
         if (!$trackingRecord) {
             session_write_close();
-            return $this->response->setJSON(['status' => 'error', 'message' => 'Record not found']);
+            return $this->response->setStatusCode(404)->setJSON(['status' => 'error', 'message' => 'Record not found']);
         }
 
         $bookingId = $trackingRecord['booking_id'] ?? null;
+        $booking = $bookingId ? $this->bookingModel->find($bookingId) : null;
+        if (!$booking) {
+            session_write_close();
+            return $this->response->setStatusCode(404)->setJSON([
+                'status'  => 'error',
+                'message' => 'Booking not found'
+            ]);
+        }
+
+        $companyId = session()->get('selected_company_id');
+        if (!$companyId || (int) $booking['company_id'] !== (int) $companyId) {
+            session_write_close();
+            return $this->response->setStatusCode(403)->setJSON([
+                'status'  => 'error',
+                'message' => 'Unauthorized: Booking belongs to another company'
+            ]);
+        }
 
         // Pass 'true' as the second parameter to force a hard delete from the database
         // instead of a soft delete (which only updates the deleted_at column).

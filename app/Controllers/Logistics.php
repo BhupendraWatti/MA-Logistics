@@ -61,6 +61,10 @@ class Logistics extends BaseController
 
     private function checkPermission($permission)
     {
+        if (session()->get('role') === 'admin') {
+            return true;
+        }
+
         $permissions = session()->get('permissions') ?? [];
         if (!($permissions[$permission] ?? 0)) {
             if ($this->request->isAJAX()) {
@@ -71,10 +75,23 @@ class Logistics extends BaseController
                     'message' => 'Permission denied',
                 ]);
             }
-            return redirect()->to('/logistics')->with('error', 'Permission denied!');
+            return redirect()->to('/logistics/manage')->with('error', 'Permission denied!');
         }
 
         return true;
+    }
+
+    private function hasRootAdminAccess(): bool
+    {
+        $userId = (int) session()->get('user_id');
+        if ($userId <= 0) {
+            return false;
+        }
+
+        $access = (new \App\Models\UserCompanyAccessModel())->getUserAccess($userId, 1);
+        return $access
+            && (int) ($access['is_active'] ?? 0) === 1
+            && ($access['role'] ?? '') === 'admin';
     }
 
 
@@ -86,6 +103,12 @@ public function index()
     // Redirect to company selection if no company is selected
     if (!$companyId) {
         return redirect()->to('/company-selection');
+    }
+
+    $permissions = session()->get('permissions') ?? [];
+    $userRole    = session()->get('role') ?? 'user';
+    if ($userRole !== 'admin' && !($permissions['can_create'] ?? 0)) {
+        return redirect()->to('/logistics/manage');
     }
 
     $data = [
@@ -272,6 +295,11 @@ public function create()
 
   public function view($id)
   {
+    $perm = $this->checkPermission('can_create');
+    if ($perm !== true) {
+        return redirect()->to('/logistics/manage')->with('error', 'Access Denied: You do not have permission to view shipment details.');
+    }
+
     $bookingModel = new BookingModel();
     $shipmentModel = new ShipmentItemModel();
     $salesModel = new SalesChargeModel();
@@ -306,9 +334,9 @@ public function create()
 
 public function edit($id)
 {
-    $perm = $this->checkPermission('can_edit');
+    $perm = $this->checkPermission('can_create');
     if ($perm !== true) {
-        return $perm;
+        return redirect()->to('/logistics/manage')->with('error', 'Access Denied: You do not have permission to edit shipments.');
     }
     
     $bookingModel  = new BookingModel();
@@ -356,7 +384,10 @@ public function edit($id)
 
   public function update($id)
   {
-    $this->checkPermission('can_edit');
+    $perm = $this->checkPermission('can_create');
+    if ($perm !== true) {
+        return $perm;
+    }
     
     $bookingService = new \App\Services\BookingService();
     
@@ -416,7 +447,7 @@ public function edit($id)
 
   public function delete($id = null)
   {
-    $perm = $this->checkPermission('can_delete');
+    $perm = $this->checkPermission('can_create');
     if ($perm !== true) {
         return $perm;
     }
@@ -469,7 +500,8 @@ public function edit($id)
 public function companySelection()
 {
     // Only redirect if NOT logged in
-    if (!session()->get('user_id')) {
+    $userId = session()->get('user_id');
+    if (!$userId) {
         return redirect()->to('/login');
     }
     
@@ -478,18 +510,11 @@ public function companySelection()
         return redirect()->to('/logistics');
     }
     
-    $companyModel = new CompanyModel();
-    $companies = $companyModel->findAll();
-
-    foreach ($companies as &$c) {
-        if (!isset($c['name']) && isset($c['company_name'])) {
-            $c['name'] = $c['company_name'];
-        }
-    }
-    unset($c);
+    $userCompanyModel = new \App\Models\UserCompanyAccessModel();
+    $companies = $userCompanyModel->getUserCompanies((int) $userId, true);
 
     $data = [
-        'user' => session()->get(),
+        'user'      => session()->get(),
         'companies' => $companies
     ];
     
@@ -498,18 +523,41 @@ public function companySelection()
 
   public function setCompany()
   {
-    $companyId = $this->request->getPost('company_id');
+    $userId = (int) session()->get('user_id');
+    if (!$userId) {
+        return redirect()->to('/login');
+    }
+
+    $companyId = (int) $this->request->getPost('company_id');
     
-    if ($companyId) {
+    if ($companyId > 0) {
+        $userCompanyModel = new \App\Models\UserCompanyAccessModel();
+        $access = $userCompanyModel->getUserAccess($userId, $companyId);
+
+        if (!$access || !(int) $access['is_active']) {
+            return redirect()->back()
+                ->with('error', 'Access Denied: You are not assigned to this company.');
+        }
+
         $companyModel = new CompanyModel();
         $company = $companyModel->find($companyId);
         
         if ($company) {
             $compName = $company['name'] ?? $company['company_name'] ?? ('Company #' . $companyId);
+            $isRoot = (int) ($company['is_root'] ?? ($company['id'] == 1));
+
             session()->set([
-                'selected_company_id' => $companyId,
-                'selected_company_name' => $compName
+                'selected_company_id'   => $companyId,
+                'selected_company_name' => $compName,
+                'is_root_company'       => $isRoot,
+                'role'                  => (string) $access['role'],
+                'permissions'           => [
+                    'can_create' => (int) $access['can_create'],
+                    'can_edit'   => (int) $access['can_edit'],
+                    'can_delete' => (int) $access['can_delete'],
+                ],
             ]);
+
             return redirect()->to('/logistics')
                 ->with('success', 'Welcome to ' . $compName . ' Dashboard!');
         }
@@ -525,7 +573,10 @@ public function companySelection()
     // COMPLETE SESSION CLEANUP
     session()->remove([
         'selected_company_id', 
-        'selected_company_name'
+        'selected_company_name',
+        'is_root_company',
+        'role',
+        'permissions',
     ]);
     
     // Browser cache bust
@@ -536,9 +587,9 @@ public function companySelection()
 
   public function createCompany()
   {
-    // ONLY Admin can create companies (ignores can_create permission)
-    if (session()->get('role') !== 'admin') {
-        return redirect()->to('/company-selection')->with('error', 'Admin access required!');
+    // ONLY Root Admin can create companies
+    if (!$this->hasRootAdminAccess()) {
+        return redirect()->to('/company-selection')->with('error', 'MA Logistic root administrator access required to create companies!');
     }
 
     $name = trim($this->request->getVar('name') ?? '');
@@ -560,6 +611,9 @@ public function companySelection()
         if (in_array('company_code', $fields)) {
             $data['company_code'] = 'COMP-' . strtoupper(substr(md5($name), 0, 4));
         }
+        if (in_array('is_root', $fields)) {
+            $data['is_root'] = 0;
+        }
 
         // Check if duplicate exists
         $builder = $db->table('companies');
@@ -575,6 +629,18 @@ public function companySelection()
         }
 
         $db->table('companies')->insert($data);
+        $newCompanyId = (int) $db->insertID();
+
+        // Auto-assign creator admin to the new company
+        $ucaModel = new \App\Models\UserCompanyAccessModel();
+        $ucaModel->assignCompany((int) session()->get('user_id'), $newCompanyId, [
+            'role'       => 'admin',
+            'can_create' => 1,
+            'can_edit'   => 1,
+            'can_delete' => 1,
+            'is_active'  => 1,
+        ]);
+
         return redirect()->to('/company-selection')->with('success', 'Company "' . esc($name) . '" created successfully!');
     } catch (\Throwable $e) {
         log_message('error', '[createCompany Error] ' . $e->getMessage());
@@ -584,9 +650,14 @@ public function companySelection()
 
   public function deleteCompany($id)
   {
-    // ONLY Admin can delete companies (ignores can_delete permission)
-    if (session()->get('role') !== 'admin') {
-        return redirect()->to('/company-selection')->with('error', 'Admin access required!');
+    // ONLY Root Admin can delete companies
+    if (!$this->hasRootAdminAccess()) {
+        return redirect()->to('/company-selection')->with('error', 'MA Logistic root administrator access required to delete companies!');
+    }
+
+    // Protect root company
+    if ((int) $id === 1) {
+        return redirect()->back()->with('error', 'The root company MA Logistic cannot be deleted.');
     }
 
     try {
@@ -599,12 +670,12 @@ public function companySelection()
 
         $compName = $company['name'] ?? $company['company_name'] ?? ('Company #' . $id);
 
-        // Delete company (MySQL will cascade delete related bookings)
+        // Delete company (MySQL will cascade delete related bookings and assignments)
         $companyModel->delete($id);
 
         // If the currently selected company is deleted, clear session
         if (session()->get('selected_company_id') == $id) {
-            session()->remove(['selected_company_id', 'selected_company_name']);
+            session()->remove(['selected_company_id', 'selected_company_name', 'is_root_company', 'role', 'permissions']);
         }
 
         return redirect()->back()->with('success', 'Company "' . esc($compName) . '" and all its associated records deleted successfully!');
@@ -724,9 +795,10 @@ public function companySelection()
     $data = $builder->get()->getResultArray();
 
     // Permissions
-    $permissions = session()->get('permissions') ?? [];
-    $canEdit = $permissions['can_edit'] ?? 0;
-    $canDelete = $permissions['can_delete'] ?? 0;
+    $permissions    = session()->get('permissions') ?? [];
+    $userRole       = session()->get('role') ?? 'user';
+    $canMasterEntry = (($permissions['can_create'] ?? 0) == 1 || $userRole === 'admin') ? 1 : 0;
+    $canTracking    = (($permissions['can_edit'] ?? 0) == 1 || $userRole === 'admin') ? 1 : 0;
 
     // Fetch audit logs for loaded bookings in a single query to preserve speed and optimization
     $bookingIds = array_column($data, 'id');
@@ -758,8 +830,10 @@ public function companySelection()
         $row['total_amount'] = number_format((float) $row['total_amount'], 0);
         $time = !empty($row['created_at']) ? date('H:i', strtotime($row['created_at'])) : '00:00';
         $row['booking_date'] = date('d.m.Y', strtotime($row['booking_date'])) . ' ' . $time;
-        $row['can_edit'] = $canEdit;
-        $row['can_delete'] = $canDelete;
+        $row['can_master_entry'] = $canMasterEntry;
+        $row['can_tracking']     = $canTracking;
+        $row['can_edit']         = $canMasterEntry;
+        $row['can_delete']       = $canMasterEntry;
         $row['last_action'] = $bookingLogs[$row['id']] ?? null;
 
         $shipDetails = $shipByBooking[(int) $row['id']] ?? [];

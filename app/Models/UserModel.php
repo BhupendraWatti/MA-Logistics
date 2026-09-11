@@ -78,6 +78,31 @@ class UserModel extends Model
                     ]);
                 }
             }
+
+            // Ensure root company assignment in user_company_access if table exists
+            if ($this->db->tableExists('user_company_access')) {
+                $adminRecord = $this->where('username', 'admin')->first();
+                if ($adminRecord) {
+                    $uca = $this->db->table('user_company_access')
+                        ->where('user_id', $adminRecord['id'])
+                        ->where('company_id', 1)
+                        ->get()
+                        ->getRowArray();
+                    if (!$uca) {
+                        $this->db->table('user_company_access')->insert([
+                            'user_id'    => $adminRecord['id'],
+                            'company_id' => 1,
+                            'role'       => 'admin',
+                            'can_create' => 1,
+                            'can_edit'   => 1,
+                            'can_delete' => 1,
+                            'is_active'  => 1,
+                            'created_at' => date('Y-m-d H:i:s'),
+                            'updated_at' => date('Y-m-d H:i:s'),
+                        ]);
+                    }
+                }
+            }
         } catch (\Throwable $e) {
             // Ignore database connection or table errors
         }

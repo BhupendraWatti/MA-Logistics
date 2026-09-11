@@ -25,14 +25,15 @@
              Manage <?= esc($company_name ?? '') ?> Bookings
         </h2>
         <div>
-            <?php if (session()->get('role') !== 'tracking'): ?>
+            <?php
+                $canMasterEntry = (($permissions['can_create'] ?? 0) == 1 || session()->get('role') === 'admin');
+            ?>
+            <?php if ($canMasterEntry): ?>
             <a href="<?= base_url('logistics') ?>" class="btn btn-secondary me-2">
                 Dashboard
             </a>
-            <?php endif; ?>
-            <?php if (($permissions['can_create'] ?? 0) == 1): ?>
             <a href="<?= base_url('logistics/create') ?>" class="btn btn-success">
-                New Booking
+                <i class="fas fa-plus me-1"></i> New Booking
             </a>
             <?php endif; ?>
         </div>
@@ -40,7 +41,7 @@
 
     <div class="card shadow-sm border-0">
         <div class="card-body p-3">
-            <?php if (session()->get('role') !== 'tracking'): ?>
+            <?php if ($canMasterEntry): ?>
             <div class="d-flex justify-content-end mb-3">
                 <button type="button" class="btn btn-success fw-bold shadow-sm" onclick="exportSelected()">
                     <i class="fas fa-file-excel me-1"></i> Export Selected
@@ -79,7 +80,8 @@
 <?= $this->section('scripts') ?>
 <!-- JavaScript -->
 <script>
-const USER_ROLE = '<?= session()->get('role') ?>';
+const CAN_MASTER_ENTRY = <?= (($permissions['can_create'] ?? 0) == 1 || session()->get('role') === 'admin') ? 'true' : 'false' ?>;
+const CAN_TRACKING = <?= (($permissions['can_edit'] ?? 0) == 1 || session()->get('role') === 'admin') ? 'true' : 'false' ?>;
 let dataTable;
 
 $(document).ready(function() {
@@ -88,7 +90,7 @@ $(document).ready(function() {
             data: null, 
             orderable: false,
             searchable: false,
-            visible: USER_ROLE !== 'tracking',
+            visible: CAN_MASTER_ENTRY,
             render: function(data, type, row) {
                 return `<input type="checkbox" class="booking-check" value="${row.id}">`;
             }
@@ -96,7 +98,8 @@ $(document).ready(function() {
         { 
             data: 'awb_no',
             render: function(data, type, row) {
-                if (row.can_edit == 1) {
+                const canMaster = (row.can_master_entry !== undefined ? row.can_master_entry == 1 : CAN_MASTER_ENTRY);
+                if (canMaster) {
                     return `<a href="${BASE_URL}logistics/edit/${row.id}"><strong>${data}</strong></a>`;
                 }
                 return `<strong>${data}</strong>`;
@@ -188,7 +191,7 @@ $(document).ready(function() {
         },
         { 
             data: 'total_amount',
-            visible: USER_ROLE !== 'tracking',
+            visible: CAN_MASTER_ENTRY,
             render: function(data) {
                 return `<strong class="text-success">₹${data}</strong>`;
             }
@@ -198,26 +201,25 @@ $(document).ready(function() {
             orderable: false,
             searchable: false,
             render: function(data, type, row) {
-                let actions = `
-                    <div class="btn-group">
+                let actions = '<div class="btn-group">';
+                const canTrack = (row.can_tracking !== undefined ? row.can_tracking == 1 : CAN_TRACKING);
+                const canMaster = (row.can_master_entry !== undefined ? row.can_master_entry == 1 : CAN_MASTER_ENTRY);
+
+                if (canTrack) {
+                    actions += `
                         <button type="button" class="btn btn-sm btn-outline-info" title="Tracking / POD" onclick="openTrackingDrawer('${row.id}', '${row.awb_no}', '${(row.customer_name || '').replace(/'/g, "\\'")}')">
                             <i class="fa-solid fa-location-dot"></i>
                         </button>
-                `;
+                    `;
+                }
                 
-                if (USER_ROLE !== 'tracking') {
+                if (canMaster) {
                     actions += `<a href="${BASE_URL}logistics/view/${row.id}" class="btn btn-sm btn-outline-primary" title="View"><i class="fas fa-eye"></i></a>`;
-                }
-                
-                if (row.can_edit == 1) {
                     actions += `<a href="${BASE_URL}logistics/edit/${row.id}" class="btn btn-sm btn-outline-warning" title="Edit"><i class="fas fa-edit"></i></a>`;
-                }
-                
-                if (row.can_delete == 1) {
                     actions += `<button class="btn btn-sm btn-outline-danger" title="Delete" onclick="deleteBooking(${row.id}, '${row.awb_no}')"><i class="fas fa-trash"></i></button>`;
                 }
                 
-                actions += `</div>`;
+                actions += '</div>';
                 return actions;
             }
         }

@@ -37,7 +37,6 @@ composer.phar
 /tmp/
 /testsprite_tests/
 /.gstack/
-tests
 # Local development and debug helpers
 /.archive/
 /samples/
@@ -81,3 +80,4 @@ graphify_output.md
 .graphify_version
 .graphify_chunk_*.json
 *.py
+multi-company-architecture-discovery.md

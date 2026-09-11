@@ -122,7 +122,7 @@
         setText('val-origin', b.origin || '-');
         setText('val-destination', b.destination || '-');
         setText('val-pieces', b.total_pieces || '-');
-        
+
         const statusCell = document.getElementById('val-status');
         if (statusCell) {
             statusCell.innerText = currentStatus;
@@ -236,10 +236,10 @@
         if (!events || events.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" class="ma-table-empty-cell">' +
                 '<div class="ma-empty-table-wrap">' +
-                    '<span class="ma-empty-table-icon">&#128230;</span>' +
-                    '<div>No tracking history available for this consignment. Real-time milestones will appear as the consignment progresses.</div>' +
+                '<span class="ma-empty-table-icon">&#128230;</span>' +
+                '<div>No tracking history available for this consignment. Real-time milestones will appear as the consignment progresses.</div>' +
                 '</div>' +
-            '</td></tr>';
+                '</td></tr>';
             return;
         }
 
@@ -336,15 +336,15 @@
                 remarksHtml += '<div class="ma-timeline-remarks"><span style="font-weight:600;">Received by: ' + escapeHtml(ev.receiver_name) + '</span></div>';
             }
 
-            item.innerHTML = 
+            item.innerHTML =
                 '<div class="ma-timeline-dot"></div>' +
                 '<div class="ma-timeline-top">' +
-                    '<span class="ma-timeline-activity">' + escapeHtml(ev.activity || 'Status Update') + '</span>' +
-                    '<span class="ma-timeline-badge">' + escapeHtml(ev.location || 'Hub') + '</span>' +
+                '<span class="ma-timeline-activity">' + escapeHtml(ev.activity || 'Status Update') + '</span>' +
+                '<span class="ma-timeline-badge">' + escapeHtml(ev.location || 'Hub') + '</span>' +
                 '</div>' +
                 '<div class="ma-timeline-meta">' +
-                    '<span>&#128197; ' + escapeHtml(formatToDotDate(ev.date)) + '</span>' +
-                    '<span>&#9200; ' + escapeHtml(ev.time || '-') + '</span>' +
+                '<span>&#128197; ' + escapeHtml(formatToDotDate(ev.date)) + '</span>' +
+                '<span>&#9200; ' + escapeHtml(ev.time || '-') + '</span>' +
                 '</div>' +
                 remarksHtml;
 

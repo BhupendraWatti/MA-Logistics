@@ -27,7 +27,9 @@
             <p class="text-muted mb-0">Welcome to MA Logistics System</p>
         </div>
         <div class="d-flex gap-2">
+            <?php if (session()->get('role') === 'admin'): ?>
             <a href="<?= base_url('masters/customers') ?>" class="btn btn-outline-secondary bg-white"><i class="fas fa-user-plus me-2"></i> Add Customer</a>
+            <?php endif; ?>
             <a href="<?= base_url('logistics/manage') ?>" class="btn btn-outline-secondary bg-white"><i class="fas fa-crosshairs me-2"></i> Track Shipment</a>
             <?php if (($permissions['can_create'] ?? 0) == 1): ?>
             <a href="<?= base_url('logistics/create') ?>" class="btn btn-primary"><i class="fas fa-plus me-2"></i> New Booking</a>

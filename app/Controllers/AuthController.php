@@ -21,18 +21,19 @@ class AuthController extends BaseController
         $user = $userModel->attemptLogin($credentials);
 
         if ($user && $user['is_active']) {
+            // Clean slate: set identity, company-scoped keys populated on selection
             session()->set([
-                'user_id' => $user['id'],
-                'username' => $user['username'],
-                'role' => $user['role'],
+                'user_id'   => (int) $user['id'],
+                'username'  => $user['username'],
                 'branch_id' => $user['branch_id'] ?? 1,
-                'permissions' => [
-                    'can_create' => $user['can_create'],
-                    'can_edit' => $user['can_edit'],
-                    'can_delete' => $user['can_delete']
-                ]
             ]);
-            //return redirect()->to('/logistics');
+            session()->remove([
+                'selected_company_id',
+                'selected_company_name',
+                'is_root_company',
+                'role',
+                'permissions',
+            ]);
             return redirect()->to('/company-selection');
         }
 

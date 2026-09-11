@@ -87,8 +87,6 @@
                         <div class="mb-4"><i class="fas fa-th-large me-3"></i> Dashboard</div>
                         <div class="mb-4"><i class="fas fa-truck me-3"></i> Shipment Entry</div>
                         <div class="mb-4"><i class="fas fa-list-ul me-3"></i> All Bookings</div>
-                        <!-- <div class="mb-4"><i class="fas fa-database me-3"></i> Masters</div> -->
-                        <!-- <div class="mb-4"><i class="fas fa-cog me-3"></i> Settings</div> -->
                     </div>
                     
                     <div class="mt-auto mb-5 text-center px-4" style="color: #64748b;">
@@ -103,15 +101,19 @@
                     $totalSegs = $uri->getTotalSegments();
                     $seg1 = $totalSegs >= 1 ? $uri->getSegment(1) : ''; 
                     $seg2 = $totalSegs >= 2 ? $uri->getSegment(2) : ''; 
+
+                    $permissions    = session()->get('permissions') ?? [];
+                    $userRole       = session()->get('role') ?? 'user';
+                    $isAdmin        = ($userRole === 'admin');
+                    $canMasterEntry = (($permissions['can_create'] ?? 0) == 1 || $userRole === 'admin');
+                    $canUserMgmt    = ((($permissions['can_delete'] ?? 0) == 1 || $userRole === 'admin') && ((int)session()->get('selected_company_id') === 1 || session()->get('is_root_company')));
                 ?>
                 
-                <?php if (session()->get('role') !== 'tracking'): ?>
+                <?php if ($canMasterEntry): ?>
                 <a href="<?= base_url('logistics') ?>" class="sidebar-nav-item <?= ($seg1 == 'logistics' && $seg2 == '') ? 'active' : '' ?>">
                     <i class="fas fa-th-large"></i> Dashboard
                 </a>
-                <?php endif; ?>
                 
-                <?php if ((session()->get('permissions')['can_create'] ?? 0) == 1): ?>
                 <a href="<?= base_url('logistics/create') ?>" class="sidebar-nav-item <?= ($seg2 == 'create') ? 'active' : '' ?>">
                     <i class="fas fa-truck"></i> Shipment Entry
                 </a>
@@ -121,13 +123,13 @@
                     <i class="fas fa-list-ul"></i> All Bookings
                 </a>
 
-                <?php if (session()->get('role') !== 'tracking'): ?>
+                <?php if ($canMasterEntry): ?>
                 <a href="<?= base_url('logistics/all-invoices') ?>" class="sidebar-nav-item <?= ($seg2 == 'all-invoices') ? 'active' : '' ?> mt-2">
                     <i class="fas fa-file-invoice"></i> All Invoices
                 </a>
                 <?php endif; ?>
-                
-                <?php if (session()->get('role') === 'admin'): ?>
+
+                <?php if ($isAdmin): ?>
                 <!-- Masters Collapse -->
                 <div class="mt-2 px-3">
                     <button class="btn btn-light w-100 text-start text-secondary border shadow-none fw-semibold d-flex justify-content-between align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#mastersCollapse">
@@ -149,13 +151,9 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- Hiding Reports for Demo
-                <a href="<?= base_url('logistics/export') ?>" class="sidebar-nav-item <?= ($seg2 == 'export') ? 'active' : '' ?>">
-                    <i class="fas fa-chart-bar"></i> Reports
-                </a>
-                -->
-                
+                <?php endif; ?>
+
+                <?php if ($isAdmin || $canUserMgmt): ?>
                 <!-- Settings Collapse -->
                 <div class="mt-2 px-3 mb-4">
                     <button class="btn btn-light w-100 text-start text-secondary border shadow-none fw-semibold d-flex justify-content-between align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#settingsCollapse">
@@ -164,9 +162,13 @@
                     </button>
                     <div class="collapse <?= ($seg1 == 'masters' && $seg2 == 'company' || $seg1 == 'admin') ? 'show' : '' ?> mt-1" id="settingsCollapse">
                         <div class="card card-body p-1 border shadow-sm">
+                            <?php if ($isAdmin): ?>
                             <a class="sidebar-nav-item py-2 px-3 rounded <?= ($seg1 == 'masters' && $seg2 == 'company') ? 'bg-primary text-white' : '' ?>" href="<?= base_url('masters/company') ?>"><i class="fas fa-building me-2 <?= ($seg1 == 'masters' && $seg2 == 'company') ? 'text-white' : 'text-muted' ?>"></i> Company Settings</a>
-                            <hr class="my-1">
+                            <?php endif; ?>
+                            <?php if ($canUserMgmt): ?>
+                            <?php if ($isAdmin): ?><hr class="my-1"><?php endif; ?>
                             <a class="sidebar-nav-item py-2 px-3 rounded <?= ($seg1 == 'admin') ? 'bg-primary text-white' : '' ?>" href="<?= base_url('admin') ?>"><i class="fas fa-users-cog me-2 <?= ($seg1 == 'admin') ? 'text-white' : 'text-muted' ?>"></i> User Management</a>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -179,7 +181,7 @@
                 <div class="user-info w-100 ps-2">
                     <div class="user-name" style="font-size: 0.9rem; font-weight: 600; color: #334155;"><?= esc(session()->get('username')) ?></div>
                     <div class="d-flex justify-content-between align-items-center">
-                        <span style="font-size: 0.8rem; color: #64748b;"><?= ucfirst(session()->get('role')) ?></span>
+                        <span style="font-size: 0.8rem; color: #64748b;"><?= esc(ucfirst(session()->get('role') ?? 'user')) ?></span>
                         <a href="<?= base_url('auth/logout') ?>" class="text-danger" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
                     </div>
                 </div>
@@ -195,6 +197,10 @@
                     <div class="dropdown">
                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle shadow-none fw-semibold" type="button" data-bs-toggle="dropdown">
                             <i class="fas fa-building text-primary me-1"></i> <?= esc(session()->get('selected_company_name')) ?>
+                            <?php if (session()->get('selected_company_id') == 1 || session()->get('is_root_company')): ?>
+                                <span class="badge bg-primary ms-1" style="font-size: 0.68rem;">Root</span>
+                            <?php endif; ?>
+                            <span class="badge bg-secondary ms-1" style="font-size: 0.68rem;"><?= esc(ucfirst(session()->get('role') ?? 'user')) ?></span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-1">
                             <li><h6 class="dropdown-header">Active Company</h6></li>

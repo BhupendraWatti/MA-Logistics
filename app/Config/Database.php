@@ -223,7 +223,7 @@ class Database extends Config
             $this->default['database'] = $marlName;
         }
 
-        if (ENVIRONMENT === 'testing') {
+        if (ENVIRONMENT === 'testing' && extension_loaded('sqlite3')) {
             $this->defaultGroup = 'tests';
         }
     }

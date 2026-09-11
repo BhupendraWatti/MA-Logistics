@@ -201,6 +201,7 @@ $(document).ready(function() {
         isDirty = false;
         window.isDirty = false;
     }
+    window.resetDirty = resetDirty;
 
     // Delay change binding to ignore browser autofill and initial JS triggers on page load
     setTimeout(function() {

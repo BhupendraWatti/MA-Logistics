@@ -1,9 +1,21 @@
 <?= $this->extend('layout') ?>
 <?= $this->section('content') ?>
+<?php
+    $isRootAdmin = false;
+    if (session()->get('role') === 'admin' && (session()->get('selected_company_id') == 1 || session()->get('is_root_company'))) {
+        $isRootAdmin = true;
+    }
+    foreach (($companies ?? []) as $c) {
+        if (((int) $c['id'] === 1 || !empty($c['is_root'])) && ($c['role'] ?? '') === 'admin') {
+            $isRootAdmin = true;
+            break;
+        }
+    }
+?>
 <div class="container-fluid px-4 py-5">
     
     <div class="text-center mb-5">
-        <h2 class="fw-bold text-dark mb-2" style="font-size: 2rem;">Company </h2>
+        <h2 class="fw-bold text-dark mb-2" style="font-size: 2rem;">Company Selection</h2>
         <p class="text-secondary" style="font-size: 1.1rem;">Select operational company to continue session</p>
     </div>
 
@@ -17,7 +29,7 @@
                         <span class="input-group-text bg-white text-muted border-end-0"><i class="fas fa-search"></i></span>
                         <input type="text" class="form-control border-start-0 ps-0 shadow-none" id="companySearch" placeholder="Search entity ID or name...">
                     </div>
-                    <?php if (session()->get('role') === 'admin'): ?>
+                    <?php if ($isRootAdmin): ?>
                         <button type="button" class="btn btn-sm btn-outline-primary shadow-none" data-bs-toggle="modal" data-bs-target="#addCompanyModal">
                             <i class="fas fa-plus me-1"></i> Add Company
                         </button>
@@ -25,45 +37,88 @@
                 </div>
             </div>
 
-            <!-- Table section -->
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="companyTable">
-                    <thead class="text-muted" style="font-size: 0.85rem;">
-                        <tr>
-                            <th class="ps-4 fw-normal border-0 pt-3 pb-3">Company Name</th>
-                            <th class="text-end pe-4 fw-normal border-0 pt-3 pb-3">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="border-top-0">
-                        <?php foreach($companies ?? [] as $company): ?>
+            <?php if (empty($companies)): ?>
+                <div class="p-5 text-center">
+                    <div class="mb-3 text-warning">
+                        <i class="fas fa-building-circle-exclamation fa-3x"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark">No Companies Assigned</h5>
+                    <p class="text-muted mb-0" style="max-width: 500px; margin: 0 auto;">
+                        Your account has not been assigned to any operational companies yet. Please contact the <strong>MA Logistic</strong> root administrator to assign company access and permissions.
+                    </p>
+                </div>
+            <?php else: ?>
+                <!-- Table section -->
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="companyTable">
+                        <thead class="text-muted" style="font-size: 0.85rem;">
                             <tr>
-                                <td class="ps-4 fw-semibold text-dark company-name"><?= esc($company['name']) ?></td>
-                                <td class="text-end pe-4">
-                                    <div class="d-flex justify-content-end align-items-center gap-2">
-                                        <?= form_open('logistics/setCompany', ['class' => 'm-0']) ?>
-                                            <input type="hidden" name="company_id" value="<?= $company['id'] ?>">
-                                            <button type="submit" class="btn btn-sm btn-outline-secondary px-3 shadow-none">Enter</button>
-                                        <?= form_close() ?>
-                                        
-                                        <?php if (session()->get('role') === 'admin'): ?>
-                                        <?= form_open('logistics/deleteCompany/' . $company['id'], ['class' => 'm-0', 'onsubmit' => 'event.preventDefault(); ERPUtils.confirmAction("Delete Company", "Are you sure? This will delete ALL bookings related to this company!", "Yes, delete", "error").then(res => { if(res.isConfirmed) this.submit(); });']) ?>
-                                            <button type="submit" class="btn btn-sm btn-light text-danger shadow-none" title="Delete Company">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
-                                        <?= form_close() ?>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
+                                <th class="ps-4 fw-normal border-0 pt-3 pb-3">Company Name</th>
+                                <th class="fw-normal border-0 pt-3 pb-3">Your Role</th>
+                                <th class="fw-normal border-0 pt-3 pb-3">Permissions</th>
+                                <th class="text-end pe-4 fw-normal border-0 pt-3 pb-3">Action</th>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody class="border-top-0">
+                            <?php foreach($companies as $company): ?>
+                                <?php
+                                    $isRoot = ((int)$company['id'] === 1 || !empty($company['is_root']));
+                                    $role = $company['role'] ?? 'user';
+                                    $roleBadge = 'bg-info text-dark';
+                                    if ($role === 'admin') $roleBadge = 'bg-danger';
+                                    elseif ($role === 'tracking') $roleBadge = 'bg-warning text-dark';
+                                ?>
+                                <tr>
+                                    <td class="ps-4 fw-semibold text-dark company-name">
+                                        <i class="fas fa-building text-primary me-2"></i>
+                                        <?= esc($company['name']) ?>
+                                        <?php if ($isRoot): ?>
+                                            <span class="badge bg-primary ms-2"><i class="fas fa-crown me-1"></i> Root</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <span class="badge <?= $roleBadge ?> fw-semibold"><?= esc(ucfirst($role)) ?></span>
+                                    </td>
+                                    <td>
+                                        <?php if ($role === 'tracking'): ?>
+                                            <span class="badge bg-light text-muted border">Tracking Only</span>
+                                        <?php else: ?>
+                                            <div class="d-flex gap-1">
+                                                <span class="badge <?= !empty($company['can_create']) ? 'bg-success' : 'bg-light text-muted border' ?>" title="Create">C</span>
+                                                <span class="badge <?= !empty($company['can_edit']) ? 'bg-primary' : 'bg-light text-muted border' ?>" title="Edit">E</span>
+                                                <span class="badge <?= !empty($company['can_delete']) ? 'bg-danger' : 'bg-light text-muted border' ?>" title="Delete">D</span>
+                                            </div>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="d-flex justify-content-end align-items-center gap-2">
+                                            <?= form_open('logistics/setCompany', ['class' => 'm-0']) ?>
+                                                <input type="hidden" name="company_id" value="<?= $company['id'] ?>">
+                                                <button type="submit" class="btn btn-sm btn-outline-primary px-3 shadow-none fw-semibold">
+                                                    <i class="fas fa-sign-in-alt me-1"></i> Enter
+                                                </button>
+                                            <?= form_close() ?>
+
+                                            <?php if ($isRootAdmin && !$isRoot): ?>
+                                            <?= form_open('logistics/deleteCompany/' . $company['id'], ['class' => 'm-0', 'onsubmit' => 'event.preventDefault(); ERPUtils.confirmAction("Delete Company", "Are you sure? This will delete ALL bookings related to this company!", "Yes, delete", "error").then(res => { if(res.isConfirmed) this.submit(); });']) ?>
+                                                <button type="submit" class="btn btn-sm btn-light text-danger shadow-none" title="Delete Company">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            <?= form_close() ?>
+                                            <?php endif; ?>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>
 
-<?php if (session()->get('role') === 'admin'): ?>
+<?php if ($isRootAdmin): ?>
 <!-- Add Company Modal -->
 <div class="modal fade" id="addCompanyModal" tabindex="-1" aria-labelledby="addCompanyModalLabel" aria-hidden="true">
   <div class="modal-dialog">

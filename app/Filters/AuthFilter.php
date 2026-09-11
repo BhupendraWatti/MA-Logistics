@@ -1,6 +1,7 @@
 <?php
 namespace App\Filters;
 
+use App\Models\UserCompanyAccessModel;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -33,71 +34,90 @@ class AuthFilter implements FilterInterface
             }
         }
 
-        if ((strpos($cleanUri, 'logistics') === 0 || strpos($cleanUri, 'admin') === 0) && !$isExemptCompanyRoute) {
+        if ((strpos($cleanUri, 'logistics') === 0 || strpos($cleanUri, 'admin') === 0 || strpos($cleanUri, 'masters') === 0 || strpos($cleanUri, 'company') === 0) && !$isExemptCompanyRoute) {
             if (! session()->get('selected_company_id')) {
                 return redirect()->to('/company-selection');
             }
         }
 
+        $selectedCompanyId = (int) session()->get('selected_company_id');
+        if ($selectedCompanyId > 0 && !$isExemptCompanyRoute) {
+            $access = (new UserCompanyAccessModel())->getUserAccess((int) session()->get('user_id'), $selectedCompanyId);
+            if (!$access || !(int) ($access['is_active'] ?? 0)) {
+                session()->remove(['selected_company_id', 'selected_company_name', 'is_root_company', 'role', 'permissions']);
+                if ($request->isAJAX()) {
+                    return service('response')->setStatusCode(403)->setJSON([
+                        'status' => 'error',
+                        'message' => 'Your access to this company is no longer active.',
+                    ]);
+                }
+                return redirect()->to('/company-selection')->with('error', 'Your access to this company is no longer active.');
+            }
+
+            session()->set([
+                'role' => (string) $access['role'],
+                'permissions' => [
+                    'can_create' => (int) $access['can_create'],
+                    'can_edit' => (int) $access['can_edit'],
+                    'can_delete' => (int) $access['can_delete'],
+                ],
+            ]);
+        }
+
         $userRole = session()->get('role');
 
-        // ✅ NEW: TRACKING ROLE CHECK
-        if ($userRole === 'tracking') {
-            if ($cleanUri === '' || $cleanUri === 'logistics') {
-                return redirect()->to('/logistics/manage');
+        // PERMISSION CHECKS
+        $permissions    = session()->get('permissions') ?? [];
+        $canMasterEntry = ($userRole === 'admin' || !empty($permissions['can_create']));
+        $canTracking    = ($userRole === 'admin' || !empty($permissions['can_edit']));
+        $canUserMgmt    = ($userRole === 'admin' || !empty($permissions['can_delete']));
+
+        // ADMIN PANEL - Root Admin with User Management only
+        if (strpos($cleanUri, 'admin') === 0) {
+            $selectedCompanyId = session()->get('selected_company_id');
+            $isRootCompany = session()->get('is_root_company');
+            $isRoot = ($isRootCompany || (int)$selectedCompanyId === 1);
+            if (!$canUserMgmt || !$isRoot) {
+                return redirect()->to('/logistics/manage')->with('error', 'User Management is centralized under MA Logistic root administration.');
             }
-            
-            $allowedPaths = [
-                'logistics/manage',
-                'logistics/search',
-                'logistics/searchResult',
-                'logistics/ajax-datatable',
-                'tracking/history',
-                'tracking/save',
-                'company-selection',
-                'logistics/setCompany',
-                'logistics/clearCompany',
-                'auth/logout',
-            ];
-            
-            $isAllowed = false;
-            foreach ($allowedPaths as $allowed) {
-                if ($cleanUri === $allowed || strpos($cleanUri, $allowed . '/') === 0) {
-                    $isAllowed = true;
-                    break;
+        }
+        
+        // TRACKING ROUTES - Require Tracking & POD permission
+        if (strpos($cleanUri, 'tracking') === 0) {
+            if (!$canTracking) {
+                if ($request->isAJAX()) {
+                    session_write_close();
+                    return service('response')->setStatusCode(403)->setJSON([
+                        'status'  => 'error',
+                        'message' => 'Tracking & POD permission denied'
+                    ]);
                 }
-            }
-            if (!$isAllowed) {
-                return redirect()->to('/logistics/manage')->with('error', 'Access Restricted: Tracking role can only access tracking updates.');
+                return redirect()->to('/logistics/manage')->with('error', 'Tracking & POD permission denied!');
             }
         }
 
-        // ✅ NEW: PERMISSION CHECKS
-        $permissions = session()->get('permissions') ?? [];
-        
-        // ADMIN PANEL - Admin only
-        if (strpos($cleanUri, 'admin') === 0 && $userRole !== 'admin') {
-            return redirect()->to('/logistics')->with('error', 'Admin access denied!');
+        // MASTER ENTRY ROUTES - Require Master Entry permission (can edit, update, delete, view, create, masters)
+        $isMasterEntryRoute = ($cleanUri === 'logistics/create'
+            || $cleanUri === 'logistics/store'
+            || $cleanUri === 'logistics/all-invoices'
+            || strpos($cleanUri, 'masters') === 0
+            || strpos($cleanUri, 'company') === 0
+            || preg_match('/^logistics\/(view|edit|update|delete|exportDocketPdf|printDocketPdf)\//', $cleanUri));
+
+        if ($isMasterEntryRoute && !$canMasterEntry) {
+            if ($request->isAJAX()) {
+                session_write_close();
+                return service('response')->setStatusCode(403)->setJSON([
+                    'status'  => 'error',
+                    'message' => 'Master Entry permission denied'
+                ]);
+            }
+            return redirect()->to('/logistics/manage')->with('error', 'Access Denied: You do not have permission to view or modify shipment details.');
         }
-        
-        // CREATE - Check can_create
-        if ($cleanUri === 'logistics/create' && !($permissions['can_create'] ?? 0)) {
-            return redirect()->to('/logistics')->with('error', 'Create permission denied!');
-        }
-        
-        // EDIT/DELETE - Check can_edit/can_delete
+
+        // Perform branch-level row isolation checks for non-admins
         if (preg_match('/logistics\/(view|edit|delete)\/(\d+)/', $cleanUri, $matches)) {
             $bookingId = intval($matches[2]);
-            $action = $matches[1];
-
-            if ($action === 'edit' && !($permissions['can_edit'] ?? 0)) {
-                return redirect()->to('/logistics')->with('error', 'Edit permission denied!');
-            }
-            if ($action === 'delete' && !($permissions['can_delete'] ?? 0)) {
-                return redirect()->to('/logistics')->with('error', 'Delete permission denied!');
-            }
-
-            // Perform branch-level row isolation checks for non-admins
             if ($userRole !== 'admin') {
                 $db = \Config\Database::connect();
                 $booking = $db->table('bookings')->where('id', $bookingId)->select('branch_id')->get()->getRowArray();
@@ -105,7 +125,7 @@ class AuthFilter implements FilterInterface
                     $userBranchId = session()->get('branch_id') ?? 1;
                     $bookingBranchId = intval($booking['branch_id'] ?? 1);
                     if ($bookingBranchId !== intval($userBranchId)) {
-                        return redirect()->to('/logistics')->with('error', 'Access Denied: You cannot modify bookings originating outside your branch.');
+                        return redirect()->to('/logistics/manage')->with('error', 'Access Denied: You cannot modify bookings originating outside your branch.');
                     }
                 }
             }

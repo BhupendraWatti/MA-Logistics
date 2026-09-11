@@ -22,6 +22,9 @@ $routes->post('admin/changePassword', 'AdminController::changePassword');
 $routes->post('admin/toggleStatus', 'AdminController::toggleStatus');
 $routes->post('admin/deleteUser', 'AdminController::deleteUser');
 $routes->post('admin/ajax-datatable', 'AdminController::ajaxDatatable');
+$routes->get('admin/getUserAssignments', 'AdminController::getUserAssignments');
+$routes->post('admin/saveAssignment', 'AdminController::saveAssignment');
+$routes->post('admin/revokeAssignment', 'AdminController::revokeAssignment');
 
 // LOGISTICS ROUTES
 $routes->get('logistics', 'Logistics::index');
