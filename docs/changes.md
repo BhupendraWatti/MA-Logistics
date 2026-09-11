@@ -2,6 +2,22 @@
 
 This file tracks every technical change, feature implementation, refactoring, and pending scope addition performed on the M.A. Logistics ERP project.
 
+## Latest Navigation Alignment
+
+### [CHG-036] Align All Bookings AWB Navigation to Booking Details View
+* **Status**: Completed and regression tested
+* **Priority**: Medium
+* **Requirement**: In All Bookings (`logistics/manage`), clicking on the AWB number should open the read-only Booking Details View (`logistics/view/{id}`) instead of directly opening the Edit Booking Form (`logistics/edit/{id}`), aligning with the Dashboard Recent Bookings behavior.
+* **Implementation**:
+  - Updated `app/Views/logistics/manage_bookings.php` DataTables column 1 (`awb_no`) render function to link to `BASE_URL + 'logistics/view/' + row.id`.
+  - Maintained dedicated Edit button (`fas fa-edit`) in the Actions column and the `Edit Booking` button inside the View page for authorized editing.
+  - Enhanced the `< Back` button on `app/Views/logistics/view_booking.php` with browser history and referrer awareness (`base_url('logistics/manage')` fallback) so returning from view details preserves table state (pagination, search, filters) in All Bookings.
+* **Files Modified**:
+  - `app/Views/logistics/manage_bookings.php`
+  - `app/Views/logistics/view_booking.php`
+  - Synchronized documentation in `docs/changes.md` and `docs/functionality.md`.
+* **QA**: Code review, syntax validation, and full PHPUnit test suite execution.
+
 ## Latest Frontend Date Change
 
 ### [CHG-035] Standardize Human-Visible Dates as DD.MM.YYYY

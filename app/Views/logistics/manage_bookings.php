@@ -100,7 +100,7 @@ $(document).ready(function() {
             render: function(data, type, row) {
                 const canMaster = (row.can_master_entry !== undefined ? row.can_master_entry == 1 : CAN_MASTER_ENTRY);
                 if (canMaster) {
-                    return `<a href="${BASE_URL}logistics/edit/${row.id}"><strong>${data}</strong></a>`;
+                    return `<a href="${BASE_URL}logistics/view/${row.id}" class="text-decoration-none"><strong>${data}</strong></a>`;
                 }
                 return `<strong>${data}</strong>`;
             }

@@ -6,7 +6,8 @@
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <div class="d-flex flex-column gap-1">
             <div class="d-flex align-items-center gap-3">
-                <a href="<?= base_url('logistics') ?>" class="btn btn-outline-secondary bg-white shadow-sm fw-bold">
+                <?php $backUrl = (!empty($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], base_url('logistics/manage')) !== false) ? base_url('logistics/manage') : base_url('logistics'); ?>
+                <a href="<?= $backUrl ?>" class="btn btn-outline-secondary bg-white shadow-sm fw-bold" onclick="if(window.history.length > 1 && document.referrer){ window.history.back(); return false; }">
                     <i class="fas fa-arrow-left"></i> Back
                 </a>
                 <h4 class="mb-0 fw-bold text-dark">Booking Details: <span class="text-primary"><?= esc($booking['awb_no']) ?></span></h4>
