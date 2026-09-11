@@ -61,6 +61,32 @@
         .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=""]::before {
             content: "Font" !important;
         }
+        .sidebar-logo {
+            display: block !important;
+            width: 100% !important;
+            max-width: 208px !important;
+            max-height: 114px !important;
+            height: auto !important;
+            object-fit: contain !important;
+        }
+        .sidebar-header {
+            min-height: 120px;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .login-logo {
+            display: block !important;
+            width: 100% !important;
+            max-width: 280px !important;
+            max-height: 154px !important;
+            height: auto !important;
+            object-fit: contain !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
     </style>
 </head>
 <body>
@@ -74,7 +100,7 @@
         <div class="sidebar">
             <div class="sidebar-header">
                 <a class="sidebar-brand w-100" href="<?= base_url('logistics') ?>" aria-label="MA Logistics dashboard">
-                    <img src="<?= base_url('images/logo.png') ?>?v=<?= is_file(FCPATH . 'images/logo.png') ? filemtime(FCPATH . 'images/logo.png') : '1' ?>" alt="MA Logistics" class="sidebar-logo">
+                    <img src="<?= base_url('images/logo.png') ?>?v=<?= is_file(FCPATH . 'images/logo.png') ? filemtime(FCPATH . 'images/logo.png') : '1' ?>" alt="MA Logistics" class="sidebar-logo" style="max-width: 208px; max-height: 114px; width: 100%; height: auto; object-fit: contain;">
                 </a>
             </div>
             
