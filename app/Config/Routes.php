@@ -17,6 +17,7 @@ $routes->get('company/settings/deleteLogo', 'CompanyController::deleteLogo');
 // ====== ADMIN/USER MANAGEMENT ======
 $routes->get('admin', 'AdminController::index');
 $routes->post('admin/createUser', 'AdminController::createUser');
+$routes->post('admin/updateUser', 'AdminController::updateUser');
 $routes->post('admin/togglePermission', 'AdminController::togglePermission');
 $routes->post('admin/changePassword', 'AdminController::changePassword');
 $routes->post('admin/toggleStatus', 'AdminController::toggleStatus');

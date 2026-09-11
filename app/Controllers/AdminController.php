@@ -350,6 +350,140 @@ class AdminController extends BaseController
         return redirect()->to('/admin')->with('success', 'User created successfully!');
     }
 
+    public function updateUser()
+    {
+        if (! $this->checkRootAdmin()) {
+            if ($this->request->isAJAX()) {
+                session_write_close();
+                return $this->response->setStatusCode(403)->setJSON([
+                    'success' => false,
+                    'message' => 'User Management is centralized under MA Logistic root administration.'
+                ]);
+            }
+            return redirect()->to('/logistics')->with('error', 'User Management is centralized under MA Logistic root administration.');
+        }
+
+        $userId = (int) $this->request->getPost('user_id');
+        if ($userId <= 0) {
+            $msg = 'Invalid user ID.';
+            if ($this->request->isAJAX()) {
+                session_write_close();
+                return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => $msg]);
+            }
+            return redirect()->back()->with('error', $msg);
+        }
+
+        $userModel = new UserModel();
+        $existing = $userModel->find($userId);
+        if (!$existing) {
+            $msg = 'User not found.';
+            if ($this->request->isAJAX()) {
+                session_write_close();
+                return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => $msg]);
+            }
+            return redirect()->back()->with('error', $msg);
+        }
+
+        $username = trim((string) $this->request->getPost('username'));
+        $email    = trim((string) $this->request->getPost('email'));
+        $role     = strtolower(trim((string) $this->request->getPost('role')));
+
+        if (empty($username) || empty($email)) {
+            $msg = 'Username and Email are required.';
+            if ($this->request->isAJAX()) {
+                session_write_close();
+                return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => $msg]);
+            }
+            return redirect()->back()->withInput()->with('error', $msg);
+        }
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $msg = 'Please enter a valid email address.';
+            if ($this->request->isAJAX()) {
+                session_write_close();
+                return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => $msg]);
+            }
+            return redirect()->back()->withInput()->with('error', $msg);
+        }
+
+        // Check duplicate username (excluding current user)
+        $duplicateUser = $userModel->where('username', $username)->where('id !=', $userId)->first();
+        if ($duplicateUser) {
+            $msg = 'Username is already taken by another user.';
+            if ($this->request->isAJAX()) {
+                session_write_close();
+                return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => $msg]);
+            }
+            return redirect()->back()->withInput()->with('error', $msg);
+        }
+
+        // Check duplicate email (excluding current user)
+        $duplicateEmail = $userModel->where('email', $email)->where('id !=', $userId)->first();
+        if ($duplicateEmail) {
+            $msg = 'Email address is already registered to another user.';
+            if ($this->request->isAJAX()) {
+                session_write_close();
+                return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => $msg]);
+            }
+            return redirect()->back()->withInput()->with('error', $msg);
+        }
+
+        $updateData = [
+            'username' => $username,
+            'email'    => $email,
+        ];
+
+        // If role provided, update role
+        if (!empty($role)) {
+            // Guard: don't demote sole active root admin
+            if ($existing['role'] === 'admin' && $role !== 'admin' && $this->isSoleActiveRootAdmin($userId)) {
+                $msg = 'Cannot demote the sole active Root Administrator.';
+                if ($this->request->isAJAX()) {
+                    session_write_close();
+                    return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => $msg]);
+                }
+                return redirect()->back()->with('error', $msg);
+            }
+            $updateData['role'] = $role;
+        }
+
+        // Optional password update if provided
+        $password = (string) $this->request->getPost('password');
+        if (!empty($password)) {
+            if (strlen($password) < 6) {
+                $msg = 'Password must be at least 6 characters long.';
+                if ($this->request->isAJAX()) {
+                    session_write_close();
+                    return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => $msg]);
+                }
+                return redirect()->back()->with('error', $msg);
+            }
+            $updateData['password'] = $password;
+        }
+
+        $userModel->update($userId, $updateData);
+
+        // If current logged-in user updated their own username/role, refresh session
+        if ($userId === (int) session()->get('user_id')) {
+            session()->set('username', $username);
+            session()->set('email', $email);
+            if (isset($updateData['role'])) {
+                session()->set('role', $updateData['role']);
+            }
+        }
+
+        if ($this->request->isAJAX()) {
+            session_write_close();
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'User updated successfully!',
+                'csrf_hash' => csrf_hash()
+            ]);
+        }
+
+        return redirect()->to('/admin')->with('success', 'User updated successfully!');
+    }
+
     public function toggleStatus()
     {
         if (! $this->checkRootAdmin()) {

@@ -258,4 +258,52 @@ final class MultiCompanyAccessTest extends TestCase
         self::assertStringContainsString("<?php if (\$isAdmin): ?>\n                            <a class=\"sidebar-nav-item", $layout);
         self::assertStringContainsString("<?php if (session()->get('role') === 'admin'): ?>\n            <a href=\"<?= base_url('masters/customers') ?>\"", $dashboard);
     }
+
+    public function testUpdateUserRouteAndValidationSupport(): void
+    {
+        $routesSource = file_get_contents(ROOTPATH . 'app/Config/Routes.php');
+        self::assertStringContainsString("\$routes->post('admin/updateUser', 'AdminController::updateUser');", $routesSource);
+
+        $adminSource = file_get_contents(ROOTPATH . 'app/Controllers/AdminController.php');
+        self::assertStringContainsString('public function updateUser()', $adminSource);
+        self::assertStringContainsString("where('username', \$username)->where('id !=', \$userId)", $adminSource);
+        self::assertStringContainsString("where('email', \$email)->where('id !=', \$userId)", $adminSource);
+        self::assertStringContainsString('Cannot demote the sole active Root Administrator', $adminSource);
+
+        $viewSource = file_get_contents(ROOTPATH . 'app/Views/admin/users.php');
+        self::assertStringContainsString('id="editUserModal"', $viewSource);
+        self::assertStringContainsString('id="editUsername"', $viewSource);
+        self::assertStringContainsString('id="editEmail"', $viewSource);
+        self::assertStringContainsString('btn-edit-user', $viewSource);
+
+        // Database test for user update
+        $this->db->transStart();
+        try {
+            $userModel = new UserModel($this->db);
+            $origUser = 'edit_test_' . bin2hex(random_bytes(3));
+            $userId = $userModel->insert([
+                'username'   => $origUser,
+                'email'      => $origUser . '@example.com',
+                'password'   => 'password123',
+                'role'       => 'user',
+                'is_active'  => 1,
+            ]);
+            self::assertGreaterThan(0, $userId);
+
+            $newUsername = 'updated_' . bin2hex(random_bytes(3));
+            $newEmail    = $newUsername . '@example.com';
+
+            $userModel->update($userId, [
+                'username' => $newUsername,
+                'email'    => $newEmail,
+            ]);
+
+            $fetched = $userModel->find($userId);
+            self::assertSame($newUsername, $fetched['username']);
+            self::assertSame($newEmail, $fetched['email']);
+        } finally {
+            $this->db->transRollback();
+        }
+    }
 }
+

@@ -60,11 +60,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label text-muted fs-7 fw-semibold">Default System Role</label>
-                    <select name="role" class="form-select form-select-sm shadow-none">
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                        <option value="tracking">Tracking</option>
-                    </select>
+                    <input type="text" name="role" class="form-control form-control-sm shadow-none" value="user" placeholder="e.g. user, admin, tracking">
                 </div>
                 <hr class="my-3">
                 <div class="mb-3">
@@ -88,6 +84,42 @@
         <div class="sticky-footer bg-white border-top p-3 d-flex justify-content-between">
             <button type="button" class="btn btn-outline-secondary fw-bold px-4 shadow-sm" data-bs-dismiss="offcanvas">Cancel</button>
             <button type="submit" class="btn btn-primary fw-bold px-4 shadow-sm"><i class="fas fa-check me-2"></i> Create</button>
+        </div>
+    </form>
+</div>
+
+<!-- Edit User Drawer -->
+<div class="offcanvas offcanvas-end erp-drawer erp-drawer-sm" tabindex="-1" id="editUserModal" data-bs-backdrop="true">
+    <div class="offcanvas-header bg-light border-bottom">
+        <h5 class="offcanvas-title fw-bold text-primary"><i class="fas fa-user-edit me-2"></i> Edit User</h5>
+        <button type="button" class="btn-close shadow-none" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <form id="editUserForm" action="<?= base_url('admin/updateUser') ?>" method="post" class="d-flex flex-column h-100 mb-0 no-track">
+        <?= csrf_field() ?>
+        <input type="hidden" name="user_id" id="editUserId">
+        <div class="offcanvas-body position-relative p-0">
+            <div class="erp-drawer-content pb-5">
+                <div class="mb-3">
+                    <label class="form-label text-muted fs-7 fw-semibold">Username <span class="text-danger">*</span></label>
+                    <input type="text" name="username" id="editUsername" class="form-control form-control-sm shadow-none" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted fs-7 fw-semibold">Email <span class="text-danger">*</span></label>
+                    <input type="email" name="email" id="editEmail" class="form-control form-control-sm shadow-none" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted fs-7 fw-semibold">System Role <span class="text-danger">*</span></label>
+                    <input type="text" name="role" id="editRole" class="form-control form-control-sm shadow-none" placeholder="e.g. user, admin, tracking" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted fs-7 fw-semibold">New Password <small class="text-muted">(leave blank to keep unchanged)</small></label>
+                    <input type="password" name="password" id="editPassword" class="form-control form-control-sm shadow-none" minlength="6" placeholder="Leave blank to keep unchanged">
+                </div>
+            </div>
+        </div>
+        <div class="sticky-footer bg-white border-top p-3 d-flex justify-content-between">
+            <button type="button" class="btn btn-outline-secondary fw-bold px-4 shadow-sm" data-bs-dismiss="offcanvas">Cancel</button>
+            <button type="submit" class="btn btn-primary fw-bold px-4 shadow-sm"><i class="fas fa-save me-2"></i> Update User</button>
         </div>
     </form>
 </div>
@@ -289,12 +321,14 @@
                 data: null,
                 orderable: false,
                 searchable: false,
-                className: 'text-center',
+                className: 'text-center text-nowrap',
                 render: function(data, type, row) {
                     const btnClass = row.is_active == 1 ? 'btn-outline-danger' : 'btn-outline-success';
                     const btnText = row.is_active == 1 ? '<i class="fas fa-ban"></i> Deactivate' : '<i class="fas fa-check"></i> Activate';
-                    return `<button class="btn btn-sm ${btnClass} me-1 shadow-sm" onclick="toggleActive(${row.id}, ${row.is_active})">${btnText}</button>` +
-                           `<button class="btn btn-sm btn-outline-danger shadow-sm" onclick="deleteUser(${row.id})"><i class="fas fa-trash"></i></button>`;
+                    const editBtn = `<button type="button" class="btn btn-sm btn-outline-primary me-1 shadow-sm btn-edit-user" data-id="${row.id}" title="Edit User"><i class="fas fa-edit"></i> Edit</button>`;
+                    return editBtn +
+                           `<button class="btn btn-sm ${btnClass} me-1 shadow-sm" onclick="toggleActive(${row.id}, ${row.is_active})">${btnText}</button>` +
+                           `<button class="btn btn-sm btn-outline-danger shadow-sm" onclick="deleteUser(${row.id})" title="Delete User"><i class="fas fa-trash"></i></button>`;
                 }
             },
             {
@@ -533,5 +567,62 @@
     function setUserId(userId) {
         document.getElementById('passwordUserId').value = userId;
     }
+
+    function openEditUser(id, username, email, role) {
+        document.getElementById('editUserId').value = id;
+        document.getElementById('editUsername').value = username;
+        document.getElementById('editEmail').value = email;
+        document.getElementById('editRole').value = role || 'user';
+        document.getElementById('editPassword').value = '';
+
+        const drawerEl = document.getElementById('editUserModal');
+        const bsOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(drawerEl);
+        bsOffcanvas.show();
+    }
+
+    $('#usersTable').on('click', '.btn-edit-user', function() {
+        const tr = $(this).closest('tr');
+        const row = usersTable.row(tr).data();
+        if (row) {
+            openEditUser(row.id, row.username, row.email, row.role);
+        }
+    });
+
+    $('#editUserForm').on('submit', function(e) {
+        e.preventDefault();
+        const form = $(this);
+        const submitBtn = form.find('button[type="submit"]');
+        submitBtn.prop('disabled', true);
+
+        $.ajax({
+            url: form.attr('action'),
+            type: 'POST',
+            data: form.serialize(),
+            dataType: 'json',
+            success: function(response) {
+                submitBtn.prop('disabled', false);
+                if (response.csrf_hash) {
+                    $('input[name="<?= csrf_token() ?>"]').val(response.csrf_hash);
+                }
+                if (response.success) {
+                    const drawerEl = document.getElementById('editUserModal');
+                    const bsOffcanvas = bootstrap.Offcanvas.getInstance(drawerEl);
+                    if (bsOffcanvas) bsOffcanvas.hide();
+                    ERPUtils.showSuccess('User Updated', response.message || 'User details updated successfully.');
+                    usersTable.ajax.reload(null, false);
+                } else {
+                    ERPUtils.showError('Update Failed', response.message || 'Error updating user.');
+                }
+            },
+            error: function(xhr) {
+                submitBtn.prop('disabled', false);
+                const res = xhr.responseJSON;
+                if (res && res.csrf_hash) {
+                    $('input[name="<?= csrf_token() ?>"]').val(res.csrf_hash);
+                }
+                ERPUtils.showError('Error', (res && res.message) ? res.message : 'Server error updating user.');
+            }
+        });
+    });
 </script>
 <?= $this->endSection() ?>
